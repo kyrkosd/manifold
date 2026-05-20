@@ -6,9 +6,9 @@ independence of mutable defaults — that downstream pipeline stages rely on.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
-from ingestion.types import CleanData, NormParams, QualityReport, ValidatedData
+from ingestion.types import CleanData, NormParams, QualityReport
+# ValidatedData is an internal ingestion type defined in validator.py, not types.py.
 
 
 # ---------------------------------------------------------------------------
@@ -68,20 +68,6 @@ class TestQualityReport:
         r2 = QualityReport(n_samples=5, n_features=2, missing_pct=0.0, duplicate_count=0)
         r1.constant_dims.append(0)   # mutate r1 only
         assert r2.constant_dims == []  # r2 must be unaffected
-
-
-# ---------------------------------------------------------------------------
-# ValidatedData — pre-normalisation data wrapper
-# ---------------------------------------------------------------------------
-
-class TestValidatedData:
-    def test_construction(self):
-        # ValidatedData is a thin wrapper; both fields are stored by reference.
-        arr = np.ones((10, 3))
-        report = QualityReport(n_samples=10, n_features=3, missing_pct=0.0, duplicate_count=0)
-        vd = ValidatedData(data=arr, quality=report)
-        assert vd.data is arr       # no copy of the array
-        assert vd.quality is report
 
 
 # ---------------------------------------------------------------------------

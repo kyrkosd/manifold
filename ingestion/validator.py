@@ -5,6 +5,7 @@ issues are logged as warnings and captured in QualityReport.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -12,9 +13,23 @@ import pandas as pd
 
 from common.exceptions import ValidationError
 from common.logging import get_logger
-from .types import QualityReport, ValidatedData
+from .types import QualityReport
 
 _log = get_logger(__name__)
+
+
+@dataclass
+class ValidatedData:
+    """Internal handoff between validate() and normalize(); not part of the public API.
+
+    Parameters
+    ----------
+    data : (n, d) float64 ndarray; may contain NaN but no infinities.
+    quality : quality report from the validation pass.
+    """
+
+    data: np.ndarray
+    quality: QualityReport
 
 
 def validate(data: np.ndarray | pd.DataFrame) -> ValidatedData:

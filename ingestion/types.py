@@ -1,6 +1,7 @@
 """
-Ingestion-specific type definitions: raw dataset wrappers and the validated /
-normalised dataset contracts that downstream phases consume.
+Ingestion-specific type definitions: the public dataset contracts that
+downstream pipeline phases consume.  The internal ValidatedData handoff type
+lives in validator.py to limit the fan-in of this module to 3.
 """
 from __future__ import annotations
 
@@ -45,20 +46,6 @@ class QualityReport:
     duplicate_count: int
     constant_dims: list[int] = field(default_factory=list)
     suitability_score: float = 1.0
-
-
-@dataclass
-class ValidatedData:
-    """Raw data that has passed all fatal validation checks.
-
-    Parameters
-    ----------
-    data : (n, d) float64 ndarray; may contain NaN but no infinities.
-    quality : quality report from the validation pass.
-    """
-
-    data: np.ndarray
-    quality: QualityReport
 
 
 @dataclass
