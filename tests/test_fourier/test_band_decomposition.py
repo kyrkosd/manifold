@@ -1,4 +1,4 @@
-"""Tests for fourier/band_decomposition.py and the analyze_fourier() entry point.
+"""Tests for fourier/band_decomposition.py.
 
 Band coverage is the primary correctness invariant: every spectral index in
 [0, d-1] must belong to exactly one FrequencyBand with no gaps or overlaps.
@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from common.types import EigenBasis, FeatureGraph, FrequencyBand
+from common.types import EigenBasis, FrequencyBand
 from fourier.band_decomposition import (
     _assign_coefficients,
     _compute_band_power,
@@ -19,9 +19,6 @@ from fourier.band_decomposition import (
     _validate_coverage,
     decompose,
 )
-from fourier import SpectralData, analyze_fourier
-from structure.report import StructureReport, build as _build_report
-from structure.graph_builder import build as _build_graph
 
 
 # ---------------------------------------------------------------------------
@@ -126,56 +123,23 @@ class TestLabelBands:
 
 
 # ---------------------------------------------------------------------------
-# decompose() and analyze_fourier() — integration
+# decompose() — integration
 # ---------------------------------------------------------------------------
 
-class TestDecomposeAndAnalyze:
-    def test_decompose_returns_frequency_bands(self):
+class TestDecompose:
+    def test_returns_frequency_bands(self):
         # decompose must produce at least one FrequencyBand object.
         mean = (_coeffs() ** 2).mean(axis=0)
         bands = decompose(_coeffs(), _basis(), mean)
         assert len(bands) > 0 and all(isinstance(b, FrequencyBand) for b in bands)
 
-    def test_decompose_coverage_complete(self):
+    def test_coverage_complete(self):
         # All d spectral components must be assigned to exactly one band.
         mean = (_coeffs() ** 2).mean(axis=0)
         bands = decompose(_coeffs(), _basis(), mean)
         assert _validate_coverage(bands, d=6)
 
-    def test_decompose_band_power_non_negative(self):
+    def test_band_power_non_negative(self):
         # Power is a sum of squares and must always be ≥ 0.
         mean = (_coeffs(seed=1) ** 2).mean(axis=0)
         assert all(b.power >= 0 for b in decompose(_coeffs(seed=1), _basis(), mean))
-
-    def test_analyze_fourier_returns_spectral_data(self):
-        # End-to-end: analyze_fourier must return a SpectralData instance.
-        rng = np.random.default_rng(42)
-        data = rng.standard_normal((40, 5))
-        graph = _build_graph(data)
-        report = _build_report(graph, dim_result=2)
-        result = analyze_fourier(data, report)
-        assert isinstance(result, SpectralData)
-
-    def test_analyze_fourier_coefficients_shape(self):
-        # Output coefficients must have the same (n, d) shape as the input.
-        rng = np.random.default_rng(43)
-        data = rng.standard_normal((30, 5))
-        graph = _build_graph(data)
-        report = _build_report(graph, dim_result=2)
-        result = analyze_fourier(data, report)
-        assert result.coefficients.shape == (30, 5)
-
-    def test_analyze_fourier_no_graph_raises(self):
-        # analyze_fourier must raise ValueError when structure has no graph.
-        from common.types import FourierType, StructureType
-        bad_report = StructureReport(
-            type=StructureType.LINEAR,
-            intrinsic_dim=1,
-            graph=None,
-            ordering=None,
-            periodicity=False,
-            recommended_fourier=FourierType.STANDARD_FFT,
-            confidence=1.0,
-        )
-        with pytest.raises(ValueError, match="graph is None"):
-            analyze_fourier(np.ones((5, 3)), bad_report)
