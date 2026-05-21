@@ -52,67 +52,66 @@ def _correlated_data(n: int = 80, seed: int = 1) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# build()
+# build() — adjacency matrix properties
 # ---------------------------------------------------------------------------
 
-class TestBuild:
+class TestBuildAdjacency:
+    """Tests for the structural correctness of the adjacency matrix returned by build()."""
+
+    def test_shape_is_d_by_d(self):
+        # Graph nodes are features (columns), not samples (rows).
+        data = _independent_data(n=50, d=8)
+        assert build(data).adjacency.shape == (8, 8)
+
+    def test_is_symmetric(self):
+        # The feature graph is undirected; adjacency must equal its transpose.
+        adj = build(_independent_data()).adjacency
+        np.testing.assert_allclose(adj, adj.T, atol=1e-8)
+
+    def test_zero_diagonal(self):
+        # No self-loops: diagonal entries must all be zero.
+        adj = build(_independent_data()).adjacency
+        np.testing.assert_allclose(np.diag(adj), 0.0, atol=1e-10)
+
+    def test_non_negative(self):
+        # Edge weights must be non-negative after thresholding.
+        assert np.all(build(_independent_data()).adjacency >= 0)
+
+
+# ---------------------------------------------------------------------------
+# build() — graph-level contracts (type, nodes, stats, robustness)
+# ---------------------------------------------------------------------------
+
+class TestBuildGraph:
+    """Tests for the FeatureGraph wrapper, node labels, stats, and edge cases."""
+
     def test_returns_feature_graph(self):
         # The return type must always be FeatureGraph.
-        result = build(_independent_data())
-        assert isinstance(result, FeatureGraph)
-
-    def test_adjacency_shape_is_d_by_d(self):
-        # Graph nodes are features (columns), not samples.
-        data = _independent_data(n=50, d=8)
-        result = build(data)
-        assert result.adjacency.shape == (8, 8)
-
-    def test_adjacency_is_symmetric(self):
-        # The feature graph is undirected; adjacency must be symmetric.
-        result = build(_independent_data())
-        np.testing.assert_allclose(
-            result.adjacency, result.adjacency.T, atol=1e-8
-        )
-
-    def test_adjacency_zero_diagonal(self):
-        # No self-loops: every node has zero weight to itself.
-        result = build(_independent_data())
-        np.testing.assert_allclose(np.diag(result.adjacency), 0.0, atol=1e-10)
+        assert isinstance(build(_independent_data()), FeatureGraph)
 
     def test_nodes_match_feature_count(self):
         # Number of node labels must equal d.
-        data = _independent_data(n=50, d=5)
-        result = build(data)
-        assert len(result.nodes) == 5
+        assert len(build(_independent_data(n=50, d=5)).nodes) == 5
 
     def test_nodes_are_string_feature_indices(self):
         # Node identifiers are the string representations of column indices.
-        data = _independent_data(n=50, d=4)
-        result = build(data)
-        assert result.nodes == ["0", "1", "2", "3"]
+        assert build(_independent_data(n=50, d=4)).nodes == ["0", "1", "2", "3"]
 
-    def test_stats_keys_present(self):
-        # All four stats keys must be present regardless of graph structure.
-        result = build(_independent_data())
-        for key in ("n_edges", "density", "n_components", "avg_degree"):
-            assert key in result.stats, f"Missing stat key: {key}"
-
-    def test_adjacency_non_negative(self):
-        # Edge weights must be non-negative after thresholding.
-        result = build(_independent_data())
-        assert np.all(result.adjacency >= 0)
+    def test_all_stats_keys_present(self):
+        # All four stats keys must be populated regardless of graph structure.
+        stats = build(_independent_data()).stats
+        expected = {"n_edges", "density", "n_components", "avg_degree"}
+        assert expected.issubset(stats.keys())
 
     def test_nan_in_data_does_not_crash(self):
-        # NaN values are imputed; the function must not raise.
+        # NaN values are imputed with 0; build() must not raise.
         data = _independent_data()
         data[0, 0] = np.nan
-        result = build(data)
-        assert isinstance(result, FeatureGraph)
+        assert isinstance(build(data), FeatureGraph)
 
     def test_correlated_data_has_edges(self):
-        # Highly correlated feature pairs should produce at least some edges.
-        result = build(_correlated_data())
-        assert result.stats["n_edges"] > 0
+        # Highly correlated feature pairs should survive the adaptive threshold.
+        assert build(_correlated_data()).stats["n_edges"] > 0
 
 
 # ---------------------------------------------------------------------------
