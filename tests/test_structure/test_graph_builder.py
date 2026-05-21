@@ -258,19 +258,16 @@ class TestPrecisionToPartialCorr:
 
 
 # ---------------------------------------------------------------------------
-# Thresholding and utility helpers
+# Thresholding and combining helpers
 # ---------------------------------------------------------------------------
 
-class TestHelpers:
+class TestGraphCombineAndThreshold:
     def test_adaptive_threshold_formula(self):
         # Known matrix: upper triangle = [0.1, 0.9]; mean=0.5, std≈0.4.
-        w = np.array([[0.0, 0.1], [0.1, 0.0]])
-        w2 = np.array([[0.0, 0.9], [0.9, 0.0]])
-        combined = np.array([[0.0, 0.5], [0.5, 0.0]])  # mean of above
+        combined = np.array([[0.0, 0.5], [0.5, 0.0]])  # mean of two matrices
         upper = np.array([0.5])
         expected = float(np.mean(upper) + 1.5 * np.std(upper))
-        result = _adaptive_threshold(combined)
-        assert result == pytest.approx(expected)
+        assert _adaptive_threshold(combined) == pytest.approx(expected)
 
     def test_combine_graphs_elementwise_mean(self):
         # Three (2,2) matrices → element-wise mean.
@@ -294,27 +291,37 @@ class TestHelpers:
         _threshold_graph(w, 0.5)
         np.testing.assert_array_equal(w, original)
 
-    def test_validate_graph_valid(self):
+
+# ---------------------------------------------------------------------------
+# Graph validation
+# ---------------------------------------------------------------------------
+
+class TestValidateGraph:
+    def test_valid_graph_returns_true(self):
         # A symmetric, non-negative, zero-diagonal matrix is valid.
-        g = np.array([[0.0, 0.5], [0.5, 0.0]])
-        assert _validate_graph(g) is True
+        assert _validate_graph(np.array([[0.0, 0.5], [0.5, 0.0]])) is True
 
-    def test_validate_graph_non_symmetric(self):
+    def test_non_symmetric_returns_false(self):
         # Asymmetric matrix must fail validation.
-        g = np.array([[0.0, 0.3], [0.7, 0.0]])
-        assert _validate_graph(g) is False
+        assert _validate_graph(np.array([[0.0, 0.3], [0.7, 0.0]])) is False
 
-    def test_validate_graph_non_zero_diagonal(self):
+    def test_non_zero_diagonal_returns_false(self):
         # A self-loop (non-zero diagonal) must fail validation.
-        g = np.array([[1.0, 0.5], [0.5, 1.0]])
-        assert _validate_graph(g) is False
+        assert _validate_graph(np.array([[1.0, 0.5], [0.5, 1.0]])) is False
 
-    def test_compute_graph_stats_keys(self):
+
+# ---------------------------------------------------------------------------
+# Graph statistics
+# ---------------------------------------------------------------------------
+
+class TestComputeGraphStats:
+    def test_stats_keys_present(self):
+        # All four stat keys must be populated for any valid graph.
         g = np.array([[0.0, 0.7, 0.0], [0.7, 0.0, 0.4], [0.0, 0.4, 0.0]])
         stats = _compute_graph_stats(g)
         assert set(stats.keys()) == {"n_edges", "density", "n_components", "avg_degree"}
 
-    def test_compute_graph_stats_values(self):
+    def test_path_graph_stats_values(self):
         # 3-node path graph: 2 edges, density=2/3, 1 component.
         g = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
         stats = _compute_graph_stats(g)
