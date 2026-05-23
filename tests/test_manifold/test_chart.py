@@ -13,6 +13,7 @@ import numpy as np
 import structure.graph_builder as graph_builder
 from common import nn_utils
 from common.types import EigenBasis
+from fourier.graph_fourier import GraphFourierEngine
 from manifold.chart import (
     Chart,
     _compute_chart_inverse,
@@ -43,7 +44,6 @@ def _subspace_data(
 
 def _reference_basis(data: np.ndarray) -> EigenBasis:
     """Build a global EigenBasis from the full graph Laplacian of *data*."""
-    from fourier.graph_fourier import GraphFourierEngine
     fg = graph_builder.build(data)
     return GraphFourierEngine(fg).basis
 
@@ -209,7 +209,6 @@ class TestSelectBasisAdaptive:
         """Returns correct length."""
         data, _ = _subspace_data(n=30)
         ref = _reference_basis(data)
-        from fourier.graph_fourier import GraphFourierEngine
         fg = graph_builder.build(data)
         aligned = align_to_reference(GraphFourierEngine(fg).basis, ref)
         sel = _select_basis_adaptive(aligned, data, intrinsic_dim=2)
@@ -219,7 +218,6 @@ class TestSelectBasisAdaptive:
         """Indices in valid range."""
         data, _ = _subspace_data(n=30)
         ref = _reference_basis(data)
-        from fourier.graph_fourier import GraphFourierEngine
         fg = graph_builder.build(data)
         aligned = align_to_reference(GraphFourierEngine(fg).basis, ref)
         k = aligned.eigenvectors.shape[1]

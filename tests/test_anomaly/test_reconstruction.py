@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+import structure.graph_builder as gb
 
 from anomaly.reconstruction import (
     _batch_reconstruct,
@@ -15,6 +16,10 @@ from anomaly.reconstruction import (
     _find_chart,
     reconstruct,
 )
+from common.types import FourierType, StructureType
+from fourier import analyze_fourier
+from manifold import build_manifold
+from structure.report import StructureReport
 
 
 # ---------------------------------------------------------------------------
@@ -24,12 +29,6 @@ from anomaly.reconstruction import (
 @pytest.fixture(scope="module", name="manifold_fixture")
 def _manifold_fixture():
     """Manifold fixture."""
-    from common.types import FourierType, StructureType
-    from fourier import analyze_fourier
-    from manifold import build_manifold
-    from structure.report import StructureReport
-    import structure.graph_builder as gb
-
     rng = np.random.default_rng(0)
     d, intrinsic, n = 5, 2, 100
     orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
@@ -81,7 +80,8 @@ class TestReconstruct:
 
     def test_reconstructed_lies_in_chart_span(self, manifold_fixture):
         """Reconstructed lies in chart span."""
-        # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs); the residual has zero projection onto basis_vecs.
+        # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs);
+        # the residual has zero projection onto basis_vecs.
         mf, data = manifold_fixture
         _, residuals = reconstruct(data, mf)
         for i in range(len(data)):

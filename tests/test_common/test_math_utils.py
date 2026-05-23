@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from scipy.linalg import expm
 
 from common.math_utils import (
     distance_matrix,
@@ -266,8 +267,6 @@ def test_matrix_log_of_identity_is_zero() -> None:
 
 def test_matrix_log_inverse_of_expm() -> None:
     """Matrix log inverse of expm."""
-    from scipy.linalg import expm
-
     mat_a = np.array([[0.1, 0.0], [0.0, 0.2]])
     np.testing.assert_allclose(matrix_log(expm(mat_a)), mat_a, atol=1e-10)
 

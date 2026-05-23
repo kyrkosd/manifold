@@ -9,6 +9,7 @@ before they surface through the public validate() interface.
 """
 from __future__ import annotations
 
+import logging
 import numpy as np
 import pandas as pd
 import pytest
@@ -144,7 +145,6 @@ class TestValidateSuccess:
     def test_constant_column_reported(self, caplog):
         """Constant column reported."""
         # A zero-variance column triggers a WARNING and is listed in constant_dims.
-        import logging
         arr = _valid_array()
         arr[:, 1] = 5.0  # overwrite column 1 with a constant value
         with caplog.at_level(logging.WARNING, logger="fmas"):

@@ -12,6 +12,7 @@ import pytest
 import structure.graph_builder as graph_builder
 from common import nn_utils
 from common.types import AlignmentQuality
+from fourier.graph_fourier import GraphFourierEngine
 from manifold.chart import Chart, build, _define_chart_map, _compute_chart_inverse
 from manifold.chart_validator import (
     _check_continuity,
@@ -46,7 +47,6 @@ def _good_chart(seed: int = 1) -> tuple[Chart, np.ndarray]:
     data, _ = _subspace_data(n=60, seed=seed)
     region_indices = np.arange(40, dtype=np.intp)
     region_data = data[region_indices]
-    from fourier.graph_fourier import GraphFourierEngine
     fg = graph_builder.build(data)
     ref = GraphFourierEngine(fg).basis
     idx = nn_utils.build_faiss_index(data)

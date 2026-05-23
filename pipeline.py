@@ -8,9 +8,11 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+import structure as structure_mod
 from anomaly import AnomalyResults, detect_anomalies
 from config import PipelineConfig, default_config
 from fourier import SpectralData, analyze_fourier
+from ingestion import ingest
 from manifold import Manifold, build_manifold
 from reporting import AnomalyReport, generate_report
 from structure.report import StructureReport
@@ -107,12 +109,10 @@ class FourierManifoldPipeline:
     # ------------------------------------------------------------------
 
     def _ingest(self, data: np.ndarray | pd.DataFrame) -> np.ndarray:
-        from ingestion import ingest
         clean = ingest(data)
         return clean.data
 
     def _discover_structure(self, data: np.ndarray) -> StructureReport:
-        import structure as structure_mod
         return structure_mod.discover_structure(data)
 
     def _fourier_analyze(

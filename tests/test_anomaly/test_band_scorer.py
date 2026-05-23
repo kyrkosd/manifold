@@ -17,7 +17,12 @@ from anomaly.band_scorer import (
 )
 from anomaly.reconstruction import reconstruct
 from anomaly.residual import compute as compute_residuals
-from common.types import FrequencyBand
+from anomaly.threshold import _adaptive_threshold, _flag_points
+from common.types import FrequencyBand, FourierType, StructureType
+from fourier import analyze_fourier
+from manifold import build_manifold
+from structure.report import StructureReport
+import structure.graph_builder as gb
 
 
 # ---------------------------------------------------------------------------
@@ -27,12 +32,6 @@ from common.types import FrequencyBand
 @pytest.fixture(scope="module", name="manifold_fixture")
 def _manifold_fixture():
     """Manifold fixture."""
-    from common.types import FourierType, StructureType
-    from fourier import analyze_fourier
-    from manifold import build_manifold
-    from structure.report import StructureReport
-    import structure.graph_builder as gb
-
     rng = np.random.default_rng(2)
     d, intrinsic, n = 5, 2, 100
     orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
@@ -237,8 +236,6 @@ class TestBandSpecificAnomalyDetection:
 
     def test_l2_misses_at_least_some_anomalies(self):
         """L2 misses at least some anomalies."""
-        from anomaly.threshold import _adaptive_threshold, _flag_points
-
         _, total, anomaly_mask, _ = self._make_data()
         threshold = _adaptive_threshold(total)
         l2_flags = _flag_points(total, threshold)

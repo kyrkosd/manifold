@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.stats import spearmanr
 
+import manifold.chart_validator as chart_validator
 from common import nn_utils
 from common.exceptions import ChartError
 from common.types import EigenBasis
@@ -80,8 +81,6 @@ def build(
     ChartError
         When chart validation fails (injectivity hard gate not met).
     """
-    import manifold.chart_validator as chart_validator
-
     region_indices_arr, expanded_indices = _expand_region(
         region_indices, full_data, faiss_index, overlap_factor
     )

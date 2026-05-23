@@ -107,7 +107,9 @@ def numerical_jacobian(
     for i in range(n):
         delta = np.zeros(n)
         delta[i] = eps
-        jacobian[:, i] = (np.atleast_1d(func(point + delta)) - np.atleast_1d(func(point - delta))) / (2 * eps)
+        jacobian[:, i] = (
+            np.atleast_1d(func(point + delta)) - np.atleast_1d(func(point - delta))
+        ) / (2 * eps)
     return jacobian
 
 
