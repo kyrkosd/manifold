@@ -57,8 +57,8 @@ def compute_space(
     # Map the ambient point to chart coordinates.
     z = chart_map(point)
     # Jacobian of φ⁻¹ at z: shape (ambient_dim, chart_dim).
-    J = _chart_derivatives(chart_inverse, z, eps)
-    tangent_basis = _span_basis(J)
+    jacobian = _chart_derivatives(chart_inverse, z, eps)
+    tangent_basis = _span_basis(jacobian)
     ambient_dim = tangent_basis.shape[0]
     chart_dim = tangent_basis.shape[1]
     normal_basis = compute_normal_space(tangent_basis, ambient_dim)
@@ -171,10 +171,10 @@ def _tangent_variation(
         return 0.0
     angles = []
     for i in range(len(tangent_spaces) - 1):
-        A, B = tangent_spaces[i], tangent_spaces[i + 1]
-        # Singular values of A.T @ B equal cosines of principal angles.
-        s = np.linalg.svd(A.T @ B, compute_uv=False)
-        cos_vals = np.clip(s, -1.0, 1.0)
+        basis_a, basis_b = tangent_spaces[i], tangent_spaces[i + 1]
+        # Singular values of basis_a.T @ basis_b equal cosines of principal angles.
+        sing_vals = np.linalg.svd(basis_a.T @ basis_b, compute_uv=False)
+        cos_vals = np.clip(sing_vals, -1.0, 1.0)
         # Maximum principal angle between the two subspaces.
         angles.append(float(np.max(np.arccos(cos_vals))))
     return float(np.mean(angles))

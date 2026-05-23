@@ -245,15 +245,15 @@ class TestPartialCorrelationGraph:
 class TestPrecisionToPartialCorr:
     def test_identity_precision_gives_zero_partial_corr(self):
         # Identity precision matrix → no off-diagonal partial correlation.
-        P = np.eye(4)
-        result = _precision_to_partial_corr(P)
+        prec_mat = np.eye(4)
+        result = _precision_to_partial_corr(prec_mat)
         np.testing.assert_allclose(result, 0.0, atol=1e-10)
 
     def test_output_clipped_to_unit_interval(self):
         # Even with a numerically ill-conditioned matrix, output must be in [0, 1].
-        P = np.full((3, 3), 100.0)
-        np.fill_diagonal(P, 200.0)
-        result = _precision_to_partial_corr(P)
+        prec_mat = np.full((3, 3), 100.0)
+        np.fill_diagonal(prec_mat, 200.0)
+        result = _precision_to_partial_corr(prec_mat)
         assert np.all(result >= 0) and np.all(result <= 1.0 + 1e-8)
 
 

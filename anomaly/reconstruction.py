@@ -107,10 +107,10 @@ def _batch_reconstruct(
             if not local_mask.any():
                 continue
             local_data = batch_data[local_mask]           # (m, d)
-            V = chart.selected_vectors                     # (d, k)
-            # Encode: coords = V.T @ local_data.T → (k, m); decode: V @ coords → (d, m)
-            coords = local_data @ V                        # (m, k)
-            recon = coords @ V.T                           # (m, d)
+            basis_vecs = chart.selected_vectors            # (d, k)
+            # Encode: coords = basis_vecs.T @ local_data.T → (k, m); decode: basis_vecs @ coords → (d, m)
+            coords = local_data @ basis_vecs               # (m, k)
+            recon = coords @ basis_vecs.T                  # (m, d)
             reconstructed[start:end][local_mask] = recon
 
     return reconstructed, data - reconstructed

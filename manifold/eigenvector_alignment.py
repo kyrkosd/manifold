@@ -58,13 +58,13 @@ def align_to_reference(
     )
     # Correct sign ambiguity after ordering; must precede Procrustes.
     vecs = _correct_signs(vecs, reference_basis.eigenvectors)
-    R = _procrustes_rotation(vecs, reference_basis.eigenvectors)
-    vecs_aligned = vecs @ R
+    rotation = _procrustes_rotation(vecs, reference_basis.eigenvectors)
+    vecs_aligned = vecs @ rotation
     score = _compute_alignment_quality(vecs_aligned, reference_basis.eigenvectors)
     return AlignedBasis(
         eigenvectors=vecs_aligned,
         eigenvalues=vals,
-        rotation_matrix=R,
+        rotation_matrix=rotation,
         alignment_score=score,
         quality=_score_to_quality(score),
     )
@@ -135,12 +135,12 @@ def _procrustes_rotation(source: np.ndarray, target: np.ndarray) -> np.ndarray:
     -------
     np.ndarray : (k, k) orthogonal rotation matrix.
     """
-    M = source.T @ target
-    U, _s, Vt = np.linalg.svd(M)
+    cross_mat = source.T @ target
+    left_vecs, _sing_vals, right_vecs = np.linalg.svd(cross_mat)
     # Correct for potential reflection (det = -1).
-    d = float(np.linalg.det(U @ Vt))
-    correction = np.diag(np.concatenate([np.ones(len(_s) - 1), [d]]))
-    return U @ correction @ Vt
+    d = float(np.linalg.det(left_vecs @ right_vecs))
+    correction = np.diag(np.concatenate([np.ones(len(_sing_vals) - 1), [d]]))
+    return left_vecs @ correction @ right_vecs
 
 
 def _compute_alignment_quality(aligned: np.ndarray, reference: np.ndarray) -> float:

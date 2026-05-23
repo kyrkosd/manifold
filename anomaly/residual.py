@@ -119,10 +119,10 @@ def _batch_normal_residuals(
             normal_projs[ci] = np.zeros((chart.ambient_dim, chart.ambient_dim))
 
     normal_residuals = np.zeros_like(residuals)
-    for ci, P_N in normal_projs.items():
+    for ci, proj_normal in normal_projs.items():
         mask = assignments == ci
         if mask.any():
-            normal_residuals[mask] = residuals[mask] @ P_N.T  # (m, d) @ (d, d)
+            normal_residuals[mask] = residuals[mask] @ proj_normal.T  # (m, d) @ (d, d)
 
     return normal_residuals
 

@@ -76,14 +76,14 @@ def gram_schmidt(vectors: np.ndarray) -> np.ndarray:
     np.ndarray : (k, d) orthonormal matrix; linearly dependent rows → zero.
     """
     k, d = vectors.shape
-    Q = np.zeros((k, d), dtype=float)
+    orth_mat = np.zeros((k, d), dtype=float)
     for i in range(k):
         v = vectors[i].astype(float)
         for j in range(i):
-            v -= np.dot(v, Q[j]) * Q[j]
+            v -= np.dot(v, orth_mat[j]) * orth_mat[j]
         norm = np.linalg.norm(v)
-        Q[i] = v / norm if norm > 1e-10 else v
-    return Q
+        orth_mat[i] = v / norm if norm > 1e-10 else v
+    return orth_mat
 
 
 def numerical_jacobian(
@@ -103,12 +103,12 @@ def numerical_jacobian(
     """
     f0 = np.atleast_1d(func(point))
     m, n = f0.shape[0], point.shape[0]
-    J = np.zeros((m, n))
+    jacobian = np.zeros((m, n))
     for i in range(n):
         delta = np.zeros(n)
         delta[i] = eps
-        J[:, i] = (np.atleast_1d(func(point + delta)) - np.atleast_1d(func(point - delta))) / (2 * eps)
-    return J
+        jacobian[:, i] = (np.atleast_1d(func(point + delta)) - np.atleast_1d(func(point - delta))) / (2 * eps)
+    return jacobian
 
 
 def numerical_hessian(
@@ -129,16 +129,16 @@ def numerical_hessian(
     np.ndarray : (n, n) symmetric Hessian approximation.
     """
     n = point.shape[0]
-    H = np.zeros((n, n))
+    hessian = np.zeros((n, n))
     for i in range(n):
         for j in range(i, n):
             ei, ej = np.zeros(n), np.zeros(n)
             ei[i], ej[j] = eps, eps
-            H[i, j] = H[j, i] = (
+            hessian[i, j] = hessian[j, i] = (
                 func(point + ei + ej) - func(point + ei - ej)
                 - func(point - ei + ej) + func(point - ei - ej)
             ) / (4 * eps ** 2)
-    return H
+    return hessian
 
 
 def smooth_check(
@@ -243,11 +243,11 @@ def svd_wrapper(
     -------
     U, s, Vt : (m, k), (k,), (k, n) left vectors, singular values, right vectors.
     """
-    U, s, Vt = np.linalg.svd(matrix, full_matrices=False)
+    left_vecs, sing_vals, right_vecs = np.linalg.svd(matrix, full_matrices=False)
     if k is not None:
-        k = min(k, len(s))
-        return U[:, :k], s[:k], Vt[:k]
-    return U, s, Vt
+        k = min(k, len(sing_vals))
+        return left_vecs[:, :k], sing_vals[:k], right_vecs[:k]
+    return left_vecs, sing_vals, right_vecs
 
 
 def distance_matrix(points: np.ndarray, metric: str = "euclidean") -> np.ndarray:

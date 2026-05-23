@@ -277,10 +277,10 @@ def _define_chart_map(selected_vectors: np.ndarray) -> Callable:
     -------
     Callable (d,) → (intrinsic_dim,).
     """
-    V = selected_vectors  # capture by reference
+    basis_vecs = selected_vectors  # capture by reference
 
     def chart_map(p: np.ndarray) -> np.ndarray:
-        return V.T @ p
+        return basis_vecs.T @ p
 
     return chart_map
 
@@ -296,10 +296,10 @@ def _compute_chart_inverse(selected_vectors: np.ndarray) -> Callable:
     -------
     Callable (intrinsic_dim,) → (d,).
     """
-    V = selected_vectors
+    basis_vecs = selected_vectors
 
     def chart_inverse(z: np.ndarray) -> np.ndarray:
-        return V @ z
+        return basis_vecs @ z
 
     return chart_inverse
 

@@ -36,8 +36,8 @@ def _subspace_data(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Return (data, basis) for a 2-D subspace in 10-D with small noise."""
     rng = np.random.default_rng(seed)
-    Q, _ = np.linalg.qr(rng.standard_normal((ambient, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((ambient, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coeffs = rng.standard_normal((n, intrinsic))
     noise_mat = rng.standard_normal((n, ambient)) * noise
     return coeffs @ basis.T + noise_mat, basis
@@ -165,22 +165,22 @@ class TestExpandRegion:
 
 class TestChartMapAndInverse:
     def test_chart_map_is_linear_projection(self):
-        # chart_map(p) = V.T @ p.
+        # chart_map(p) = qr_mat.T @ p.
         rng = np.random.default_rng(5)
-        V, _ = np.linalg.qr(rng.standard_normal((8, 3)))
-        V = V[:, :3]
-        chart_map = _define_chart_map(V)
+        qr_mat, _ = np.linalg.qr(rng.standard_normal((8, 3)))
+        qr_mat = qr_mat[:, :3]
+        chart_map = _define_chart_map(qr_mat)
         p = rng.standard_normal(8)
-        np.testing.assert_allclose(chart_map(p), V.T @ p, atol=1e-12)
+        np.testing.assert_allclose(chart_map(p), qr_mat.T @ p, atol=1e-12)
 
     def test_chart_inverse_is_linear_reconstruction(self):
-        # chart_inverse(z) = V @ z.
+        # chart_inverse(z) = qr_mat @ z.
         rng = np.random.default_rng(6)
-        V, _ = np.linalg.qr(rng.standard_normal((8, 3)))
-        V = V[:, :3]
-        chart_inv = _compute_chart_inverse(V)
+        qr_mat, _ = np.linalg.qr(rng.standard_normal((8, 3)))
+        qr_mat = qr_mat[:, :3]
+        chart_inv = _compute_chart_inverse(qr_mat)
         z = rng.standard_normal(3)
-        np.testing.assert_allclose(chart_inv(z), V @ z, atol=1e-12)
+        np.testing.assert_allclose(chart_inv(z), qr_mat @ z, atol=1e-12)
 
 
 # ---------------------------------------------------------------------------

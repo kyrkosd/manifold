@@ -67,10 +67,10 @@ class TestGraphFourierInit:
         np.testing.assert_allclose(engine.basis.eigenvalues[1:], 4.0, atol=1e-8)
 
     def test_eigenvectors_orthonormal(self):
-        # U^T U = I; orthonormality guarantees an exact round-trip.
+        # eigenvec_mat^T @ eigenvec_mat = I; orthonormality guarantees an exact round-trip.
         engine = GraphFourierEngine(_p4_graph())
-        U = engine.basis.eigenvectors
-        np.testing.assert_allclose(U.T @ U, np.eye(4), atol=1e-10)
+        eigenvec_mat = engine.basis.eigenvectors
+        np.testing.assert_allclose(eigenvec_mat.T @ eigenvec_mat, np.eye(4), atol=1e-10)
 
 
 # ---------------------------------------------------------------------------

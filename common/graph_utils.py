@@ -45,8 +45,8 @@ def normalized_laplacian(adjacency: np.ndarray) -> np.ndarray:
     """
     d = adjacency.sum(axis=1)
     d_inv_sqrt = np.where(d > 0, d ** -0.5, 0.0)
-    D_inv_sqrt = np.diag(d_inv_sqrt)
-    return D_inv_sqrt @ laplacian(adjacency) @ D_inv_sqrt
+    degree_inv_sqrt = np.diag(d_inv_sqrt)
+    return degree_inv_sqrt @ laplacian(adjacency) @ degree_inv_sqrt
 
 
 def degree_matrix(adjacency: np.ndarray) -> np.ndarray:

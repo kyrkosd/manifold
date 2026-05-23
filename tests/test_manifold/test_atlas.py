@@ -32,8 +32,8 @@ def _make_embedded_plane(n: int = 120, d: int = 5, intrinsic: int = 2,
                           seed: int = 0) -> np.ndarray:
     """Return n points near a 2-D subspace in d-D ambient space."""
     rng = np.random.default_rng(seed)
-    Q, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coords = rng.standard_normal((n, intrinsic))
     return coords @ basis.T + rng.standard_normal((n, d)) * 0.03
 

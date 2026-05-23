@@ -155,15 +155,15 @@ def test_validate_symmetric_1d_false() -> None:
 
 
 def test_validate_symmetric_asymmetric_false() -> None:
-    # Off-diagonal elements differ; A[0,1]=2, A[1,0]=3.
-    A = np.array([[1.0, 2.0], [3.0, 1.0]])
-    assert validate_symmetric(A) is False
+    # Off-diagonal elements differ; mat_a[0,1]=2, mat_a[1,0]=3.
+    mat_a = np.array([[1.0, 2.0], [3.0, 1.0]])
+    assert validate_symmetric(mat_a) is False
 
 
 def test_validate_symmetric_near_symmetric_true() -> None:
     # Floating-point noise within atol=1e-8 must still be considered symmetric.
-    A = np.array([[1.0, 2.0], [2.0 + 1e-9, 1.0]])
-    assert validate_symmetric(A) is True
+    mat_a = np.array([[1.0, 2.0], [2.0 + 1e-9, 1.0]])
+    assert validate_symmetric(mat_a) is True
 
 
 # ---------------------------------------------------------------------------
@@ -177,14 +177,14 @@ def test_validate_positive_definite_identity() -> None:
 
 def test_validate_positive_definite_negative_eigenvalue_false() -> None:
     # A diagonal matrix with one negative entry is indefinite.
-    A = np.array([[1.0, 0.0], [0.0, -1.0]])
-    assert validate_positive_definite(A) is False
+    mat_a = np.array([[1.0, 0.0], [0.0, -1.0]])
+    assert validate_positive_definite(mat_a) is False
 
 
 def test_validate_positive_definite_singular_false() -> None:
     # A rank-1 matrix has a zero eigenvalue; not strictly positive definite.
-    A = np.array([[1.0, 1.0], [1.0, 1.0]])
-    assert validate_positive_definite(A) is False
+    mat_a = np.array([[1.0, 1.0], [1.0, 1.0]])
+    assert validate_positive_definite(mat_a) is False
 
 
 def test_validate_positive_definite_non_symmetric_false() -> None:
@@ -194,8 +194,8 @@ def test_validate_positive_definite_non_symmetric_false() -> None:
 
 def test_validate_positive_definite_2x2_spd() -> None:
     # [[4,2],[2,3]] has eigenvalues ~1.35 and ~5.65; both positive.
-    A = np.array([[4.0, 2.0], [2.0, 3.0]])
-    assert validate_positive_definite(A) is True
+    mat_a = np.array([[4.0, 2.0], [2.0, 3.0]])
+    assert validate_positive_definite(mat_a) is True
 
 
 # ---------------------------------------------------------------------------

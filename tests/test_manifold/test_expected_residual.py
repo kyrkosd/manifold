@@ -35,8 +35,8 @@ def _make_manifold_data(n: int = 80, d: int = 5, intrinsic: int = 2,
                         noise: float = 0.02, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
     """Return (data, basis) for n points near a 2-D subspace in d-D."""
     rng = np.random.default_rng(seed)
-    Q, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coords = rng.standard_normal((n, intrinsic))
     data = coords @ basis.T + rng.standard_normal((n, d)) * noise
     return data, basis
@@ -69,14 +69,14 @@ def _make_chart_for_data(data: np.ndarray, structure: StructureReport):
     k = structure.intrinsic_dim
     pca = PCA(n_components=k)
     pca.fit(data)
-    V = pca.components_.T   # (d, k) orthonormal columns
+    basis_vecs = pca.components_.T   # (d, k) orthonormal columns
 
-    chart_map = _define_chart_map(V)
-    chart_inv = _compute_chart_inverse(V)
+    chart_map = _define_chart_map(basis_vecs)
+    chart_inv = _compute_chart_inverse(basis_vecs)
     coords = _compute_coordinates(data, chart_map)
 
     dummy_basis = AlignedBasis(
-        eigenvectors=V,
+        eigenvectors=basis_vecs,
         eigenvalues=pca.explained_variance_,
         rotation_matrix=np.eye(k),
         alignment_score=1.0,
@@ -88,7 +88,7 @@ def _make_chart_for_data(data: np.ndarray, structure: StructureReport):
         expanded_indices=np.arange(len(data), dtype=np.intp),
         local_basis=dummy_basis,
         selected_indices=list(range(k)),
-        selected_vectors=V,
+        selected_vectors=basis_vecs,
         coordinates=coords,
         chart_map=chart_map,
         chart_inverse=chart_inv,

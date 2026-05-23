@@ -43,8 +43,8 @@ def test_laplacian_single_node() -> None:
 
 def test_normalized_laplacian_symmetric() -> None:
     adj = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
-    Ln = normalized_laplacian(adj)
-    np.testing.assert_allclose(Ln, Ln.T, atol=1e-10)
+    norm_lap = normalized_laplacian(adj)
+    np.testing.assert_allclose(norm_lap, norm_lap.T, atol=1e-10)
 
 
 def test_normalized_laplacian_eigenvalues_in_range() -> None:
@@ -56,9 +56,9 @@ def test_normalized_laplacian_eigenvalues_in_range() -> None:
 
 def test_normalized_laplacian_isolated_node_zero_row_col() -> None:
     adj = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
-    Ln = normalized_laplacian(adj)
-    np.testing.assert_allclose(Ln[0, :], np.zeros(3), atol=1e-10)
-    np.testing.assert_allclose(Ln[:, 0], np.zeros(3), atol=1e-10)
+    norm_lap = normalized_laplacian(adj)
+    np.testing.assert_allclose(norm_lap[0, :], np.zeros(3), atol=1e-10)
+    np.testing.assert_allclose(norm_lap[:, 0], np.zeros(3), atol=1e-10)
 
 
 # --- degree_matrix ---
@@ -70,8 +70,8 @@ def test_degree_matrix_diagonal() -> None:
 
 
 def test_degree_matrix_off_diagonal_zero() -> None:
-    D = degree_matrix(np.ones((4, 4)))
-    np.testing.assert_allclose(D - np.diag(np.diag(D)), np.zeros((4, 4)), atol=1e-10)
+    deg_mat = degree_matrix(np.ones((4, 4)))
+    np.testing.assert_allclose(deg_mat - np.diag(np.diag(deg_mat)), np.zeros((4, 4)), atol=1e-10)
 
 
 def test_degree_matrix_all_zeros() -> None:
@@ -140,8 +140,8 @@ def test_knn_graph_collinear_k1() -> None:
 
 
 def test_threshold_graph_removes_weak_edges() -> None:
-    W = np.array([[0.0, 0.3, 0.8], [0.3, 0.0, 0.5], [0.8, 0.5, 0.0]])
-    result = threshold_graph(W, threshold=0.5)
+    weight_mat = np.array([[0.0, 0.3, 0.8], [0.3, 0.0, 0.5], [0.8, 0.5, 0.0]])
+    result = threshold_graph(weight_mat, threshold=0.5)
     assert result[0, 1] == pytest.approx(0.0)
     assert result[0, 2] == pytest.approx(0.8)
 
@@ -153,10 +153,10 @@ def test_threshold_graph_boundary_retained() -> None:
 
 
 def test_threshold_graph_does_not_mutate_input() -> None:
-    W = np.array([[0.0, 0.5], [0.5, 0.0]])
-    original = W.copy()
-    threshold_graph(W, threshold=1.0)
-    np.testing.assert_allclose(W, original, atol=1e-10)
+    weight_mat = np.array([[0.0, 0.5], [0.5, 0.0]])
+    original = weight_mat.copy()
+    threshold_graph(weight_mat, threshold=1.0)
+    np.testing.assert_allclose(weight_mat, original, atol=1e-10)
 
 
 # --- dijkstra ---

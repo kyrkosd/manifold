@@ -24,8 +24,8 @@ from common.math_utils import (
 
 
 def test_eigendecompose_returns_ascending_eigenvalues() -> None:
-    A = np.array([[2.0, 1.0], [1.0, 2.0]])
-    vecs, vals = eigendecompose(A)
+    mat_a = np.array([[2.0, 1.0], [1.0, 2.0]])
+    vecs, vals = eigendecompose(mat_a)
     assert vals[0] <= vals[1]
 
 
@@ -35,14 +35,14 @@ def test_eigendecompose_identity_eigenvalues() -> None:
 
 
 def test_eigendecompose_eigenvectors_orthonormal() -> None:
-    A = np.array([[4.0, 2.0], [2.0, 3.0]])
-    vecs, _ = eigendecompose(A)
+    mat_a = np.array([[4.0, 2.0], [2.0, 3.0]])
+    vecs, _ = eigendecompose(mat_a)
     np.testing.assert_allclose(vecs.T @ vecs, np.eye(2), atol=1e-10)
 
 
 def test_eigendecompose_n_components_selects_smallest() -> None:
-    A = np.diag([1.0, 2.0, 3.0, 4.0])
-    vecs, vals = eigendecompose(A, n_components=2)
+    mat_a = np.diag([1.0, 2.0, 3.0, 4.0])
+    vecs, vals = eigendecompose(mat_a, n_components=2)
     assert vals.shape == (2,)
     np.testing.assert_allclose(vals, [1.0, 2.0], atol=1e-10)
 
@@ -110,10 +110,10 @@ def test_orthogonal_complement_wrong_dim_raises() -> None:
 
 
 def test_gram_schmidt_rows_orthonormal() -> None:
-    Q = gram_schmidt(np.array([[1.0, 1.0, 0.0], [1.0, 0.0, 1.0]]))
-    np.testing.assert_allclose(np.linalg.norm(Q[0]), 1.0, atol=1e-10)
-    np.testing.assert_allclose(np.linalg.norm(Q[1]), 1.0, atol=1e-10)
-    np.testing.assert_allclose(Q[0] @ Q[1], 0.0, atol=1e-10)
+    orth_mat = gram_schmidt(np.array([[1.0, 1.0, 0.0], [1.0, 0.0, 1.0]]))
+    np.testing.assert_allclose(np.linalg.norm(orth_mat[0]), 1.0, atol=1e-10)
+    np.testing.assert_allclose(np.linalg.norm(orth_mat[1]), 1.0, atol=1e-10)
+    np.testing.assert_allclose(orth_mat[0] @ orth_mat[1], 0.0, atol=1e-10)
 
 
 def test_gram_schmidt_single_vector() -> None:
@@ -123,23 +123,23 @@ def test_gram_schmidt_single_vector() -> None:
 
 
 def test_gram_schmidt_linearly_dependent_zero_row() -> None:
-    Q = gram_schmidt(np.array([[1.0, 0.0], [2.0, 0.0]]))
-    np.testing.assert_allclose(np.linalg.norm(Q[1]), 0.0, atol=1e-10)
+    orth_mat = gram_schmidt(np.array([[1.0, 0.0], [2.0, 0.0]]))
+    np.testing.assert_allclose(np.linalg.norm(orth_mat[1]), 0.0, atol=1e-10)
 
 
 # --- numerical_jacobian ---
 
 
 def test_numerical_jacobian_linear_map() -> None:
-    A = np.array([[1.0, 2.0], [3.0, 4.0]])
-    J = numerical_jacobian(lambda x: A @ x, np.zeros(2))
-    np.testing.assert_allclose(J, A, atol=1e-5)
+    mat_a = np.array([[1.0, 2.0], [3.0, 4.0]])
+    jacobian = numerical_jacobian(lambda x: mat_a @ x, np.zeros(2))
+    np.testing.assert_allclose(jacobian, mat_a, atol=1e-5)
 
 
 def test_numerical_jacobian_quadratic() -> None:
     func = lambda x: np.array([x[0] ** 2 + x[1] ** 2])
-    J = numerical_jacobian(func, np.array([1.0, 2.0]))
-    np.testing.assert_allclose(J, [[2.0, 4.0]], atol=1e-5)
+    jacobian = numerical_jacobian(func, np.array([1.0, 2.0]))
+    np.testing.assert_allclose(jacobian, [[2.0, 4.0]], atol=1e-5)
 
 
 def test_numerical_jacobian_shape() -> None:
@@ -151,38 +151,38 @@ def test_numerical_jacobian_shape() -> None:
 
 
 def test_numerical_hessian_quadratic_known() -> None:
-    # f(x) = x0^2 + 3*x1^2 → H = diag([2, 6])
+    # f(x) = x0^2 + 3*x1^2 → hessian = diag([2, 6])
     func = lambda x: x[0] ** 2 + 3 * x[1] ** 2
-    H = numerical_hessian(func, np.array([0.0, 0.0]))
-    np.testing.assert_allclose(H, [[2.0, 0.0], [0.0, 6.0]], atol=1e-4)
+    hessian = numerical_hessian(func, np.array([0.0, 0.0]))
+    np.testing.assert_allclose(hessian, [[2.0, 0.0], [0.0, 6.0]], atol=1e-4)
 
 
 def test_numerical_hessian_symmetric() -> None:
     func = lambda x: x[0] * x[1] + x[0] ** 2
-    H = numerical_hessian(func, np.array([1.0, 1.0]))
-    np.testing.assert_allclose(H, H.T, atol=1e-8)
+    hessian = numerical_hessian(func, np.array([1.0, 1.0]))
+    np.testing.assert_allclose(hessian, hessian.T, atol=1e-8)
 
 
 def test_numerical_hessian_cross_term() -> None:
-    # f(x) = x0*x1 → H[0,1] = H[1,0] = 1, diagonal = 0
+    # f(x) = x0*x1 → hessian[0,1] = hessian[1,0] = 1, diagonal = 0
     func = lambda x: x[0] * x[1]
-    H = numerical_hessian(func, np.zeros(2))
-    np.testing.assert_allclose(H[0, 1], 1.0, atol=1e-4)
-    np.testing.assert_allclose(H[1, 0], 1.0, atol=1e-4)
+    hessian = numerical_hessian(func, np.zeros(2))
+    np.testing.assert_allclose(hessian[0, 1], 1.0, atol=1e-4)
+    np.testing.assert_allclose(hessian[1, 0], 1.0, atol=1e-4)
 
 
 def test_numerical_hessian_shape() -> None:
     func = lambda x: float(x @ x)
-    H = numerical_hessian(func, np.zeros(4))
-    assert H.shape == (4, 4)
+    hessian = numerical_hessian(func, np.zeros(4))
+    assert hessian.shape == (4, 4)
 
 
 # --- smooth_check ---
 
 
 def test_smooth_check_linear_is_smooth() -> None:
-    A = np.eye(2)
-    func = lambda x: A @ x
+    mat_a = np.eye(2)
+    func = lambda x: mat_a @ x
     points = np.linspace([0.0, 0.0], [1.0, 1.0], 5)
     assert smooth_check(func, points) is True
 
@@ -236,8 +236,8 @@ def test_matrix_log_of_identity_is_zero() -> None:
 def test_matrix_log_inverse_of_expm() -> None:
     from scipy.linalg import expm
 
-    A = np.array([[0.1, 0.0], [0.0, 0.2]])
-    np.testing.assert_allclose(matrix_log(expm(A)), A, atol=1e-10)
+    mat_a = np.array([[0.1, 0.0], [0.0, 0.2]])
+    np.testing.assert_allclose(matrix_log(expm(mat_a)), mat_a, atol=1e-10)
 
 
 def test_matrix_log_shape_preserved() -> None:
@@ -248,31 +248,31 @@ def test_matrix_log_shape_preserved() -> None:
 
 
 def test_svd_wrapper_full_shapes() -> None:
-    A = np.random.default_rng(0).standard_normal((5, 3))
-    U, s, Vt = svd_wrapper(A)
-    assert U.shape == (5, 3)
-    assert s.shape == (3,)
-    assert Vt.shape == (3, 3)
+    mat_a = np.random.default_rng(0).standard_normal((5, 3))
+    left_vecs, sing_vals, right_vecs = svd_wrapper(mat_a)
+    assert left_vecs.shape == (5, 3)
+    assert sing_vals.shape == (3,)
+    assert right_vecs.shape == (3, 3)
 
 
 def test_svd_wrapper_truncated_k() -> None:
-    A = np.random.default_rng(1).standard_normal((6, 4))
-    U, s, Vt = svd_wrapper(A, k=2)
-    assert U.shape == (6, 2)
-    assert s.shape == (2,)
-    assert Vt.shape == (2, 4)
+    mat_a = np.random.default_rng(1).standard_normal((6, 4))
+    left_vecs, sing_vals, right_vecs = svd_wrapper(mat_a, k=2)
+    assert left_vecs.shape == (6, 2)
+    assert sing_vals.shape == (2,)
+    assert right_vecs.shape == (2, 4)
 
 
 def test_svd_wrapper_singular_values_descending() -> None:
-    A = np.diag([3.0, 1.0, 2.0])
-    _, s, _ = svd_wrapper(A)
-    assert list(s) == sorted(s, reverse=True)
+    mat_a = np.diag([3.0, 1.0, 2.0])
+    _, sing_vals, _ = svd_wrapper(mat_a)
+    assert list(sing_vals) == sorted(sing_vals, reverse=True)
 
 
 def test_svd_wrapper_k_larger_than_rank_clamped() -> None:
-    A = np.random.default_rng(2).standard_normal((4, 3))
-    _, s, _ = svd_wrapper(A, k=100)
-    assert len(s) == 3  # clamped to min(m, n)
+    mat_a = np.random.default_rng(2).standard_normal((4, 3))
+    _, sing_vals, _ = svd_wrapper(mat_a, k=100)
+    assert len(sing_vals) == 3  # clamped to min(m, n)
 
 
 # --- safe_normalize ---
@@ -296,17 +296,17 @@ def test_safe_normalize_already_unit() -> None:
 
 
 def test_distance_matrix_known_distance() -> None:
-    D = distance_matrix(np.array([[0.0, 0.0], [3.0, 4.0]]))
-    np.testing.assert_allclose(D[0, 1], 5.0, atol=1e-10)
-    np.testing.assert_allclose(D[0, 0], 0.0, atol=1e-10)
+    dist_mat = distance_matrix(np.array([[0.0, 0.0], [3.0, 4.0]]))
+    np.testing.assert_allclose(dist_mat[0, 1], 5.0, atol=1e-10)
+    np.testing.assert_allclose(dist_mat[0, 0], 0.0, atol=1e-10)
 
 
 def test_distance_matrix_symmetric() -> None:
-    D = distance_matrix(np.random.default_rng(1).standard_normal((5, 3)))
-    np.testing.assert_allclose(D, D.T, atol=1e-10)
+    dist_mat = distance_matrix(np.random.default_rng(1).standard_normal((5, 3)))
+    np.testing.assert_allclose(dist_mat, dist_mat.T, atol=1e-10)
 
 
 def test_distance_matrix_single_point() -> None:
-    D = distance_matrix(np.array([[1.0, 2.0]]))
-    assert D.shape == (1, 1)
-    np.testing.assert_allclose(D[0, 0], 0.0, atol=1e-10)
+    dist_mat = distance_matrix(np.array([[1.0, 2.0]]))
+    assert dist_mat.shape == (1, 1)
+    np.testing.assert_allclose(dist_mat[0, 0], 0.0, atol=1e-10)

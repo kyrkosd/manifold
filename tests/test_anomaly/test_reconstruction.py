@@ -32,8 +32,8 @@ def manifold_fixture():
 
     rng = np.random.default_rng(0)
     d, intrinsic, n = 5, 2, 100
-    Q, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coords = rng.standard_normal((n, intrinsic))
     data = coords @ basis.T + rng.standard_normal((n, d)) * 0.02
 
@@ -75,15 +75,15 @@ class TestReconstruct:
         np.testing.assert_allclose(residuals, data - reconstructed, atol=1e-12)
 
     def test_reconstructed_lies_in_chart_span(self, manifold_fixture):
-        # p̂ = V @ V.T @ p is in span(V); the residual has zero projection onto V.
+        # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs); the residual has zero projection onto basis_vecs.
         mf, data = manifold_fixture
         reconstructed, residuals = reconstruct(data, mf)
         for i in range(len(data)):
             ci = int(mf.atlas.primary_assignments[i])
-            V = mf.atlas.charts[ci].selected_vectors
-            # residual should be orthogonal to V's columns
+            basis_vecs = mf.atlas.charts[ci].selected_vectors
+            # residual should be orthogonal to basis_vecs's columns
             np.testing.assert_allclose(
-                V.T @ residuals[i], np.zeros(V.shape[1]), atol=1e-10
+                basis_vecs.T @ residuals[i], np.zeros(basis_vecs.shape[1]), atol=1e-10
             )
 
 

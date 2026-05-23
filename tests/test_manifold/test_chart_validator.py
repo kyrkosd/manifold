@@ -34,8 +34,8 @@ def _subspace_data(
     noise: float = 0.01, seed: int = 0
 ) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
-    Q, _ = np.linalg.qr(rng.standard_normal((ambient, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((ambient, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coeffs = rng.standard_normal((n, intrinsic))
     noise_mat = rng.standard_normal((n, ambient)) * noise
     return coeffs @ basis.T + noise_mat, basis

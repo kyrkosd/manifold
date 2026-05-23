@@ -27,8 +27,8 @@ from manifold.eigenvector_alignment import (
 def _ortho_basis(d: int, k: int, seed: int = 0) -> np.ndarray:
     """Return a (d, k) matrix with orthonormal columns."""
     rng = np.random.default_rng(seed)
-    Q, _ = np.linalg.qr(rng.standard_normal((d, k)))
-    return Q[:, :k]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, k)))
+    return orth_mat[:, :k]
 
 
 def _rotation_2d(theta: float) -> np.ndarray:
@@ -120,32 +120,32 @@ class TestAlignOrdering:
 
 class TestProcrustesRotation:
     def test_result_is_orthogonal(self):
-        # R @ R.T must be the identity for any input.
+        # rotation @ rotation.T must be the identity for any input.
         ref = _ortho_basis(4, 3, seed=7)
-        Q = np.linalg.qr(np.random.default_rng(8).standard_normal((3, 3)))[0]
-        R = _procrustes_rotation(ref @ Q, ref)
-        np.testing.assert_allclose(R @ R.T, np.eye(3), atol=1e-10)
+        orth_mat = np.linalg.qr(np.random.default_rng(8).standard_normal((3, 3)))[0]
+        rotation = _procrustes_rotation(ref @ orth_mat, ref)
+        np.testing.assert_allclose(rotation @ rotation.T, np.eye(3), atol=1e-10)
 
     def test_determinant_is_one(self):
         # A proper rotation has det = +1 (not a reflection).
         ref = _ortho_basis(4, 2, seed=9)
-        Q = _rotation_2d(0.7)
-        R = _procrustes_rotation(ref @ Q, ref)
-        assert np.linalg.det(R) == pytest.approx(1.0, abs=1e-10)
+        rot_mat = _rotation_2d(0.7)
+        rotation = _procrustes_rotation(ref @ rot_mat, ref)
+        assert np.linalg.det(rotation) == pytest.approx(1.0, abs=1e-10)
 
     def test_known_rotation_recovered(self):
-        # source = ref @ Q → R ≈ Q.T; then source @ R ≈ ref.
+        # source = ref @ rot_mat → rotation ≈ rot_mat.T; then source @ rotation ≈ ref.
         ref = _ortho_basis(5, 2, seed=10)
-        Q = _rotation_2d(np.pi / 4)
-        source = ref @ Q
-        R = _procrustes_rotation(source, ref)
-        np.testing.assert_allclose(source @ R, ref, atol=1e-10)
+        rot_mat = _rotation_2d(np.pi / 4)
+        source = ref @ rot_mat
+        rotation = _procrustes_rotation(source, ref)
+        np.testing.assert_allclose(source @ rotation, ref, atol=1e-10)
 
     def test_identical_inputs_give_identity(self):
-        # Rotating source = target: optimal R is the identity.
+        # Rotating source = target: optimal rotation is the identity.
         ref = _ortho_basis(4, 3, seed=11)
-        R = _procrustes_rotation(ref, ref)
-        np.testing.assert_allclose(ref @ R, ref, atol=1e-10)
+        rotation = _procrustes_rotation(ref, ref)
+        np.testing.assert_allclose(ref @ rotation, ref, atol=1e-10)
 
 
 # ---------------------------------------------------------------------------
@@ -190,12 +190,12 @@ class TestAlignToReference:
         assert isinstance(align_to_reference(local, ref), AlignedBasis)
 
     def test_rotation_matrix_is_orthogonal(self):
-        # The stored rotation_matrix must satisfy R @ R.T ≈ I.
+        # The stored rotation_matrix must satisfy rotation @ rotation.T ≈ I.
         ref = _eigen_basis(seed=15)
         local = _eigen_basis(seed=16)
         result = align_to_reference(local, ref)
-        R = result.rotation_matrix
-        np.testing.assert_allclose(R @ R.T, np.eye(R.shape[0]), atol=1e-10)
+        rotation = result.rotation_matrix
+        np.testing.assert_allclose(rotation @ rotation.T, np.eye(rotation.shape[0]), atol=1e-10)
 
     def test_score_near_one_for_same_basis(self):
         # Aligning a basis to itself must yield a near-perfect score.
@@ -209,10 +209,10 @@ class TestAlignToReference:
         assert align_to_reference(basis, basis).quality is AlignmentQuality.EXCELLENT
 
     def test_rotated_basis_aligns_well(self):
-        # source = ref @ Q: after alignment, eigenvectors should ≈ ref columns.
+        # source = ref @ rot_mat: after alignment, eigenvectors should ≈ ref columns.
         ref = _eigen_basis(d=5, k=2, seed=19)
-        Q = _rotation_2d(np.pi / 6)
-        rotated = EigenBasis(eigenvectors=ref.eigenvectors @ Q,
+        rot_mat = _rotation_2d(np.pi / 6)
+        rotated = EigenBasis(eigenvectors=ref.eigenvectors @ rot_mat,
                              eigenvalues=ref.eigenvalues.copy())
         result = align_to_reference(rotated, ref)
         np.testing.assert_allclose(result.eigenvectors,

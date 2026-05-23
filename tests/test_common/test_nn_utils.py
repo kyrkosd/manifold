@@ -46,29 +46,29 @@ def test_build_index_single_point() -> None:
 
 def test_query_knn_output_shapes() -> None:
     index = build_faiss_index(_DATA)
-    D, I = query_knn(index, _DATA[:2], k=2)
-    assert D.shape == (2, 2)
-    assert I.shape == (2, 2)
+    dists, idxs = query_knn(index, _DATA[:2], k=2)
+    assert dists.shape == (2, 2)
+    assert idxs.shape == (2, 2)
 
 
 def test_query_knn_self_is_nearest_neighbour() -> None:
     index = build_faiss_index(_DATA)
-    D, I = query_knn(index, _DATA, k=1)
-    np.testing.assert_allclose(D[:, 0], np.zeros(len(_DATA)), atol=1e-5)
-    np.testing.assert_array_equal(I[:, 0], np.arange(len(_DATA)))
+    dists, idxs = query_knn(index, _DATA, k=1)
+    np.testing.assert_allclose(dists[:, 0], np.zeros(len(_DATA)), atol=1e-5)
+    np.testing.assert_array_equal(idxs[:, 0], np.arange(len(_DATA)))
 
 
 def test_query_knn_distances_non_negative() -> None:
     index = build_faiss_index(_DATA)
-    D, _ = query_knn(index, _DATA, k=3)
-    assert np.all(D >= 0)
+    dists, _ = query_knn(index, _DATA, k=3)
+    assert np.all(dists >= 0)
 
 
 def test_query_knn_single_query_point() -> None:
     index = build_faiss_index(_DATA)
-    D, I = query_knn(index, _DATA[:1], k=2)
-    assert D.shape == (1, 2)
-    assert I.shape == (1, 2)
+    dists, idxs = query_knn(index, _DATA[:1], k=2)
+    assert dists.shape == (1, 2)
+    assert idxs.shape == (1, 2)
 
 
 # --- query_radius ---
@@ -111,23 +111,23 @@ def test_query_radius_zero_radius_returns_only_self() -> None:
 
 def test_batch_knn_matches_full_query_knn() -> None:
     index = build_faiss_index(_DATA)
-    D_batch, I_batch = batch_knn(index, _DATA, k=2, batch_size=2)
-    D_full, I_full = query_knn(index, _DATA, k=2)
-    np.testing.assert_allclose(D_batch, D_full, atol=1e-5)
-    np.testing.assert_array_equal(I_batch, I_full)
+    dists_batch, idxs_batch = batch_knn(index, _DATA, k=2, batch_size=2)
+    dists_full, idxs_full = query_knn(index, _DATA, k=2)
+    np.testing.assert_allclose(dists_batch, dists_full, atol=1e-5)
+    np.testing.assert_array_equal(idxs_batch, idxs_full)
 
 
 def test_batch_knn_output_shapes() -> None:
     index = build_faiss_index(_DATA)
-    D, I = batch_knn(index, _DATA, k=3, batch_size=1)
-    assert D.shape == (len(_DATA), 3)
-    assert I.shape == (len(_DATA), 3)
+    dists, idxs = batch_knn(index, _DATA, k=3, batch_size=1)
+    assert dists.shape == (len(_DATA), 3)
+    assert idxs.shape == (len(_DATA), 3)
 
 
 def test_batch_knn_batch_larger_than_data() -> None:
     index = build_faiss_index(_DATA)
-    D, I = batch_knn(index, _DATA, k=2, batch_size=10_000)
-    assert D.shape == (len(_DATA), 2)
+    dists, idxs = batch_knn(index, _DATA, k=2, batch_size=10_000)
+    assert dists.shape == (len(_DATA), 2)
 
 
 # --- rebuild_index ---

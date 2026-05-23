@@ -34,8 +34,8 @@ def manifold_fixture():
 
     rng = np.random.default_rng(2)
     d, intrinsic, n = 5, 2, 100
-    Q, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
-    basis = Q[:, :intrinsic]
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
+    basis = orth_mat[:, :intrinsic]
     coords = rng.standard_normal((n, intrinsic))
     data = coords @ basis.T + rng.standard_normal((n, d)) * 0.02
 
