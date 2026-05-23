@@ -13,7 +13,7 @@ import structure.graph_builder as graph_builder
 from common import nn_utils
 from common.types import AlignmentQuality
 from fourier.graph_fourier import GraphFourierEngine
-from manifold.chart import Chart, ChartBuildParams, build, _define_chart_map, _compute_chart_inverse
+from manifold.chart import Chart, ChartBasis, ChartBuildParams, ChartRegion, build, _define_chart_map, _compute_chart_inverse
 from manifold.chart_validator import (
     _check_continuity,
     _check_injectivity,
@@ -88,12 +88,14 @@ def _bad_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
     chart_inv = _compute_chart_inverse(rand_vecs)
     coords = np.stack([chart_map(p) for p in data])
 
+    idx = np.arange(n, dtype=np.intp)
     return Chart(
-        region_indices=np.arange(n, dtype=np.intp),
-        expanded_indices=np.arange(n, dtype=np.intp),
-        local_basis=dummy_basis,
-        selected_indices=[0, 1],
-        selected_vectors=rand_vecs,
+        region=ChartRegion(core=idx, expanded=idx),
+        basis=ChartBasis(
+            local=dummy_basis,
+            selected_indices=[0, 1],
+            selected_vectors=rand_vecs,
+        ),
         coordinates=coords,
         chart_map=chart_map,
         chart_inverse=chart_inv,

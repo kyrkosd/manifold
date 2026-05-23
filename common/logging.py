@@ -8,7 +8,7 @@ import logging
 import sys
 
 _DEFAULT_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-_CONFIGURED = False
+_CONFIGURED = [False]  # mutable sentinel; mutated in-place to avoid global statement
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -42,12 +42,11 @@ def setup_logging(
     log_format:
         Log record format string; defaults to the FMAS standard format.
     """
-    global _CONFIGURED  # noqa: PLW0603
-    if _CONFIGURED:
+    if _CONFIGURED[0]:
         return
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter(log_format or _DEFAULT_FORMAT))
     root = logging.getLogger("fmas")
     root.addHandler(handler)
     root.setLevel(level)
-    _CONFIGURED = True
+    _CONFIGURED[0] = True

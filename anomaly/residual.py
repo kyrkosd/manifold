@@ -83,7 +83,7 @@ def _normal_residual(
     -------
     np.ndarray : (d,) normal-space component of *residual*.
     """
-    normal_basis = compute_normal_space(chart.selected_vectors, chart.ambient_dim)
+    normal_basis = compute_normal_space(chart.basis.selected_vectors, chart.ambient_dim)
     return _project_to_normal(residual, normal_basis)
 
 
@@ -112,7 +112,7 @@ def _batch_normal_residuals(
     # Precompute normal projection matrices: P_N = N @ N.T for each chart.
     normal_projs: dict[int, np.ndarray] = {}
     for ci, chart in enumerate(charts):
-        nb = compute_normal_space(chart.selected_vectors, chart.ambient_dim)
+        nb = compute_normal_space(chart.basis.selected_vectors, chart.ambient_dim)
         if nb.shape[1] > 0:
             normal_projs[ci] = nb @ nb.T   # (d, d) projection matrix
         else:

@@ -86,7 +86,7 @@ class TestReconstruct:
         _, residuals = reconstruct(data, mf)
         for i in range(len(data)):
             ci = int(mf.atlas.primary_assignments[i])
-            basis_vecs = mf.atlas.charts[ci].selected_vectors
+            basis_vecs = mf.atlas.charts[ci].basis.selected_vectors
             # residual should be orthogonal to basis_vecs's columns
             np.testing.assert_allclose(
                 basis_vecs.T @ residuals[i], np.zeros(basis_vecs.shape[1]), atol=1e-10

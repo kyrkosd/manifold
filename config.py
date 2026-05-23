@@ -13,6 +13,10 @@ class IngestionConfig(BaseModel):
         """Return semantic validation warnings for this config."""
         return []
 
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
+
 
 class StructureConfig(BaseModel):
     """Configuration for the structure discovery phase."""
@@ -25,6 +29,10 @@ class StructureConfig(BaseModel):
     def validate_values(self) -> list[str]:
         """Return semantic validation warnings for this config."""
         return []
+
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
 
 
 class FourierConfig(BaseModel):
@@ -40,6 +48,10 @@ class FourierConfig(BaseModel):
         if self.min_bands > self.max_bands:
             warnings.append("min_bands > max_bands")
         return warnings
+
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
 
 
 class ManifoldConfig(BaseModel):
@@ -59,6 +71,10 @@ class ManifoldConfig(BaseModel):
             warnings.append("max_chart_retries must be positive")
         return warnings
 
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
+
 
 class AnomalyConfig(BaseModel):
     """Configuration for the anomaly detection phase."""
@@ -74,6 +90,10 @@ class AnomalyConfig(BaseModel):
             warnings.append("contamination should be in (0, 0.5)")
         return warnings
 
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
+
 
 class FAISSConfig(BaseModel):
     """Configuration for the FAISS nearest-neighbour index."""
@@ -88,6 +108,10 @@ class FAISSConfig(BaseModel):
         if self.k_neighbors <= 0:
             warnings.append("k_neighbors must be positive")
         return warnings
+
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
 
 
 class PipelineConfig(BaseModel):
@@ -109,6 +133,10 @@ class PipelineConfig(BaseModel):
                     self.manifold, self.anomaly, self.faiss):
             warnings.extend(sub.validate_values())
         return warnings
+
+    def is_valid(self) -> bool:
+        """Return True when validate_values produces no warnings."""
+        return not self.validate_values()
 
 
 def default_config() -> PipelineConfig:

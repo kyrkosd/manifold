@@ -115,7 +115,7 @@ class TestNormalResidual:
         # A pure tangent vector has no normal component.
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
-        tangent_vec = chart.selected_vectors[:, 0]   # column of V
+        tangent_vec = chart.basis.selected_vectors[:, 0]   # column of V
         result = _normal_residual(tangent_vec, data[0], chart)
         np.testing.assert_allclose(np.linalg.norm(result), 0.0, atol=1e-10)
 

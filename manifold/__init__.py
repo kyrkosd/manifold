@@ -64,7 +64,7 @@ def build_manifold(
 
     expected_residuals: dict[int, ExpectedResidualDistribution] = {}
     for i, chart in enumerate(atlas.charts):
-        region_data = data[chart.region_indices]
+        region_data = data[chart.region.core]
         expected_residuals[i] = expected_residual_mod.compute(
             chart, region_data, spectral.bands, spectral.basis
         )

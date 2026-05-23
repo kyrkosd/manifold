@@ -79,7 +79,7 @@ def _compute_coverage_pct(charts: list, n_points: int) -> float:
     """Return the fraction of n_points covered by at least one chart."""
     covered: set[int] = set()
     for c in charts:
-        covered.update(c.region_indices.tolist())
+        covered.update(c.region.core.tolist())
     return len(covered) / n_points if n_points > 0 else 0.0
 
 
@@ -191,8 +191,8 @@ def _build_all_charts(
             if len(charts) == 1:
                 # Align all subsequent charts to the first chart's local basis.
                 reference_basis = EigenBasis(
-                    eigenvectors=charts[0].local_basis.eigenvectors,
-                    eigenvalues=charts[0].local_basis.eigenvalues,
+                    eigenvectors=charts[0].basis.local.eigenvectors,
+                    eigenvalues=charts[0].basis.local.eigenvalues,
                 )
     return charts
 
@@ -238,7 +238,7 @@ def _verify_coverage(charts: list, n_points: int) -> bool:
     """Return True when every point index appears in at least one chart."""
     covered = set()
     for c in charts:
-        covered.update(c.region_indices.tolist())
+        covered.update(c.region.core.tolist())
     return len(covered) >= n_points
 
 
@@ -258,8 +258,8 @@ def _assign_primary_charts(charts: list, n_points: int) -> np.ndarray:
     best_scores = np.full(n_points, -np.inf)
 
     for ci, chart in enumerate(charts):
-        score = chart.local_basis.alignment_score
-        for idx in chart.region_indices:
+        score = chart.basis.local.alignment_score
+        for idx in chart.region.core:
             if score > best_scores[idx]:
                 best_scores[idx] = score
                 assignments[idx] = ci
@@ -280,7 +280,7 @@ def _find_overlaps(
     -------
     list of (i, j, shared_indices) for every chart pair with non-empty overlap.
     """
-    index_sets = [set(c.region_indices.tolist()) for c in charts]
+    index_sets = [set(c.region.core.tolist()) for c in charts]
     overlaps = []
     for i in range(len(charts)):
         for j in range(i + 1, len(charts)):

@@ -84,7 +84,7 @@ def _reconstruct_batch(
         if not mask.any():
             continue
         local_data = batch_data[mask]
-        basis_vecs = chart.selected_vectors
+        basis_vecs = chart.basis.selected_vectors
         result[mask] = (local_data @ basis_vecs) @ basis_vecs.T
     return result
 

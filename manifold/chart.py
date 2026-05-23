@@ -21,16 +21,30 @@ from manifold.eigenvector_alignment import AlignedBasis, align_to_reference
 
 
 @dataclass
+class ChartRegion:
+    """Core and expanded region index arrays for a chart patch."""
+
+    core: np.ndarray      # (n_region,) indices into full_data
+    expanded: np.ndarray  # (n_expanded,) includes overlap boundary points
+
+
+@dataclass
+class ChartBasis:
+    """Local eigenbasis components for a chart's coordinate system."""
+
+    local: AlignedBasis              # aligned to reference eigenbasis
+    selected_indices: list[int]      # column indices of selected eigenvectors
+    selected_vectors: np.ndarray     # (ambient_dim, intrinsic_dim)
+
+
+@dataclass
 class Chart:
     """A local coordinate patch on the data manifold.
 
     Parameters
     ----------
-    region_indices : (n_region,) indices into *full_data* of core region points.
-    expanded_indices : (n_expanded,) indices including overlap boundary points.
-    local_basis : AlignedBasis for this patch, aligned to a reference.
-    selected_indices : (intrinsic_dim,) column indices of selected eigenvectors.
-    selected_vectors : (ambient_dim, intrinsic_dim) chart basis vectors.
+    region : ChartRegion with core and expanded index arrays.
+    basis : ChartBasis with local eigenbasis and selected vectors.
     coordinates : (n_region, intrinsic_dim) chart coordinates of region points.
     chart_map : callable (ambient_dim,) → (intrinsic_dim,).
     chart_inverse : callable (intrinsic_dim,) → (ambient_dim,).
@@ -38,14 +52,11 @@ class Chart:
     ambient_dim : ambient embedding dimension.
     """
 
-    region_indices: np.ndarray       # (n_region,)
-    expanded_indices: np.ndarray     # (n_expanded,)
-    local_basis: AlignedBasis
-    selected_indices: list[int]      # length intrinsic_dim
-    selected_vectors: np.ndarray     # (ambient_dim, intrinsic_dim)
-    coordinates: np.ndarray          # (n_region, intrinsic_dim)
-    chart_map: Callable              # (ambient_dim,) → (intrinsic_dim,)
-    chart_inverse: Callable          # (intrinsic_dim,) → (ambient_dim,)
+    region: ChartRegion
+    basis: ChartBasis
+    coordinates: np.ndarray     # (n_region, intrinsic_dim)
+    chart_map: Callable         # (ambient_dim,) → (intrinsic_dim,)
+    chart_inverse: Callable     # (intrinsic_dim,) → (ambient_dim,)
     intrinsic_dim: int
     ambient_dim: int
 
@@ -87,11 +98,12 @@ def _assemble_chart(region_data: np.ndarray, spec: _ChartSpec) -> Chart:
     chart_inverse = _compute_chart_inverse(sel_vectors)
     coordinates = _compute_coordinates(region_data, chart_map)
     return Chart(
-        region_indices=spec.region_indices,
-        expanded_indices=spec.expanded_indices,
-        local_basis=spec.aligned,
-        selected_indices=spec.sel_indices,
-        selected_vectors=sel_vectors,
+        region=ChartRegion(core=spec.region_indices, expanded=spec.expanded_indices),
+        basis=ChartBasis(
+            local=spec.aligned,
+            selected_indices=spec.sel_indices,
+            selected_vectors=sel_vectors,
+        ),
         coordinates=coordinates,
         chart_map=chart_map,
         chart_inverse=chart_inverse,

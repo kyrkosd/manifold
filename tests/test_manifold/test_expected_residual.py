@@ -12,7 +12,7 @@ import pytest
 from sklearn.decomposition import PCA
 from common.types import AlignmentQuality, FourierType, StructureType
 from fourier import SpectralData, analyze_fourier
-from manifold.chart import Chart, _compute_chart_inverse, _compute_coordinates, _define_chart_map
+from manifold.chart import Chart, ChartBasis, ChartRegion, _compute_chart_inverse, _compute_coordinates, _define_chart_map
 from manifold.eigenvector_alignment import AlignedBasis
 from manifold.expected_residual import (
     ExpectedResidualDistribution,
@@ -76,12 +76,14 @@ def _make_chart_for_data(data: np.ndarray, structure: StructureReport):
         quality=AlignmentQuality.EXCELLENT,
     )
 
+    idx = np.arange(len(data), dtype=np.intp)
     return Chart(
-        region_indices=np.arange(len(data), dtype=np.intp),
-        expanded_indices=np.arange(len(data), dtype=np.intp),
-        local_basis=dummy_basis,
-        selected_indices=list(range(k)),
-        selected_vectors=basis_vecs,
+        region=ChartRegion(core=idx, expanded=idx),
+        basis=ChartBasis(
+            local=dummy_basis,
+            selected_indices=list(range(k)),
+            selected_vectors=basis_vecs,
+        ),
         coordinates=coords,
         chart_map=chart_map,
         chart_inverse=chart_inv,

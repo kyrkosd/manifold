@@ -169,7 +169,8 @@ class TestVerifyCoverage:
         """Full coverage returns true."""
         # Build minimal stub charts that together cover points 0..9.
         def _stub_chart(indices):
-            return type("C", (), {"region_indices": np.array(indices)})()
+            region = type("R", (), {"core": np.array(indices)})()
+            return type("C", (), {"region": region})()
 
         charts = [_stub_chart([0, 1, 2, 3]), _stub_chart([4, 5, 6, 7, 8, 9])]
         assert _verify_coverage(charts, n_points=10) is True
@@ -177,7 +178,8 @@ class TestVerifyCoverage:
     def test_missing_point_returns_false(self):
         """Missing point returns false."""
         def _stub_chart(indices):
-            return type("C", (), {"region_indices": np.array(indices)})()
+            region = type("R", (), {"core": np.array(indices)})()
+            return type("C", (), {"region": region})()
 
         charts = [_stub_chart([0, 1, 2])]   # point 3 is missing
         assert _verify_coverage(charts, n_points=4) is False
@@ -196,10 +198,9 @@ class TestAssignPrimaryCharts:
     def test_shape_is_n_points(self):
         """Shape is n points."""
         def _stub(indices, score):
-            return type("C", (), {
-                "region_indices": np.array(indices),
-                "local_basis": type("B", (), {"alignment_score": score})(),
-            })()
+            region = type("R", (), {"core": np.array(indices)})()
+            basis = type("Basis", (), {"local": type("L", (), {"alignment_score": score})()})()
+            return type("C", (), {"region": region, "basis": basis})()
 
         charts = [_stub([0, 1, 2], 0.9), _stub([1, 2, 3], 0.5)]
         result = _assign_primary_charts(charts, n_points=4)
@@ -209,10 +210,9 @@ class TestAssignPrimaryCharts:
         """Best score wins."""
         # Point 1 is in both charts; chart-0 has higher score → assigned to 0.
         def _stub(indices, score):
-            return type("C", (), {
-                "region_indices": np.array(indices),
-                "local_basis": type("B", (), {"alignment_score": score})(),
-            })()
+            region = type("R", (), {"core": np.array(indices)})()
+            basis = type("Basis", (), {"local": type("L", (), {"alignment_score": score})()})()
+            return type("C", (), {"region": region, "basis": basis})()
 
         charts = [_stub([0, 1], 0.95), _stub([1, 2], 0.50)]
         result = _assign_primary_charts(charts, n_points=3)
@@ -221,10 +221,9 @@ class TestAssignPrimaryCharts:
     def test_exclusive_point_gets_only_chart(self):
         """Exclusive point gets only chart."""
         def _stub(indices, score):
-            return type("C", (), {
-                "region_indices": np.array(indices),
-                "local_basis": type("B", (), {"alignment_score": score})(),
-            })()
+            region = type("R", (), {"core": np.array(indices)})()
+            basis = type("Basis", (), {"local": type("L", (), {"alignment_score": score})()})()
+            return type("C", (), {"region": region, "basis": basis})()
 
         charts = [_stub([0], 0.8), _stub([1], 0.7)]
         result = _assign_primary_charts(charts, n_points=2)
@@ -241,7 +240,8 @@ class TestFindOverlaps:
     def test_disjoint_charts_give_empty_overlaps(self):
         """Disjoint charts give empty overlaps."""
         def _stub(indices):
-            return type("C", (), {"region_indices": np.array(indices)})()
+            region = type("R", (), {"core": np.array(indices)})()
+            return type("C", (), {"region": region})()
 
         charts = [_stub([0, 1, 2]), _stub([3, 4, 5])]
         assert _find_overlaps(charts) == []
@@ -249,7 +249,8 @@ class TestFindOverlaps:
     def test_shared_indices_correct(self):
         """Shared indices correct."""
         def _stub(indices):
-            return type("C", (), {"region_indices": np.array(indices)})()
+            region = type("R", (), {"core": np.array(indices)})()
+            return type("C", (), {"region": region})()
 
         charts = [_stub([0, 1, 2]), _stub([2, 3, 4])]
         overlaps = _find_overlaps(charts)
@@ -261,7 +262,8 @@ class TestFindOverlaps:
     def test_triple_overlap_gives_three_pairs(self):
         """Triple overlap gives three pairs."""
         def _stub(indices):
-            return type("C", (), {"region_indices": np.array(indices)})()
+            region = type("R", (), {"core": np.array(indices)})()
+            return type("C", (), {"region": region})()
 
         charts = [_stub([0, 1, 2]), _stub([1, 2, 3]), _stub([2, 3, 4])]
         overlaps = _find_overlaps(charts)

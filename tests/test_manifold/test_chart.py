@@ -95,7 +95,7 @@ class TestBuild:
     def test_selected_vectors_shape(self):
         """Selected vectors shape."""
         chart, _ = _make_chart()
-        assert chart.selected_vectors.shape == (10, 2)
+        assert chart.basis.selected_vectors.shape == (10, 2)
 
     def test_coordinates_shape(self):
         """Coordinates shape."""

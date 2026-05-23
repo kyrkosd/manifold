@@ -141,7 +141,7 @@ def _check_invertibility(
         if np.linalg.norm(residual) < 1e-12:
             tangent_fracs.append(0.0)
             continue
-        tangent_component = _project_to_tangent(residual, chart.selected_vectors)
+        tangent_component = _project_to_tangent(residual, chart.basis.selected_vectors)
         frac = float(np.linalg.norm(tangent_component) / np.linalg.norm(residual))
         tangent_fracs.append(frac)
 
@@ -155,7 +155,7 @@ def _compute_distortion(chart) -> float:
     ----------
     chart : Chart with selected_vectors (d, intrinsic_dim).
     """
-    s = np.linalg.svd(chart.selected_vectors, compute_uv=False)
+    s = np.linalg.svd(chart.basis.selected_vectors, compute_uv=False)
     if s[-1] < 1e-12:
         return float("inf")
     return float(s[0] / s[-1])
@@ -189,7 +189,7 @@ def _quality_score(chart, data: np.ndarray) -> float:
     chart : Chart with local_basis.alignment_score and selected_vectors.
     data : (n, d) region data.
     """
-    alignment = float(np.clip(chart.local_basis.alignment_score, 0.0, 1.0))
+    alignment = float(np.clip(chart.basis.local.alignment_score, 0.0, 1.0))
     distortion = _compute_distortion(chart)
     distortion_score = float(np.clip(1.0 / (1.0 + distortion), 0.0, 1.0))
     injectivity = _injectivity_proxy(data, chart.chart_map)
