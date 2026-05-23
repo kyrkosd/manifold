@@ -77,7 +77,7 @@ class TestReconstruct:
     def test_reconstructed_lies_in_chart_span(self, manifold_fixture):
         # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs); the residual has zero projection onto basis_vecs.
         mf, data = manifold_fixture
-        reconstructed, residuals = reconstruct(data, mf)
+        _, residuals = reconstruct(data, mf)
         for i in range(len(data)):
             ci = int(mf.atlas.primary_assignments[i])
             basis_vecs = mf.atlas.charts[ci].selected_vectors
@@ -94,7 +94,7 @@ class TestReconstruct:
 class TestFindChart:
     """Tests for Find Chart."""
     def test_returns_chart_at_assigned_index(self, manifold_fixture):
-        mf, data = manifold_fixture
+        mf, _ = manifold_fixture
         for i in [0, 5, 10]:
             expected_ci = int(mf.atlas.primary_assignments[i])
             chart = _find_chart(i, mf)
@@ -126,7 +126,7 @@ class TestEncodeAndDecode:
         assert z.shape == (chart.intrinsic_dim,)
 
     def test_decode_output_shape(self, manifold_fixture):
-        mf, data = manifold_fixture
+        mf, _ = manifold_fixture
         chart = mf.atlas.charts[0]
         z = np.zeros(chart.intrinsic_dim)
         p_hat = _decode(z, chart)

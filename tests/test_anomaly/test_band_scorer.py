@@ -220,7 +220,7 @@ class TestBandSpecificAnomalyDetection:
     def test_l2_misses_at_least_some_anomalies(self):
         from anomaly.threshold import _adaptive_threshold, _flag_points
 
-        per_band_norms, total, anomaly_mask, _ = self._make_data()
+        _, total, anomaly_mask, _ = self._make_data()
         threshold = _adaptive_threshold(total)
         l2_flags = _flag_points(total, threshold)
 

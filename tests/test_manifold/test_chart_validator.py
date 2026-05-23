@@ -43,7 +43,7 @@ def _subspace_data(
 
 def _good_chart(seed: int = 1) -> tuple[Chart, np.ndarray]:
     """Build a valid chart for a near-linear 2-D submanifold."""
-    data, basis = _subspace_data(n=60, seed=seed)
+    data, _ = _subspace_data(n=60, seed=seed)
     region_indices = np.arange(40, dtype=np.intp)
     region_data = data[region_indices]
     from fourier.graph_fourier import GraphFourierEngine
@@ -108,7 +108,7 @@ class TestValidate:
     """Tests for Validate."""
     def test_good_chart_is_valid(self):
         chart, region_data = _good_chart()
-        valid, score, _reason = validate(chart, region_data)
+        valid, _, _reason = validate(chart, region_data)
         assert valid is True
 
     def test_good_chart_score_positive(self):

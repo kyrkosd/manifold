@@ -106,7 +106,7 @@ def query_radius(
     # FAISS range_search uses strict inequality (d < threshold), so radius=0
     # would exclude self.  Use a tiny floor so exact matches are always included.
     threshold = max(radius ** 2, 1e-10)
-    lims, _D, idx = index.range_search(pts, threshold)
+    lims, _dists, idx = index.range_search(pts, threshold)
     return [idx[lims[i] : lims[i + 1]] for i in range(len(pts))]
 
 

@@ -25,12 +25,12 @@ from common.math_utils import (
 
 def test_eigendecompose_returns_ascending_eigenvalues() -> None:
     mat_a = np.array([[2.0, 1.0], [1.0, 2.0]])
-    vecs, vals = eigendecompose(mat_a)
+    _, vals = eigendecompose(mat_a)
     assert vals[0] <= vals[1]
 
 
 def test_eigendecompose_identity_eigenvalues() -> None:
-    vecs, vals = eigendecompose(np.eye(4))
+    _, vals = eigendecompose(np.eye(4))
     np.testing.assert_allclose(vals, np.ones(4), atol=1e-10)
 
 
@@ -42,18 +42,18 @@ def test_eigendecompose_eigenvectors_orthonormal() -> None:
 
 def test_eigendecompose_n_components_selects_smallest() -> None:
     mat_a = np.diag([1.0, 2.0, 3.0, 4.0])
-    vecs, vals = eigendecompose(mat_a, n_components=2)
+    _, vals = eigendecompose(mat_a, n_components=2)
     assert vals.shape == (2,)
     np.testing.assert_allclose(vals, [1.0, 2.0], atol=1e-10)
 
 
 def test_eigendecompose_n_components_clamped_to_n() -> None:
-    vecs, vals = eigendecompose(np.eye(3), n_components=100)
+    _, vals = eigendecompose(np.eye(3), n_components=100)
     assert vals.shape == (3,)
 
 
 def test_eigendecompose_single_element_matrix() -> None:
-    vecs, vals = eigendecompose(np.array([[7.0]]))
+    _, vals = eigendecompose(np.array([[7.0]]))
     np.testing.assert_allclose(vals, [7.0], atol=1e-10)
 
 

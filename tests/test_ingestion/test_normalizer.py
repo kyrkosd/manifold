@@ -30,7 +30,7 @@ class TestNormalize:
         # Normalisation must not alter the (n, d) shape of the input.
         rng = np.random.default_rng(0)
         arr = rng.standard_normal((20, 4))
-        normed, params = normalize(arr)
+        normed, _ = normalize(arr)
         assert normed.shape == arr.shape
 
     def test_zero_mean_after_normalize(self):
@@ -124,7 +124,7 @@ class TestUnitVariance:
         # Pre-centred data should have std exactly 1 after unit-variance scaling.
         arr = np.array([[2.0, 10.0], [4.0, 20.0], [6.0, 30.0]])
         arr = arr - arr.mean(axis=0)  # centre first so ddof=0 std is exact
-        scaled, stds = _unit_variance(arr)
+        scaled, _ = _unit_variance(arr)
         np.testing.assert_allclose(scaled.std(axis=0), 1.0, atol=1e-10)
 
     def test_zero_variance_col_safe_std_is_one(self):

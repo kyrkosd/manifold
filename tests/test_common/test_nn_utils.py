@@ -126,7 +126,7 @@ def test_batch_knn_output_shapes() -> None:
 
 def test_batch_knn_batch_larger_than_data() -> None:
     index = build_faiss_index(_DATA)
-    dists, idxs = batch_knn(index, _DATA, k=2, batch_size=10_000)
+    dists, _ = batch_knn(index, _DATA, k=2, batch_size=10_000)
     assert dists.shape == (len(_DATA), 2)
 
 
@@ -144,9 +144,9 @@ def test_rebuild_index_queries_new_data() -> None:
     index = build_faiss_index(_DATA)
     new_data = np.array([[10.0, 10.0], [20.0, 20.0]], dtype=np.float32)
     index = rebuild_index(index, new_data)
-    D, I = query_knn(index, new_data[:1], k=1)
-    np.testing.assert_allclose(D[0, 0], 0.0, atol=1e-5)
-    assert I[0, 0] == 0
+    dists, idxs = query_knn(index, new_data[:1], k=1)
+    np.testing.assert_allclose(dists[0, 0], 0.0, atol=1e-5)
+    assert idxs[0, 0] == 0
 
 
 def test_rebuild_index_old_data_not_found() -> None:
@@ -155,6 +155,6 @@ def test_rebuild_index_old_data_not_found() -> None:
     index = rebuild_index(index, new_data)
     # Original points are gone; nearest neighbour of [0,0] is now [100,100]
     query = np.array([[0.0, 0.0]], dtype=np.float32)
-    D, I = query_knn(index, query, k=1)
-    assert I[0, 0] == 0  # only one point in new index
-    assert D[0, 0] > 100.0  # far from origin
+    dists, idxs = query_knn(index, query, k=1)
+    assert idxs[0, 0] == 0  # only one point in new index
+    assert dists[0, 0] > 100.0  # far from origin

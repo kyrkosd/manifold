@@ -33,10 +33,10 @@ def _linear_subspace(n: int, intrinsic_dim: int, ambient_dim: int,
     """
     rng = np.random.default_rng(seed)
     # Orthonormal embedding matrix: (ambient_dim, intrinsic_dim).
-    Q, _ = np.linalg.qr(rng.standard_normal((ambient_dim, intrinsic_dim)))
+    orth_mat, _ = np.linalg.qr(rng.standard_normal((ambient_dim, intrinsic_dim)))
     coords = rng.standard_normal((n, intrinsic_dim))
     # Add small isotropic noise so the manifold is not degenerate.
-    return coords @ Q[:, :intrinsic_dim].T + rng.standard_normal((n, ambient_dim)) * noise
+    return coords @ orth_mat[:, :intrinsic_dim].T + rng.standard_normal((n, ambient_dim)) * noise
 
 
 # ---------------------------------------------------------------------------
