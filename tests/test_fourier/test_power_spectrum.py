@@ -40,25 +40,30 @@ def _coeffs(n: int = 10, d: int = 4, seed: int = 0) -> np.ndarray:
 class TestPerPointAndMeanPower:
     """Tests for Per Point And Mean Power."""
     def test_per_point_shape_preserved(self):
+        """Per point shape preserved."""
         # Squaring does not change the (n, d) shape.
         assert _per_point_power(_coeffs(n=8, d=5)).shape == (8, 5)
 
     def test_per_point_non_negative(self):
+        """Per point non negative."""
         # Squares are always non-negative.
         assert np.all(_per_point_power(_coeffs()) >= 0)
 
     def test_per_point_known_value(self):
+        """Per point known value."""
         # [[3, 4]] squared is [[9, 16]].
         np.testing.assert_allclose(
             _per_point_power(np.array([[3.0, 4.0]])), [[9.0, 16.0]]
         )
 
     def test_mean_power_shape(self):
+        """Mean power shape."""
         # Averaging over n rows collapses the first axis; result is (d,).
         per_point = _per_point_power(_coeffs(n=10, d=6))
         assert _mean_power(per_point).shape == (6,)
 
     def test_mean_power_known_value(self):
+        """Mean power known value."""
         # Column means of [[1, 4], [9, 16]] are [5, 10].
         np.testing.assert_allclose(
             _mean_power(np.array([[1.0, 4.0], [9.0, 16.0]])), [5.0, 10.0]
@@ -72,25 +77,30 @@ class TestPerPointAndMeanPower:
 class TestCumulativeAndDominant:
     """Tests for Cumulative And Dominant."""
     def test_cumulative_last_is_one(self):
+        """Cumulative last is one."""
         # Normalised cumsum must end at exactly 1.0 for any non-zero spectrum.
         result = _cumulative_power(np.array([1.0, 2.0, 3.0, 4.0]))
         assert result[-1] == pytest.approx(1.0)
 
     def test_cumulative_monotone(self):
+        """Cumulative monotone."""
         # Power can only accumulate; result must be non-decreasing.
         result = _cumulative_power(np.array([0.5, 1.0, 2.0]))
         assert np.all(result[1:] >= result[:-1])
 
     def test_cumulative_zero_spectrum(self):
+        """Cumulative zero spectrum."""
         # All-zero spectrum must produce all-zero cumulative (no divide-by-zero).
         np.testing.assert_allclose(_cumulative_power(np.zeros(4)), 0.0)
 
     def test_dominant_length(self):
+        """Dominant length."""
         # Default top-5; fewer than 5 components → returns all of them.
         result = _dominant_frequencies(np.arange(10, dtype=float))
         assert len(result) == 5
 
     def test_dominant_first_is_argmax(self):
+        """Dominant first is argmax."""
         # The index of the maximum power must be first in the sorted list.
         mean = np.array([0.0, 0.0, 5.0, 0.0])
         assert _dominant_frequencies(mean, n=4)[0] == 2
@@ -103,26 +113,31 @@ class TestCumulativeAndDominant:
 class TestSpectralCentroidAndCompare:
     """Tests for Spectral Centroid And Compare."""
     def test_centroid_is_float(self):
+        """Centroid is float."""
         # Return type must always be Python float.
         result = _spectral_centroid(np.array([1.0, 2.0, 3.0]), _basis(3).eigenvalues)
         assert isinstance(result, float)
 
     def test_centroid_zero_power(self):
+        """Centroid zero power."""
         # No power in any mode → centroid defaults to 0.
         assert _spectral_centroid(np.zeros(4), _basis().eigenvalues) == pytest.approx(0.0)
 
     def test_centroid_single_mode(self):
+        """Centroid single mode."""
         # All power in mode k → centroid equals eigenvalue[k].
         # Basis eigenvalues = [0, 1, 2, 3]; all power at index 2 → centroid = 2.
         mean = np.array([0.0, 0.0, 1.0, 0.0])
         assert _spectral_centroid(mean, _basis().eigenvalues) == pytest.approx(2.0)
 
     def test_compare_identical_spectra(self):
+        """Compare identical spectra."""
         # L2 distance of a spectrum to itself is 0.
         spec = np.array([0.1, 0.5, 0.3, 0.1])
         assert _compare_spectra(spec, spec) == pytest.approx(0.0)
 
     def test_compare_orthogonal_spectra(self):
+        """Compare orthogonal spectra."""
         # [1, 0] and [0, 1] have L2 distance √2.
         dist = _compare_spectra(np.array([1.0, 0.0]), np.array([0.0, 1.0]))
         assert dist == pytest.approx(np.sqrt(2))
@@ -135,21 +150,25 @@ class TestSpectralCentroidAndCompare:
 class TestComputeIntegration:
     """Tests for Compute Integration."""
     def test_all_keys_present(self):
+        """All keys present."""
         # All five keys must appear regardless of input shape.
         result = compute(_coeffs(n=10, d=4), _basis())
         assert {"per_point", "mean", "cumulative", "dominant", "centroid"}.issubset(result)
 
     def test_per_point_shape(self):
+        """Per point shape."""
         # per_point retains (n, d).
         result = compute(_coeffs(n=8, d=5), _basis(5))
         assert result["per_point"].shape == (8, 5)
 
     def test_mean_shape(self):
+        """Mean shape."""
         # mean collapses n; shape is (d,).
         result = compute(_coeffs(n=8, d=5), _basis(5))
         assert result["mean"].shape == (5,)
 
     def test_cumulative_ends_at_one(self):
+        """Cumulative ends at one."""
         # Cumulative power of any non-trivial input must end at 1.
         result = compute(_coeffs(n=10, d=4, seed=1), _basis())
         assert result["cumulative"][-1] == pytest.approx(1.0)

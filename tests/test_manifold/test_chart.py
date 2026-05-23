@@ -75,31 +75,38 @@ def _make_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
 class TestBuild:
     """Tests for Build."""
     def test_returns_chart_instance(self):
+        """Returns chart instance."""
         chart, _ = _make_chart()
         assert isinstance(chart, Chart)
 
     def test_intrinsic_dim_stored(self):
+        """Intrinsic dim stored."""
         chart, _ = _make_chart()
         assert chart.intrinsic_dim == 2
 
     def test_ambient_dim_stored(self):
+        """Ambient dim stored."""
         chart, _ = _make_chart()
         assert chart.ambient_dim == 10
 
     def test_selected_vectors_shape(self):
+        """Selected vectors shape."""
         chart, _ = _make_chart()
         assert chart.selected_vectors.shape == (10, 2)
 
     def test_coordinates_shape(self):
+        """Coordinates shape."""
         chart, region_data = _make_chart()
         assert chart.coordinates.shape == (len(region_data), 2)
 
     def test_chart_map_output_shape(self):
+        """Chart map output shape."""
         chart, region_data = _make_chart()
         z = chart.chart_map(region_data[0])
         assert z.shape == (2,)
 
     def test_chart_inverse_output_shape(self):
+        """Chart inverse output shape."""
         chart, region_data = _make_chart()
         z = chart.chart_map(region_data[0])
         p_hat = chart.chart_inverse(z)
@@ -113,6 +120,7 @@ class TestBuild:
 class TestRoundTrip:
     """Tests for Round Trip."""
     def test_reconstruction_error_bounded(self):
+        """Reconstruction error bounded."""
         # chart_inverse(chart_map(p)) = V@V.T@p, projecting onto chart span.
         # Residual is the normal-space component; bounded by the data norm.
         chart, region_data = _make_chart()
@@ -122,6 +130,7 @@ class TestRoundTrip:
             assert np.linalg.norm(p - p_hat) <= np.linalg.norm(p) + 1e-10
 
     def test_coordinates_match_chart_map(self):
+        """Coordinates match chart map."""
         # chart.coordinates must equal _compute_coordinates applied to region_data.
         chart, region_data = _make_chart()
         coords = _compute_coordinates(region_data, chart.chart_map)
@@ -135,6 +144,7 @@ class TestRoundTrip:
 class TestExpandRegion:
     """Tests for Expand Region."""
     def test_region_indices_unchanged(self):
+        """Region indices unchanged."""
         data, _ = _subspace_data()
         indices = np.arange(20, dtype=np.intp)
         idx = nn_utils.build_faiss_index(data)
@@ -142,6 +152,7 @@ class TestExpandRegion:
         np.testing.assert_array_equal(returned_region, indices)
 
     def test_expanded_is_superset(self):
+        """Expanded is superset."""
         data, _ = _subspace_data()
         indices = np.arange(20, dtype=np.intp)
         idx = nn_utils.build_faiss_index(data)
@@ -150,6 +161,7 @@ class TestExpandRegion:
             assert i in set(expanded.tolist())
 
     def test_overlap_zero_gives_only_region(self):
+        """Overlap zero gives only region."""
         # With overlap_factor=0 we request 0 outside neighbours (max(1,...) = 1).
         data, _ = _subspace_data(n=40)
         indices = np.arange(30, dtype=np.intp)
@@ -167,6 +179,7 @@ class TestExpandRegion:
 class TestChartMapAndInverse:
     """Tests for Chart Map And Inverse."""
     def test_chart_map_is_linear_projection(self):
+        """Chart map is linear projection."""
         # chart_map(p) = qr_mat.T @ p.
         rng = np.random.default_rng(5)
         qr_mat, _ = np.linalg.qr(rng.standard_normal((8, 3)))
@@ -176,6 +189,7 @@ class TestChartMapAndInverse:
         np.testing.assert_allclose(chart_map(p), qr_mat.T @ p, atol=1e-12)
 
     def test_chart_inverse_is_linear_reconstruction(self):
+        """Chart inverse is linear reconstruction."""
         # chart_inverse(z) = qr_mat @ z.
         rng = np.random.default_rng(6)
         qr_mat, _ = np.linalg.qr(rng.standard_normal((8, 3)))
@@ -192,6 +206,7 @@ class TestChartMapAndInverse:
 class TestSelectBasisAdaptive:
     """Tests for Select Basis Adaptive."""
     def test_returns_correct_length(self):
+        """Returns correct length."""
         data, _ = _subspace_data(n=30)
         ref = _reference_basis(data)
         from fourier.graph_fourier import GraphFourierEngine
@@ -201,6 +216,7 @@ class TestSelectBasisAdaptive:
         assert len(sel) == 2
 
     def test_indices_in_valid_range(self):
+        """Indices in valid range."""
         data, _ = _subspace_data(n=30)
         ref = _reference_basis(data)
         from fourier.graph_fourier import GraphFourierEngine

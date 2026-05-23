@@ -67,11 +67,13 @@ def _make_results(n: int = 80, n_bands: int = 3, n_anomaly: int = 8,
 class TestReport:
     """Tests for Report."""
     def test_returns_anomaly_report(self):
+        """Returns anomaly report."""
         results, data = _make_results()
         r = report(results, data)
         assert isinstance(r, AnomalyReport)
 
     def test_all_fields_populated(self):
+        """All fields populated."""
         results, data = _make_results()
         r = report(results, data)
         assert isinstance(r.table, pd.DataFrame)
@@ -87,16 +89,19 @@ class TestReport:
 class TestPerPointTable:
     """Tests for Per Point Table."""
     def test_is_dataframe(self):
+        """Is dataframe."""
         results, _ = _make_results()
         assert isinstance(_per_point_table(results), pd.DataFrame)
 
     def test_row_count_equals_n(self):
+        """Row count equals n."""
         n = 80
         results, _ = _make_results(n=n)
         df = _per_point_table(results)
         assert len(df) == n
 
     def test_required_columns_present(self):
+        """Required columns present."""
         results, _ = _make_results(n_bands=3)
         df = _per_point_table(results)
         for col in ["point_index", "overall_score", "is_anomaly",
@@ -105,6 +110,7 @@ class TestPerPointTable:
             assert col in df.columns
 
     def test_column_count(self):
+        """Column count."""
         # 4 fixed cols + n_bands band-score cols = 4 + n_bands
         n_bands = 3
         results, _ = _make_results(n_bands=n_bands)
@@ -112,21 +118,25 @@ class TestPerPointTable:
         assert len(df.columns) == 4 + n_bands
 
     def test_sorted_by_overall_score_descending(self):
+        """Sorted by overall score descending."""
         results, _ = _make_results()
         df = _per_point_table(results)
         assert df["overall_score"].is_monotonic_decreasing
 
     def test_is_anomaly_dtype_bool(self):
+        """Is anomaly dtype bool."""
         results, _ = _make_results()
         df = _per_point_table(results)
         assert df["is_anomaly"].dtype == bool
 
     def test_top_anomalous_band_has_band_prefix(self):
+        """Top anomalous band has band prefix."""
         results, _ = _make_results()
         df = _per_point_table(results)
         assert all(v.startswith("band_") for v in df["top_anomalous_band"])
 
     def test_point_index_covers_all_points(self):
+        """Point index covers all points."""
         n = 60
         results, _ = _make_results(n=n)
         df = _per_point_table(results)
@@ -140,22 +150,26 @@ class TestPerPointTable:
 class TestTypeDistribution:
     """Tests for Type Distribution."""
     def test_returns_dict_with_three_keys(self):
+        """Returns dict with three keys."""
         results, _ = _make_results()
         td = _type_distribution(results)
         assert set(td.keys()) == {"spectral", "partial", "global"}
 
     def test_counts_are_non_negative(self):
+        """Counts are non negative."""
         results, _ = _make_results()
         td = _type_distribution(results)
         assert all(v >= 0 for v in td.values())
 
     def test_total_le_n_anomalies(self):
+        """Total le n anomalies."""
         results, _ = _make_results()
         td = _type_distribution(results)
         total = td["spectral"] + td["partial"] + td["global"]
         assert total <= results.n_anomalies
 
     def test_no_anomalies_gives_all_zeros(self):
+        """No anomalies gives all zeros."""
         # Build results with no anomalies by setting all z-scores near zero.
         rng = np.random.default_rng(5)
         n, n_bands = 50, 2
@@ -186,15 +200,18 @@ class TestTypeDistribution:
 class TestTopAnomalies:
     """Tests for Top Anomalies."""
     def test_returns_list(self):
+        """Returns list."""
         results, _ = _make_results()
         assert isinstance(_top_anomalies(results), list)
 
     def test_length_at_most_n(self):
+        """Length at most n."""
         results, _ = _make_results(n_anomaly=8)
         top = _top_anomalies(results, n=5)
         assert len(top) <= 5
 
     def test_each_entry_has_required_keys(self):
+        """Each entry has required keys."""
         results, _ = _make_results()
         for entry in _top_anomalies(results):
             assert "point_index" in entry
@@ -203,18 +220,21 @@ class TestTopAnomalies:
             assert "band_scores" in entry
 
     def test_sorted_by_score_descending(self):
+        """Sorted by score descending."""
         results, _ = _make_results()
         top = _top_anomalies(results)
         scores = [e["overall_score"] for e in top]
         assert scores == sorted(scores, reverse=True)
 
     def test_all_entries_are_anomalies(self):
+        """All entries are anomalies."""
         results, _ = _make_results()
         top = _top_anomalies(results)
         for entry in top:
             assert results.flags.overall_flags[entry["point_index"]]
 
     def test_empty_when_no_anomalies(self):
+        """Empty when no anomalies."""
         rng = np.random.default_rng(9)
         n, n_bands = 40, 2
         per_band = {b: rng.standard_normal(n) * 0.0001 for b in range(n_bands)}
@@ -241,10 +261,12 @@ class TestTopAnomalies:
 class TestStatisticalSummary:
     """Tests for Statistical Summary."""
     def test_returns_dict(self):
+        """Returns dict."""
         results, _ = _make_results()
         assert isinstance(_statistical_summary(results), dict)
 
     def test_required_keys_present(self):
+        """Required keys present."""
         results, _ = _make_results()
         sm = _statistical_summary(results)
         for key in ["total_points", "total_anomalies", "anomaly_rate",
@@ -252,6 +274,7 @@ class TestStatisticalSummary:
             assert key in sm
 
     def test_per_band_count_keys_present(self):
+        """Per band count keys present."""
         n_bands = 3
         results, _ = _make_results(n_bands=n_bands)
         sm = _statistical_summary(results)
@@ -259,16 +282,19 @@ class TestStatisticalSummary:
             assert f"band_{b}_anomaly_count" in sm
 
     def test_total_points_correct(self):
+        """Total points correct."""
         n = 70
         results, _ = _make_results(n=n)
         assert _statistical_summary(results)["total_points"] == n
 
     def test_anomaly_rate_in_unit_interval(self):
+        """Anomaly rate in unit interval."""
         results, _ = _make_results()
         rate = _statistical_summary(results)["anomaly_rate"]
         assert 0.0 <= rate <= 1.0
 
     def test_max_score_is_max_of_overall(self):
+        """Max score is max of overall."""
         results, _ = _make_results()
         sm = _statistical_summary(results)
         assert sm["max_score"] == pytest.approx(float(np.max(results.scores.overall)))

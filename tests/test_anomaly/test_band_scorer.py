@@ -26,6 +26,7 @@ from common.types import FrequencyBand
 
 @pytest.fixture(scope="module")
 def manifold_fixture():
+    """Manifold fixture."""
     from common.types import FourierType, StructureType
     from fourier import analyze_fourier
     from manifold import build_manifold
@@ -58,6 +59,7 @@ def manifold_fixture():
 class TestScore:
     """Tests for Score."""
     def test_returns_band_scores(self, manifold_fixture):
+        """Returns band scores."""
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
@@ -65,6 +67,7 @@ class TestScore:
         assert isinstance(result, BandScores)
 
     def test_per_band_keys_match_bands(self, manifold_fixture):
+        """Per band keys match bands."""
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
@@ -72,6 +75,7 @@ class TestScore:
         assert set(result.per_band.keys()) == set(range(len(mf.spectral.bands)))
 
     def test_overall_shape(self, manifold_fixture):
+        """Overall shape."""
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
@@ -79,6 +83,7 @@ class TestScore:
         assert result.overall.shape == (len(data),)
 
     def test_overall_is_max_abs_per_band(self, manifold_fixture):
+        """Overall is max abs per band."""
         # overall[i] = max |z_b[i]| across bands.
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
@@ -88,6 +93,7 @@ class TestScore:
         np.testing.assert_allclose(result.overall, np.max(abs_matrix, axis=1), atol=1e-10)
 
     def test_weights_length_matches_bands(self, manifold_fixture):
+        """Weights length matches bands."""
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
@@ -102,11 +108,13 @@ class TestScore:
 class TestScoreBandAgainstExpected:
     """Tests for Score Band Against Expected."""
     def test_zero_mean_zero_var_at_mean_gives_zero(self):
+        """Zero mean zero var at mean gives zero."""
         # band_norms = expected_mean = 0 → z = 0.
         z = _score_band_against_expected(np.zeros(5), 0.0, 0.0)
         np.testing.assert_allclose(z, 0.0, atol=1e-10)
 
     def test_standard_z_score_formula(self):
+        """Standard z score formula."""
         # z = (x - μ) / σ.
         norms = np.array([1.5, 2.0, 0.5])
         z = _score_band_against_expected(norms, 1.0, 0.25)  # σ = 0.5
@@ -114,19 +122,23 @@ class TestScoreBandAgainstExpected:
         np.testing.assert_allclose(z, expected, atol=1e-10)
 
     def test_positive_deviation_gives_positive_z(self):
+        """Positive deviation gives positive z."""
         z = _score_band_against_expected(np.array([2.0]), 1.0, 1.0)
         assert z[0] > 0.0
 
     def test_negative_deviation_gives_negative_z(self):
+        """Negative deviation gives negative z."""
         z = _score_band_against_expected(np.array([0.0]), 1.0, 1.0)
         assert z[0] < 0.0
 
     def test_zero_var_nonzero_diff_gives_large_z(self):
+        """Zero var nonzero diff gives large z."""
         # expected_var=0, band_norm >> expected_mean → large z.
         z = _score_band_against_expected(np.array([5.0]), 0.0, 0.0)
         assert abs(z[0]) > 1e5
 
     def test_zero_var_zero_diff_gives_zero_z(self):
+        """Zero var zero diff gives zero z."""
         z = _score_band_against_expected(np.array([1.0]), 1.0, 0.0)
         np.testing.assert_allclose(z, 0.0, atol=1e-10)
 
@@ -138,17 +150,20 @@ class TestScoreBandAgainstExpected:
 class TestAggregateScores:
     """Tests for Aggregate Scores."""
     def test_default_is_max_abs(self):
+        """Default is max abs."""
         band_scores = {0: np.array([1.0, 3.0]), 1: np.array([2.0, 1.0])}
         result = _aggregate_scores(band_scores)
         np.testing.assert_allclose(result, [2.0, 3.0])
 
     def test_weighted_mean(self):
+        """Weighted mean."""
         band_scores = {0: np.array([2.0]), 1: np.array([4.0])}
         weights = np.array([0.5, 0.5])
         result = _aggregate_scores(band_scores, weights=weights)
         np.testing.assert_allclose(result, [3.0], atol=1e-10)
 
     def test_empty_returns_empty(self):
+        """Empty returns empty."""
         result = _aggregate_scores({})
         assert len(result) == 0
 
@@ -160,6 +175,7 @@ class TestAggregateScores:
 class TestWeightBands:
     """Tests for Weight Bands."""
     def test_uniform_sums_to_one(self):
+        """Uniform sums to one."""
         bands = [
             FrequencyBand(0, 1, "low", 1.0),
             FrequencyBand(2, 3, "mid", 0.5),
@@ -169,11 +185,13 @@ class TestWeightBands:
         assert w.sum() == pytest.approx(1.0)
 
     def test_uniform_all_equal(self):
+        """Uniform all equal."""
         bands = [FrequencyBand(0, 1, "a", 1.0), FrequencyBand(2, 3, "b", 1.0)]
         w = _weight_bands(bands)
         assert w[0] == pytest.approx(w[1])
 
     def test_empty_bands_returns_empty(self):
+        """Empty bands returns empty."""
         assert len(_weight_bands([])) == 0
 
 
@@ -218,6 +236,7 @@ class TestBandSpecificAnomalyDetection:
         return per_band_norms, total, anomaly_mask, b1_normal
 
     def test_l2_misses_at_least_some_anomalies(self):
+        """L2 misses at least some anomalies."""
         from anomaly.threshold import _adaptive_threshold, _flag_points
 
         _, total, anomaly_mask, _ = self._make_data()
@@ -231,6 +250,7 @@ class TestBandSpecificAnomalyDetection:
         )
 
     def test_fmas_detects_all_band_specific_anomalies(self):
+        """Fmas detects all band specific anomalies."""
         per_band_norms, _, anomaly_mask, b1_normal = self._make_data()
 
         expected_mean = float(np.mean(b1_normal))
@@ -247,6 +267,7 @@ class TestBandSpecificAnomalyDetection:
         )
 
     def test_fmas_low_false_positive_rate(self):
+        """Fmas low false positive rate."""
         per_band_norms, _, anomaly_mask, b1_normal = self._make_data()
 
         expected_mean = float(np.mean(b1_normal))

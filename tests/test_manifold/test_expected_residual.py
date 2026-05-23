@@ -101,6 +101,7 @@ def _make_spectral(data: np.ndarray, structure: StructureReport) -> SpectralData
 class TestComputeDistribution:
     """Tests for Compute Distribution."""
     def test_returns_expected_residual_distribution(self):
+        """Returns expected residual distribution."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -109,6 +110,7 @@ class TestComputeDistribution:
         assert isinstance(result, ExpectedResidualDistribution)
 
     def test_n_samples_matches_data(self):
+        """N samples matches data."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -117,6 +119,7 @@ class TestComputeDistribution:
         assert result.n_samples == len(data)
 
     def test_per_band_keys_match_bands(self):
+        """Per band keys match bands."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -127,6 +130,7 @@ class TestComputeDistribution:
         assert set(result.per_band_var.keys()) == expected_keys
 
     def test_means_are_non_negative(self):
+        """Means are non negative."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -136,6 +140,7 @@ class TestComputeDistribution:
             assert m >= 0.0
 
     def test_variances_are_non_negative(self):
+        """Variances are non negative."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -145,6 +150,7 @@ class TestComputeDistribution:
             assert v >= 0.0
 
     def test_empty_data_returns_zero_samples(self):
+        """Empty data returns zero samples."""
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -160,6 +166,7 @@ class TestComputeDistribution:
 class TestEncodeDecodeResiduals:
     """Tests for Encode Decode Residuals."""
     def test_residuals_shape(self):
+        """Residuals shape."""
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
         chart = _make_chart_for_data(data, structure)
@@ -167,6 +174,7 @@ class TestEncodeDecodeResiduals:
         assert residuals.shape == data.shape
 
     def test_residual_is_p_minus_p_hat(self):
+        """Residual is p minus p hat."""
         # r[i] must equal data[i] - chart_inverse(chart_map(data[i])).
         data, _ = _make_manifold_data(n=10)
         structure = _make_structure(data)
@@ -184,6 +192,7 @@ class TestEncodeDecodeResiduals:
 class TestDecomposeToBands:
     """Tests for Decompose To Bands."""
     def test_returns_dict_with_band_keys(self):
+        """Returns dict with band keys."""
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -193,6 +202,7 @@ class TestDecomposeToBands:
         assert set(band_norms.keys()) == set(range(len(spectral.bands)))
 
     def test_norms_non_negative(self):
+        """Norms non negative."""
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -203,6 +213,7 @@ class TestDecomposeToBands:
             assert np.all(norms >= 0.0)
 
     def test_each_band_norm_array_has_n_rows(self):
+        """Each band norm array has n rows."""
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
         spectral = _make_spectral(data, structure)
@@ -220,25 +231,30 @@ class TestDecomposeToBands:
 class TestFitDistribution:
     """Tests for Fit Distribution."""
     def test_returns_two_floats(self):
+        """Returns two floats."""
         norms = np.array([0.1, 0.2, 0.15, 0.3])
         mean, var = _fit_distribution(norms)
         assert isinstance(mean, float) and isinstance(var, float)
 
     def test_mean_matches_numpy(self):
+        """Mean matches numpy."""
         norms = np.array([1.0, 2.0, 3.0, 4.0])
         mean, _ = _fit_distribution(norms)
         assert mean == pytest.approx(float(np.mean(norms)))
 
     def test_var_matches_numpy(self):
+        """Var matches numpy."""
         norms = np.array([1.0, 2.0, 3.0, 4.0])
         _, var = _fit_distribution(norms)
         assert var == pytest.approx(float(np.var(norms)))
 
     def test_empty_gives_zeros(self):
+        """Empty gives zeros."""
         mean, var = _fit_distribution(np.array([]))
         assert mean == 0.0 and var == 0.0
 
     def test_constant_gives_zero_var(self):
+        """Constant gives zero var."""
         norms = np.full(5, 2.5)
         _, var = _fit_distribution(norms)
         assert var == pytest.approx(0.0, abs=1e-10)

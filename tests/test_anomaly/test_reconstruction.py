@@ -23,6 +23,7 @@ from anomaly.reconstruction import (
 
 @pytest.fixture(scope="module")
 def manifold_fixture():
+    """Manifold fixture."""
     from common.types import FourierType, StructureType
     from fourier import analyze_fourier
     from manifold import build_manifold
@@ -55,26 +56,31 @@ def manifold_fixture():
 class TestReconstruct:
     """Tests for Reconstruct."""
     def test_returns_two_arrays(self, manifold_fixture):
+        """Returns two arrays."""
         mf, data = manifold_fixture
         result = reconstruct(data, mf)
         assert len(result) == 2
 
     def test_reconstructed_shape(self, manifold_fixture):
+        """Reconstructed shape."""
         mf, data = manifold_fixture
         reconstructed, _ = reconstruct(data, mf)
         assert reconstructed.shape == data.shape
 
     def test_residuals_shape(self, manifold_fixture):
+        """Residuals shape."""
         mf, data = manifold_fixture
         _, residuals = reconstruct(data, mf)
         assert residuals.shape == data.shape
 
     def test_residuals_equal_data_minus_reconstructed(self, manifold_fixture):
+        """Residuals equal data minus reconstructed."""
         mf, data = manifold_fixture
         reconstructed, residuals = reconstruct(data, mf)
         np.testing.assert_allclose(residuals, data - reconstructed, atol=1e-12)
 
     def test_reconstructed_lies_in_chart_span(self, manifold_fixture):
+        """Reconstructed lies in chart span."""
         # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs); the residual has zero projection onto basis_vecs.
         mf, data = manifold_fixture
         _, residuals = reconstruct(data, mf)
@@ -94,6 +100,7 @@ class TestReconstruct:
 class TestFindChart:
     """Tests for Find Chart."""
     def test_returns_chart_at_assigned_index(self, manifold_fixture):
+        """Returns chart at assigned index."""
         mf, _ = manifold_fixture
         for i in [0, 5, 10]:
             expected_ci = int(mf.atlas.primary_assignments[i])
@@ -108,24 +115,28 @@ class TestFindChart:
 class TestEncodeAndDecode:
     """Tests for Encode And Decode."""
     def test_encode_applies_chart_map(self, manifold_fixture):
+        """Encode applies chart map."""
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
         p = data[0]
         np.testing.assert_allclose(_encode(p, chart), chart.chart_map(p), atol=1e-12)
 
     def test_decode_applies_chart_inverse(self, manifold_fixture):
+        """Decode applies chart inverse."""
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
         z = chart.chart_map(data[0])
         np.testing.assert_allclose(_decode(z, chart), chart.chart_inverse(z), atol=1e-12)
 
     def test_encode_output_shape(self, manifold_fixture):
+        """Encode output shape."""
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
         z = _encode(data[0], chart)
         assert z.shape == (chart.intrinsic_dim,)
 
     def test_decode_output_shape(self, manifold_fixture):
+        """Decode output shape."""
         mf, _ = manifold_fixture
         chart = mf.atlas.charts[0]
         z = np.zeros(chart.intrinsic_dim)
@@ -140,6 +151,7 @@ class TestEncodeAndDecode:
 class TestBatchReconstruct:
     """Tests for Batch Reconstruct."""
     def test_same_result_as_reconstruct(self, manifold_fixture):
+        """Same result as reconstruct."""
         mf, data = manifold_fixture
         r1, res1 = reconstruct(data, mf)
         r2, res2 = _batch_reconstruct(data, mf, batch_size=5000)
@@ -147,6 +159,7 @@ class TestBatchReconstruct:
         np.testing.assert_allclose(res1, res2, atol=1e-12)
 
     def test_small_batch_gives_same_result(self, manifold_fixture):
+        """Small batch gives same result."""
         mf, data = manifold_fixture
         r_big, _ = _batch_reconstruct(data, mf, batch_size=10_000)
         r_small, _ = _batch_reconstruct(data, mf, batch_size=10)

@@ -44,31 +44,37 @@ def _valid_array(n: int = 20, d: int = 3) -> np.ndarray:
 class TestValidateErrors:
     """Tests for Validate Errors."""
     def test_non_numeric_ndarray_raises(self):
+        """Non numeric ndarray raises."""
         # String dtype cannot be cast to float64; pipeline must abort immediately.
         with pytest.raises(ValidationError):
             validate(np.array([["a", "b"], ["c", "d"]]))
 
     def test_non_numeric_dataframe_raises(self):
+        """Non numeric dataframe raises."""
         # Mixed-type DataFrames with object columns must be rejected at the gate.
         with pytest.raises(ValidationError):
             validate(pd.DataFrame({"x": [1.0, 2.0], "y": ["a", "b"]}))
 
     def test_single_row_raises(self):
+        """Single row raises."""
         # Fewer than 2 rows → cannot compute inter-sample structure.
         with pytest.raises(ValidationError):
             validate(np.ones((1, 3)))
 
     def test_single_column_raises(self):
+        """Single column raises."""
         # Fewer than 2 columns → cannot build a feature graph.
         with pytest.raises(ValidationError):
             validate(np.ones((5, 1)))
 
     def test_1d_array_raises(self):
+        """1d array raises."""
         # 1-D input has no column axis; dimension check catches it before conversion.
         with pytest.raises(ValidationError):
             validate(np.ones(5))
 
     def test_positive_infinite_raises(self):
+        """Positive infinite raises."""
         # +inf cannot be normalised; its presence terminates validation.
         arr = _valid_array()
         arr[0, 0] = np.inf
@@ -76,6 +82,7 @@ class TestValidateErrors:
             validate(arr)
 
     def test_negative_infinite_raises(self):
+        """Negative infinite raises."""
         # -inf is equally illegal; the range check does not distinguish sign.
         arr = _valid_array()
         arr[1, 2] = -np.inf
@@ -90,6 +97,7 @@ class TestValidateErrors:
 class TestValidateSuccess:
     """Tests for Validate Success."""
     def test_ndarray_output_shape_and_dtype(self):
+        """Ndarray output shape and dtype."""
         # Validated output must be float64 and preserve the input shape.
         arr = _valid_array()
         result = validate(arr)
@@ -100,6 +108,7 @@ class TestValidateSuccess:
         assert result.quality.n_features == arr.shape[1]
 
     def test_dataframe_converted_correctly(self):
+        """Dataframe converted correctly."""
         # DataFrames must be converted to a float64 ndarray with the same shape.
         df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0], "b": [5.0, 6.0, 7.0, 8.0]})
         result = validate(df)
@@ -108,27 +117,32 @@ class TestValidateSuccess:
         assert result.data.shape == (4, 2)  # rows = samples, cols = features
 
     def test_integer_array_converted_to_float64(self):
+        """Integer array converted to float64."""
         # Integer arrays are a valid input type; dtype must be promoted.
         arr = np.arange(20).reshape(4, 5).astype(np.int32)
         assert validate(arr).data.dtype == np.float64
 
     def test_min_2x2_passes(self):
+        """Min 2x2 passes."""
         # The minimum acceptable shape is (2, 2); verify the boundary is correct.
         arr = np.array([[1.0, 2.0], [3.0, 4.0]])
         assert validate(arr).data.shape == (2, 2)
 
     def test_nan_values_are_allowed(self):
+        """Nan values are allowed."""
         # NaN is a non-fatal issue; it is allowed and reflected in missing_pct.
         arr = _valid_array()
         arr[0, 0] = np.nan
         assert validate(arr).quality.missing_pct > 0.0
 
     def test_dataframe_with_nan(self):
+        """Dataframe with nan."""
         # NaN inside a DataFrame must also be tracked in the quality report.
         df = pd.DataFrame({"a": [1.0, np.nan, 3.0, 4.0], "b": [5.0, 6.0, 7.0, 8.0]})
         assert validate(df).quality.missing_pct > 0.0
 
     def test_constant_column_reported(self, caplog):
+        """Constant column reported."""
         # A zero-variance column triggers a WARNING and is listed in constant_dims.
         import logging
         arr = _valid_array()
@@ -138,11 +152,13 @@ class TestValidateSuccess:
         assert 1 in result.quality.constant_dims  # column index 1 must be flagged
 
     def test_duplicate_rows_detected(self):
+        """Duplicate rows detected."""
         # All-identical rows are detected and counted in the quality report.
         arr = np.vstack([np.ones((1, 3))] * 20)
         assert validate(arr).quality.duplicate_count > 0
 
     def test_suitability_score_is_in_unit_range(self):
+        """Suitability score is in unit range."""
         # Score is always clamped to [0, 1] regardless of deduction magnitude.
         result = validate(_valid_array())
         assert 0.0 <= result.quality.suitability_score <= 1.0
@@ -155,25 +171,31 @@ class TestValidateSuccess:
 class TestCheckDimensions:
     """Tests for Check Dimensions."""
     def test_valid_2d(self):
+        """Valid 2d."""
         assert _check_dimensions(np.ones((5, 3))) is True
 
     def test_exactly_2x2(self):
+        """Exactly 2x2."""
         # (2, 2) is the minimum; boundary must be included.
         assert _check_dimensions(np.ones((2, 2))) is True
 
     def test_1d_fails(self):
+        """1d fails."""
         # ndim==1 violates the 2-D requirement.
         assert _check_dimensions(np.ones(5)) is False
 
     def test_single_row_fails(self):
+        """Single row fails."""
         # shape[0]==1 < 2; rejected even if ncols is sufficient.
         assert _check_dimensions(np.ones((1, 5))) is False
 
     def test_single_col_fails(self):
+        """Single col fails."""
         # shape[1]==1 < 2; rejected even if nrows is sufficient.
         assert _check_dimensions(np.ones((5, 1))) is False
 
     def test_3d_fails(self):
+        """3d fails."""
         # 3-D arrays cannot be treated as a 2-D feature matrix.
         assert _check_dimensions(np.ones((3, 3, 3))) is False
 
@@ -185,14 +207,17 @@ class TestCheckDimensions:
 class TestCheckCompleteness:
     """Tests for Check Completeness."""
     def test_no_nans(self):
+        """No nans."""
         # All values present → completeness = 1.0.
         assert _check_completeness(np.ones((5, 3))) == pytest.approx(1.0)
 
     def test_all_nans(self):
+        """All nans."""
         # All values missing → completeness = 0.0.
         assert _check_completeness(np.full((5, 3), np.nan)) == pytest.approx(0.0)
 
     def test_half_nans(self):
+        """Half nans."""
         # Two of four values are NaN → completeness = 0.5.
         arr = np.ones((2, 2))
         arr[0, 0] = np.nan
@@ -200,6 +225,7 @@ class TestCheckCompleteness:
         assert _check_completeness(arr) == pytest.approx(0.5)
 
     def test_empty_array_returns_1(self):
+        """Empty array returns 1."""
         # Zero-element arrays have no missing values by convention.
         assert _check_completeness(np.empty((0, 0))) == pytest.approx(1.0)
 
@@ -211,28 +237,34 @@ class TestCheckCompleteness:
 class TestCheckTypes:
     """Tests for Check Types."""
     def test_float_array_ok(self):
+        """Float array ok."""
         # Default float64 dtype is numeric.
         assert _check_types(np.ones((3, 3))) is True
 
     def test_int_array_ok(self):
+        """Int array ok."""
         # Integer dtypes are also numeric and accepted.
         assert _check_types(np.ones((3, 3), dtype=np.int32)) is True
 
     def test_string_array_fails(self):
+        """String array fails."""
         # Object/string dtype is non-numeric; must be rejected.
         assert _check_types(np.array([["a", "b"]])) is False
 
     def test_numeric_dataframe_ok(self):
+        """Numeric dataframe ok."""
         # All-float columns pass the DataFrame dtype check.
         df = pd.DataFrame({"x": [1.0, 2.0], "y": [3.0, 4.0]})
         assert _check_types(df) is True
 
     def test_mixed_dataframe_fails(self):
+        """Mixed dataframe fails."""
         # One non-numeric column contaminates the entire DataFrame.
         df = pd.DataFrame({"x": [1.0, 2.0], "y": ["a", "b"]})
         assert _check_types(df) is False
 
     def test_all_string_dataframe_fails(self):
+        """All string dataframe fails."""
         # Fully non-numeric DataFrame is also rejected.
         df = pd.DataFrame({"x": ["a", "b"], "y": ["c", "d"]})
         assert _check_types(df) is False
@@ -245,20 +277,24 @@ class TestCheckTypes:
 class TestCheckRanges:
     """Tests for Check Ranges."""
     def test_finite_ok(self):
+        """Finite ok."""
         # All finite values; no infinities → passes.
         assert _check_ranges(np.ones((3, 3))) is True
 
     def test_nan_allowed(self):
+        """Nan allowed."""
         # NaN is not infinite; the range check specifically permits it.
         arr = np.array([[1.0, np.nan], [2.0, 3.0]])
         assert _check_ranges(arr) is True
 
     def test_pos_inf_rejected(self):
+        """Pos inf rejected."""
         # +inf is not finite and not NaN → fails.
         arr = np.array([[1.0, np.inf], [2.0, 3.0]])
         assert _check_ranges(arr) is False
 
     def test_neg_inf_rejected(self):
+        """Neg inf rejected."""
         # -inf is equally unacceptable; sign does not matter.
         arr = np.array([[1.0, -np.inf], [2.0, 3.0]])
         assert _check_ranges(arr) is False
@@ -271,12 +307,14 @@ class TestCheckRanges:
 class TestCheckConstantDims:
     """Tests for Check Constant Dims."""
     def test_no_constant(self):
+        """No constant."""
         # Random normal data almost certainly has non-zero variance in every column.
         rng = np.random.default_rng(1)
         arr = rng.standard_normal((10, 3))
         assert _check_constant_dims(arr) == []
 
     def test_one_constant_col(self):
+        """One constant col."""
         # Column 1 is the only constant one; it must be the sole flagged index.
         arr = np.ones((5, 3))
         arr[:, 0] = np.random.standard_normal(5)  # variable
@@ -285,6 +323,7 @@ class TestCheckConstantDims:
         assert 1 in result
 
     def test_all_nan_col_flagged(self):
+        """All nan col flagged."""
         # nanstd of an all-NaN column is NaN; treated the same as zero variance.
         arr = np.ones((5, 2))
         arr[:, 1] = np.nan
@@ -292,6 +331,7 @@ class TestCheckConstantDims:
         assert 1 in result
 
     def test_all_constant(self):
+        """All constant."""
         # Every column is constant; all three indices must appear in the result.
         arr = np.full((5, 3), 7.0)
         assert sorted(_check_constant_dims(arr)) == [0, 1, 2]
@@ -304,18 +344,21 @@ class TestCheckConstantDims:
 class TestCheckDuplicates:
     """Tests for Check Duplicates."""
     def test_no_duplicates(self):
+        """No duplicates."""
         # Random normal rows are almost certainly unique.
         rng = np.random.default_rng(2)
         arr = rng.standard_normal((10, 3))
         assert _check_duplicates(arr) == 0
 
     def test_with_duplicates(self):
+        """With duplicates."""
         # Row [1, 2, 3] appears 3 times; 2 are beyond the first occurrence.
         row = np.array([[1.0, 2.0, 3.0]])
         arr = np.vstack([row, row, row, np.array([[4.0, 5.0, 6.0]])])
         assert _check_duplicates(arr) == 2  # two duplicates beyond first occurrence
 
     def test_all_identical(self):
+        """All identical."""
         # Five identical rows → 4 duplicates (first occurrence is not counted).
         arr = np.ones((5, 2))
         assert _check_duplicates(arr) == 4
@@ -328,16 +371,19 @@ class TestCheckDuplicates:
 class TestCheckMinSamples:
     """Tests for Check Min Samples."""
     def test_sufficient_samples(self):
+        """Sufficient samples."""
         # 30 rows / 3 features = 10×; meets the rule-of-thumb exactly.
         arr = np.ones((30, 3))
         assert _check_min_samples(arr) is True
 
     def test_exactly_at_threshold(self):
+        """Exactly at threshold."""
         # The boundary (n == 10d) must be accepted, not rejected.
         arr = np.ones((30, 3))
         assert _check_min_samples(arr) is True
 
     def test_insufficient_samples(self):
+        """Insufficient samples."""
         # 5 rows / 3 features ≈ 1.7×; far below the 10× heuristic.
         arr = np.ones((5, 3))
         assert _check_min_samples(arr) is False
@@ -365,24 +411,28 @@ class TestEstimateSuitability:
         )
 
     def test_perfect_data(self):
+        """Perfect data."""
         # No issues → no deductions → score = 1.0.
         r = self._make_report()
         score = _estimate_suitability(r)
         assert score == pytest.approx(1.0)
 
     def test_all_missing_deducts_half(self):
+        """All missing deducts half."""
         # 100 % missing → deduction = 0.5 * 1.0 = 0.5 → score = 0.5.
         r = self._make_report(missing_pct=100.0)
         score = _estimate_suitability(r)
         assert score == pytest.approx(0.5)
 
     def test_all_constant_dims_deducts_30pct(self):
+        """All constant dims deducts 30pct."""
         # All 5 of 5 features are constant → deduction = 0.3 * 1.0 = 0.3 → score = 0.7.
         r = self._make_report(constant_dims=[0, 1, 2, 3, 4], n_features=5)
         score = _estimate_suitability(r)
         assert score == pytest.approx(0.7)
 
     def test_score_clamped_to_zero(self):
+        """Score clamped to zero."""
         # Combined deductions exceed 1.0; clamping must prevent negative scores.
         r = self._make_report(missing_pct=100.0, constant_dims=[0, 1, 2, 3, 4],
                               duplicate_count=100)
@@ -390,6 +440,7 @@ class TestEstimateSuitability:
         assert score == pytest.approx(0.0)  # clamped; raw would be negative
 
     def test_score_never_exceeds_one(self):
+        """Score never exceeds one."""
         # Even with no issues the score must stay ≤ 1.0 (no bonus points).
         r = self._make_report()
         score = _estimate_suitability(r)

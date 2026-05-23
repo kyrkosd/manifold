@@ -68,6 +68,7 @@ def _l2_rank(data: np.ndarray) -> np.ndarray:
 
 @pytest.fixture(scope="module")
 def band_anomaly_result() -> tuple[FinalReport, np.ndarray, np.ndarray]:
+    """Band anomaly result."""
     data, mask = _band_specific_dataset()
     cfg = PipelineConfig(
         manifold=ManifoldConfig(n_charts="auto", overlap_factor=0.2, max_chart_retries=3),
@@ -86,20 +87,24 @@ def band_anomaly_result() -> tuple[FinalReport, np.ndarray, np.ndarray]:
 class TestBandSpecificPipeline:
     """Tests for Band Specific Pipeline."""
     def test_pipeline_completes(self, band_anomaly_result):
+        """Pipeline completes."""
         result, _, _ = band_anomaly_result
         assert isinstance(result, FinalReport)
 
     def test_output_has_band_score_columns(self, band_anomaly_result):
+        """Output has band score columns."""
         result, _, _ = band_anomaly_result
         cols = result.anomaly_report.table.columns.tolist()
         band_cols = [c for c in cols if c.startswith("band_") and c.endswith("_score")]
         assert len(band_cols) >= 1
 
     def test_anomaly_report_length_matches_input(self, band_anomaly_result):
+        """Anomaly report length matches input."""
         result, _, data = band_anomaly_result
         assert len(result.anomaly_report.table) == len(data)
 
     def test_detects_some_anomalies(self, band_anomaly_result):
+        """Detects some anomalies."""
         result, _, _ = band_anomaly_result
         assert result.anomaly_report.summary["total_anomalies"] > 0
 

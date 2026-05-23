@@ -46,18 +46,21 @@ def _linear_subspace(n: int, intrinsic_dim: int, ambient_dim: int,
 class TestEstimate:
     """Tests for Estimate."""
     def test_returns_positive_int(self):
+        """Returns positive int."""
         # estimate() must always return a positive integer.
         data = _linear_subspace(n=100, intrinsic_dim=2, ambient_dim=8)
         result = estimate(data)
         assert isinstance(result, int) and result >= 1
 
     def test_bounded_by_n_features_minus_one(self):
+        """Bounded by n features minus one."""
         # Result must not exceed d - 1 regardless of input.
         data = _linear_subspace(n=100, intrinsic_dim=5, ambient_dim=8)
         result = estimate(data)
         assert result <= 7  # d - 1 = 8 - 1
 
     def test_1d_manifold_in_10d(self):
+        """1d manifold in 10d."""
         # Points on a line in 10D; all estimators should agree on dim ≈ 1.
         data = _linear_subspace(n=200, intrinsic_dim=1, ambient_dim=10, noise=0.01)
         result = estimate(data)
@@ -65,6 +68,7 @@ class TestEstimate:
         assert 1 <= result <= 3
 
     def test_3d_manifold_in_10d(self):
+        """3d manifold in 10d."""
         # Points in a 3D subspace of 10D; consensus should be near 3.
         data = _linear_subspace(n=300, intrinsic_dim=3, ambient_dim=10, noise=0.02)
         result = estimate(data)
@@ -72,6 +76,7 @@ class TestEstimate:
         assert 1 <= result <= 6
 
     def test_small_dataset_does_not_raise(self):
+        """Small dataset does not raise."""
         # Very small data (n < k) must fall back gracefully without error.
         data = _linear_subspace(n=10, intrinsic_dim=2, ambient_dim=5, noise=0.1)
         result = estimate(data)
@@ -85,6 +90,7 @@ class TestEstimate:
 class TestEigenvalueGap:
     """Tests for Eigenvalue Gap."""
     def test_1d_data_returns_1(self):
+        """1d data returns 1."""
         # All variance in one direction → largest ratio at index 0 → dim = 1.
         rng = np.random.default_rng(0)
         line_dir = rng.standard_normal(10)
@@ -94,12 +100,14 @@ class TestEigenvalueGap:
         assert result <= 2  # practically always 1 for clean 1D data
 
     def test_two_component_data(self):
+        """Two component data."""
         # Data lives in a 2D plane; eigenvalue gap should identify 2.
         data = _linear_subspace(n=200, intrinsic_dim=2, ambient_dim=8, noise=0.01)
         result = _eigenvalue_gap(data)
         assert 1 <= result <= 4
 
     def test_returns_at_least_1(self):
+        """Returns at least 1."""
         # Even for degenerate constant data the result must be ≥ 1.
         data = np.ones((10, 5))
         result = _eigenvalue_gap(data)
@@ -113,17 +121,20 @@ class TestEigenvalueGap:
 class TestLocalPCAEstimate:
     """Tests for Local PCAEstimate."""
     def test_falls_back_for_small_n(self):
+        """Falls back for small n."""
         # n=5 ≤ k=20: fallback to eigenvalue gap must not raise.
         data = _linear_subspace(n=5, intrinsic_dim=2, ambient_dim=6, noise=0.1)
         result = _local_pca_estimate(data, k=20)
         assert isinstance(result, int) and result >= 1
 
     def test_normal_path_returns_positive_int(self):
+        """Normal path returns positive int."""
         data = _linear_subspace(n=200, intrinsic_dim=3, ambient_dim=8, noise=0.02)
         result = _local_pca_estimate(data)
         assert isinstance(result, int) and result >= 1
 
     def test_bounded_by_ambient_dim(self):
+        """Bounded by ambient dim."""
         data = _linear_subspace(n=150, intrinsic_dim=3, ambient_dim=7, noise=0.02)
         result = _local_pca_estimate(data)
         assert result <= 7
@@ -136,11 +147,13 @@ class TestLocalPCAEstimate:
 class TestPCADim:
     """Tests for PCADim."""
     def test_single_point_returns_full_dim(self):
+        """Single point returns full dim."""
         # A 1-point neighbourhood has undefined PCA; returns ambient dimension.
         result = _pca_dim(np.ones((1, 5)))
         assert result == 5
 
     def test_1d_cluster(self):
+        """1d cluster."""
         # Points on a line; 1 component explains all variance.
         rng = np.random.default_rng(1)
         t = rng.standard_normal(20)
@@ -150,12 +163,14 @@ class TestPCADim:
         assert result == 1
 
     def test_full_dim_random_data(self):
+        """Full dim random data."""
         # Independent Gaussian data fills the ambient space.
         data = np.random.default_rng(2).standard_normal((30, 4))
         result = _pca_dim(data)
         assert 1 <= result <= 4
 
     def test_constant_points_returns_1(self):
+        """Constant points returns 1."""
         # All-identical points have zero variance → dimension 1.
         result = _pca_dim(np.ones((10, 4)))
         assert result == 1
@@ -168,12 +183,14 @@ class TestPCADim:
 class TestMLEEstimate:
     """Tests for MLEEstimate."""
     def test_very_small_n_returns_1(self):
+        """Very small n returns 1."""
         # n=2 → k < _MIN_K_MLE → early return of 1.
         data = np.random.default_rng(3).standard_normal((2, 4))
         result = _mle_estimate(data)
         assert result == 1
 
     def test_normal_path_positive_int(self):
+        """Normal path positive int."""
         data = _linear_subspace(n=200, intrinsic_dim=2, ambient_dim=8, noise=0.02)
         result = _mle_estimate(data)
         assert isinstance(result, int) and result >= 1
@@ -186,12 +203,14 @@ class TestMLEEstimate:
 class TestLevinaBickel:
     """Tests for Levina Bickel."""
     def test_single_actual_neighbour_returns_1(self):
+        """Single actual neighbour returns 1."""
         # Only 1 column after skipping self → not enough for log-ratios → 1.
         distances = np.array([[0.0, 1.0]])
         result = _levina_bickel(distances)
         assert result == 1
 
     def test_known_2d_estimate(self):
+        """Known 2d estimate."""
         # Simulate distances on a 2D manifold: r_j ∝ j^{1/2} → dim ≈ 2.
         rng = np.random.default_rng(7)
         n, k = 100, 10
@@ -217,24 +236,29 @@ class TestLevinaBickel:
 class TestConsensus:
     """Tests for Consensus."""
     def test_median_of_estimates(self):
+        """Median of estimates."""
         # Median of [2, 3, 4] is 3; clamped to [1, d-1=9].
         result = _consensus_dimension([2, 3, 4], n_features=10)
         assert result == 3
 
     def test_clamped_to_at_least_1(self):
+        """Clamped to at least 1."""
         # Even if all estimates are 0, result must be ≥ 1.
         result = _consensus_dimension([0, 0, 0], n_features=5)
         assert result == 1
 
     def test_clamped_to_n_features_minus_1(self):
+        """Clamped to n features minus 1."""
         # Estimates larger than d-1 must be clamped down.
         result = _consensus_dimension([10, 12, 15], n_features=5)
         assert result == 4  # d - 1 = 4
 
     def test_confidence_interval_min_max(self):
+        """Confidence interval min max."""
         lo, hi = _confidence_interval([1, 4, 2])
         assert lo == 1 and hi == 4
 
     def test_confidence_interval_single_estimate(self):
+        """Confidence interval single estimate."""
         lo, hi = _confidence_interval([3])
         assert lo == 3 and hi == 3

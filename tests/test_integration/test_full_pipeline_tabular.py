@@ -52,6 +52,7 @@ def _make_contaminated_tabular(n: int = 300, d: int = 5, intrinsic: int = 2,
 
 @pytest.fixture(scope="module")
 def pipeline() -> FourierManifoldPipeline:
+    """Pipeline."""
     cfg = PipelineConfig(
         manifold=ManifoldConfig(n_charts="auto", overlap_factor=0.2, max_chart_retries=3),
         anomaly=AnomalyConfig(contamination=0.05),
@@ -62,11 +63,13 @@ def pipeline() -> FourierManifoldPipeline:
 
 @pytest.fixture(scope="module")
 def clean_data() -> np.ndarray:
+    """Clean data."""
     return _make_clean_tabular()
 
 
 @pytest.fixture(scope="module")
 def contaminated_pair() -> tuple[np.ndarray, np.ndarray]:
+    """Contaminated pair."""
     return _make_contaminated_tabular()
 
 
@@ -77,28 +80,33 @@ def contaminated_pair() -> tuple[np.ndarray, np.ndarray]:
 class TestCleanData:
     """Tests for Clean Data."""
     def test_pipeline_returns_final_report(self, pipeline, clean_data):
+        """Pipeline returns final report."""
         result = pipeline.run(clean_data)
         assert isinstance(result, FinalReport)
 
     def test_anomaly_report_populated(self, pipeline, clean_data):
+        """Anomaly report populated."""
         result = pipeline.run(clean_data)
         r = result.anomaly_report
         assert r.table is not None
         assert len(r.table) == len(clean_data)
 
     def test_low_false_positive_rate(self, pipeline, clean_data):
+        """Low false positive rate."""
         result = pipeline.run(clean_data)
         sd = result.anomaly_report.summary
         rate = sd["anomaly_rate"]
         assert rate < 0.20, f"FPR too high on clean data: {rate:.3f}"
 
     def test_timing_dict_has_all_phases(self, pipeline, clean_data):
+        """Timing dict has all phases."""
         result = pipeline.run(clean_data)
         for phase in ("ingest", "structure", "fourier", "manifold", "anomaly", "reporting"):
             assert phase in result.timing
             assert result.timing[phase] >= 0.0
 
     def test_manifold_summary_populated(self, pipeline, clean_data):
+        """Manifold summary populated."""
         result = pipeline.run(clean_data)
         ms = result.manifold_summary
         assert ms["n_charts"] >= 1
@@ -106,16 +114,19 @@ class TestCleanData:
         assert ms["n_points"] == len(clean_data)
 
     def test_config_preserved_in_report(self, pipeline, clean_data):
+        """Config preserved in report."""
         result = pipeline.run(clean_data)
         assert result.config is pipeline.config
 
     def test_table_has_required_columns(self, pipeline, clean_data):
+        """Table has required columns."""
         result = pipeline.run(clean_data)
         cols = result.anomaly_report.table.columns.tolist()
         for col in ("point_index", "overall_score", "is_anomaly", "top_anomalous_band"):
             assert col in cols
 
     def test_summary_has_required_keys(self, pipeline, clean_data):
+        """Summary has required keys."""
         result = pipeline.run(clean_data)
         sm = result.anomaly_report.summary
         for key in ("total_points", "total_anomalies", "anomaly_rate", "mean_score"):
@@ -129,11 +140,13 @@ class TestCleanData:
 class TestContaminatedData:
     """Tests for Contaminated Data."""
     def test_pipeline_completes(self, pipeline, contaminated_pair):
+        """Pipeline completes."""
         data, _ = contaminated_pair
         result = pipeline.run(data)
         assert isinstance(result, FinalReport)
 
     def test_table_length_matches_input(self, pipeline, contaminated_pair):
+        """Table length matches input."""
         data, _ = contaminated_pair
         result = pipeline.run(data)
         assert len(result.anomaly_report.table) == len(data)
@@ -177,9 +190,11 @@ class TestContaminatedData:
 class TestCreatePipeline:
     """Tests for Create Pipeline."""
     def test_no_args(self):
+        """No args."""
         p = create_pipeline()
         assert isinstance(p, FourierManifoldPipeline)
 
     def test_with_dict(self):
+        """With dict."""
         p = create_pipeline({"verbose": False})
         assert p.config.verbose is False

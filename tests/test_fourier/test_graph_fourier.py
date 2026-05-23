@@ -42,32 +42,38 @@ def _data(n: int = 20, d: int = 4, seed: int = 0) -> np.ndarray:
 class TestGraphFourierInit:
     """Tests for Graph Fourier Init."""
     def test_eigenvectors_shape(self):
+        """Eigenvectors shape."""
         # K4 has 4 nodes; eigenvector matrix must be square (4, 4).
         engine = GraphFourierEngine(_k4_graph())
         assert engine.basis.eigenvectors.shape == (4, 4)
 
     def test_eigenvalues_shape(self):
+        """Eigenvalues shape."""
         # One eigenvalue per spectral component.
         engine = GraphFourierEngine(_k4_graph())
         assert engine.basis.eigenvalues.shape == (4,)
 
     def test_eigenvalues_sorted_ascending(self):
+        """Eigenvalues sorted ascending."""
         # EigenBasis contract: eigenvalues are non-decreasing.
         engine = GraphFourierEngine(_k4_graph())
         vals = engine.basis.eigenvalues
         assert np.all(vals[1:] >= vals[:-1] - 1e-10)
 
     def test_k4_smallest_eigenvalue_zero(self):
+        """K4 smallest eigenvalue zero."""
         # Laplacian is positive semi-definite; first eigenvalue is 0 (dc mode).
         engine = GraphFourierEngine(_k4_graph())
         assert engine.basis.eigenvalues[0] == pytest.approx(0.0, abs=1e-8)
 
     def test_k4_nonzero_eigenvalues_are_four(self):
+        """K4 nonzero eigenvalues are four."""
         # K4 has eigenvalue 4 with multiplicity 3.
         engine = GraphFourierEngine(_k4_graph())
         np.testing.assert_allclose(engine.basis.eigenvalues[1:], 4.0, atol=1e-8)
 
     def test_eigenvectors_orthonormal(self):
+        """Eigenvectors orthonormal."""
         # eigenvec_mat^T @ eigenvec_mat = I; orthonormality guarantees an exact round-trip.
         engine = GraphFourierEngine(_p4_graph())
         eigenvec_mat = engine.basis.eigenvectors
@@ -81,16 +87,19 @@ class TestGraphFourierInit:
 class TestTransformAndInverse:
     """Tests for Transform And Inverse."""
     def test_transform_shape(self):
+        """Transform shape."""
         # Forward GFT must preserve the (n, d) data shape.
         engine = GraphFourierEngine(_k4_graph())
         assert engine.transform(_data(n=10, d=4)).shape == (10, 4)
 
     def test_inverse_shape(self):
+        """Inverse shape."""
         # Inverse GFT must also return (n, d).
         engine = GraphFourierEngine(_k4_graph())
         assert engine.inverse_transform(_data(n=10, d=4, seed=1)).shape == (10, 4)
 
     def test_round_trip_recovery(self):
+        """Round trip recovery."""
         # forward followed by inverse must recover the original data exactly.
         engine = GraphFourierEngine(_p4_graph())
         data = _data(n=15, d=4, seed=2)
@@ -98,6 +107,7 @@ class TestTransformAndInverse:
         np.testing.assert_allclose(recovered, data, atol=1e-10)
 
     def test_transform_local_shape(self):
+        """Transform local shape."""
         # transform_local output rows == number of True entries in mask.
         engine = GraphFourierEngine(_k4_graph())
         data = _data(n=20, d=4, seed=3)
@@ -106,6 +116,7 @@ class TestTransformAndInverse:
         assert engine.transform_local(data, mask).shape == (8, 4)
 
     def test_transform_local_all_true_matches_full(self):
+        """Transform local all true matches full."""
         # All-True mask: transform_local must equal transform on the same data.
         engine = GraphFourierEngine(_k4_graph())
         data = _data(n=12, d=4, seed=4)
@@ -124,6 +135,7 @@ class TestTransformAndInverse:
 class TestDisconnectedGraph:
     """Tests for Disconnected Graph."""
     def test_all_zero_adjacency_does_not_raise(self):
+        """All zero adjacency does not raise."""
         # Fully disconnected graph: all-zero Laplacian, all-zero eigenvalues.
         adj = np.zeros((4, 4))
         graph = FeatureGraph(adjacency=adj, nodes=["0", "1", "2", "3"], stats={})
@@ -131,6 +143,7 @@ class TestDisconnectedGraph:
         assert engine.basis.eigenvectors.shape == (4, 4)
 
     def test_round_trip_with_partial_graph(self):
+        """Round trip with partial graph."""
         # Only one edge (0-1); nodes 2 and 3 are isolated — round-trip must hold.
         adj = np.zeros((4, 4))
         adj[0, 1] = adj[1, 0] = 1.0

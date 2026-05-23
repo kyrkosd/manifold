@@ -59,22 +59,26 @@ def _ortho_cols(d: int, k: int, seed: int = 0) -> np.ndarray:
 class TestComputeSpace:
     """Tests for Compute Space."""
     def test_returns_tangent_space_instance(self):
+        """Returns tangent space instance."""
         # compute_space must return a TangentSpace dataclass.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         assert isinstance(ts, TangentSpace)
 
     def test_chart_dim_and_ambient_dim(self):
+        """Chart dim and ambient dim."""
         # S² in ℝ³: chart_dim=2, ambient_dim=3.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         assert ts.chart_dim == 2 and ts.ambient_dim == 3
 
     def test_tangent_basis_orthonormal_at_north_pole(self):
+        """Tangent basis orthonormal at north pole."""
         # tangent_b @ tangent_b.T must be the identity (orthonormal columns).
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         tangent_b = ts.tangent_basis
         np.testing.assert_allclose(tangent_b.T @ tangent_b, np.eye(2), atol=1e-6)
 
     def test_sphere_tangent_spans_xy_plane(self):
+        """Sphere tangent spans xy plane."""
         # Tangent plane at north pole must lie in the xy-plane (z-component ≈ 0).
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         # Each tangent basis column must be orthogonal to the z-axis.
@@ -83,6 +87,7 @@ class TestComputeSpace:
             assert abs(np.dot(ts.tangent_basis[:, j], z_axis)) == pytest.approx(0.0, abs=1e-5)
 
     def test_sphere_normal_is_z_axis(self):
+        """Sphere normal is z axis."""
         # Normal at north pole must be the z-axis (outward radial direction).
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         z_axis = np.array([0.0, 0.0, 1.0])
@@ -91,6 +96,7 @@ class TestComputeSpace:
         assert abs(abs(np.dot(n, z_axis)) - 1.0) < 1e-5
 
     def test_point_is_stored(self):
+        """Point is stored."""
         # The base point must be stored verbatim in the TangentSpace.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         np.testing.assert_array_equal(ts.point, _NORTH_POLE)
@@ -103,17 +109,20 @@ class TestComputeSpace:
 class TestDerivativesAndBasis:
     """Tests for Derivatives And Basis."""
     def test_chart_derivatives_shape(self):
+        """Chart derivatives shape."""
         # Jacobian of φ⁻¹ at (0,0) must be (3, 2) for a sphere chart.
         jacobian = _chart_derivatives(_sphere_chart_inverse, np.array([0.0, 0.0]), eps=1e-5)
         assert jacobian.shape == (3, 2)
 
     def test_span_basis_orthonormal(self):
+        """Span basis orthonormal."""
         # Orthonormalized columns of a full-rank Jacobian must satisfy tangent_b.T @ tangent_b = I.
         jacobian = _chart_derivatives(_sphere_chart_inverse, np.array([0.0, 0.0]), eps=1e-5)
         tangent_b = _span_basis(jacobian)
         np.testing.assert_allclose(tangent_b.T @ tangent_b, np.eye(tangent_b.shape[1]), atol=1e-6)
 
     def test_span_basis_shape_preserved(self):
+        """Span basis shape preserved."""
         # _span_basis must return (ambient_dim, chart_dim) matching input.
         cols = _ortho_cols(5, 3)
         tangent_b = _span_basis(cols)
@@ -127,18 +136,21 @@ class TestDerivativesAndBasis:
 class TestNormalSpace:
     """Tests for Normal Space."""
     def test_normal_orthogonal_to_tangent(self):
+        """Normal orthogonal to tangent."""
         # Every normal vector must be orthogonal to every tangent vector.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         cross = ts.tangent_basis.T @ ts.normal_basis  # (2, 1)
         np.testing.assert_allclose(cross, 0.0, atol=1e-6)
 
     def test_full_dim_chart_gives_empty_normal(self):
+        """Full dim chart gives empty normal."""
         # chart_dim == ambient_dim → normal space has 0 columns.
         tangent_b = _ortho_cols(3, 3)   # full-rank 3×3
         normal_b = compute_normal_space(tangent_b, ambient_dim=3)
         assert normal_b.shape == (3, 0)
 
     def test_normal_basis_orthonormal(self):
+        """Normal basis orthonormal."""
         # Normal columns must be orthonormal: normal_b.T @ normal_b = I.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         normal_b = ts.normal_basis
@@ -152,6 +164,7 @@ class TestNormalSpace:
 class TestProjections:
     """Tests for Projections."""
     def test_tangent_plus_normal_recovers_vector(self):
+        """Tangent plus normal recovers vector."""
         # For S² at north pole, v = v_tangent + v_normal for any ambient vector.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         v = np.array([1.0, 2.0, 3.0])
@@ -160,6 +173,7 @@ class TestProjections:
         np.testing.assert_allclose(vt + vn, v, atol=1e-6)
 
     def test_tangent_vector_projects_to_itself(self):
+        """Tangent vector projects to itself."""
         # A tangent vector projected onto the tangent space is unchanged.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         t = ts.tangent_basis[:, 0]   # first tangent basis column
@@ -167,6 +181,7 @@ class TestProjections:
         np.testing.assert_allclose(vt, t, atol=1e-6)
 
     def test_normal_vector_projects_to_itself(self):
+        """Normal vector projects to itself."""
         # A normal vector projected onto the normal space is unchanged.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
         n = ts.normal_basis[:, 0]
@@ -181,16 +196,19 @@ class TestProjections:
 class TestTangentVariation:
     """Tests for Tangent Variation."""
     def test_single_space_returns_zero(self):
+        """Single space returns zero."""
         # One space → no pairs → variation = 0.
         tangent_b = _ortho_cols(3, 2)
         assert _tangent_variation([tangent_b]) == pytest.approx(0.0)
 
     def test_identical_spaces_return_zero(self):
+        """Identical spaces return zero."""
         # Two copies of the same basis → principal angles = 0.
         tangent_b = _ortho_cols(4, 2, seed=1)
         assert _tangent_variation([tangent_b, tangent_b]) == pytest.approx(0.0, abs=1e-10)
 
     def test_orthogonal_spaces_return_pi_over_two(self):
+        """Orthogonal spaces return pi over two."""
         # Two 1-D spaces along orthogonal axes → angle = π/2.
         basis_a = np.array([[1.0], [0.0], [0.0]])   # x-axis
         basis_b = np.array([[0.0], [1.0], [0.0]])   # y-axis

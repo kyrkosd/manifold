@@ -60,36 +60,43 @@ def _make_report(n: int = 60, n_bands: int = 3, n_anomaly: int = 6,
 class TestToJson:
     """Tests for To Json."""
     def test_returns_string(self):
+        """Returns string."""
         r = _make_report()
         assert isinstance(to_json(r), str)
 
     def test_valid_json(self):
+        """Valid json."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         assert isinstance(parsed, dict)
 
     def test_has_summary_key(self):
+        """Has summary key."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         assert "summary" in parsed
 
     def test_has_type_distribution_key(self):
+        """Has type distribution key."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         assert "type_distribution" in parsed
 
     def test_has_top_anomalies_key(self):
+        """Has top anomalies key."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         assert "top_anomalies" in parsed
 
     def test_summary_values_are_native_types(self):
+        """Summary values are native types."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         for val in parsed["summary"].values():
             assert type(val) in (int, float, str, bool, list, dict, type(None))
 
     def test_no_numpy_types_in_output(self):
+        """No numpy types in output."""
         # If numpy types slipped through, json.loads would have raised TypeError.
         # This test is satisfied if test_valid_json passes, but we also verify
         # that every scalar in summary is a Python native type.
@@ -100,12 +107,14 @@ class TestToJson:
             assert not isinstance(val, np.generic)
 
     def test_total_points_roundtrips_correctly(self):
+        """Total points roundtrips correctly."""
         n = 60
         r = _make_report(n=n)
         parsed = json.loads(to_json(r))
         assert parsed["summary"]["total_points"] == n
 
     def test_top_anomalies_is_list(self):
+        """Top anomalies is list."""
         r = _make_report()
         parsed = json.loads(to_json(r))
         assert isinstance(parsed["top_anomalies"], list)
@@ -118,6 +127,7 @@ class TestToJson:
 class TestToCsv:
     """Tests for To Csv."""
     def test_creates_file(self):
+        """Creates file."""
         r = _make_report()
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
             path = f.name
@@ -128,6 +138,7 @@ class TestToCsv:
             os.unlink(path)
 
     def test_roundtrip_shape(self):
+        """Roundtrip shape."""
         r = _make_report(n=60, n_bands=3)
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
             path = f.name
@@ -139,6 +150,7 @@ class TestToCsv:
             os.unlink(path)
 
     def test_roundtrip_columns(self):
+        """Roundtrip columns."""
         r = _make_report()
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
             path = f.name
@@ -150,6 +162,7 @@ class TestToCsv:
             os.unlink(path)
 
     def test_overall_score_preserved(self):
+        """Overall score preserved."""
         r = _make_report()
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
             path = f.name
@@ -165,6 +178,7 @@ class TestToCsv:
             os.unlink(path)
 
     def test_no_unnamed_index_column(self):
+        """No unnamed index column."""
         # to_csv must use index=False so no "Unnamed: 0" column appears.
         r = _make_report()
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
@@ -184,14 +198,17 @@ class TestToCsv:
 class TestToDataframe:
     """Tests for To Dataframe."""
     def test_returns_dataframe(self):
+        """Returns dataframe."""
         r = _make_report()
         assert isinstance(to_dataframe(r), pd.DataFrame)
 
     def test_is_same_object_as_table(self):
+        """Is same object as table."""
         r = _make_report()
         assert to_dataframe(r) is r.table
 
     def test_shape_matches_n(self):
+        """Shape matches n."""
         n = 60
         r = _make_report(n=n)
         df = to_dataframe(r)
@@ -205,22 +222,26 @@ class TestToDataframe:
 class TestSummaryDict:
     """Tests for Summary Dict."""
     def test_returns_dict(self):
+        """Returns dict."""
         r = _make_report()
         assert isinstance(summary_dict(r), dict)
 
     def test_includes_summary_keys(self):
+        """Includes summary keys."""
         r = _make_report()
         sd = summary_dict(r)
         for key in r.summary:
             assert key in sd
 
     def test_includes_type_distribution_keys(self):
+        """Includes type distribution keys."""
         r = _make_report()
         sd = summary_dict(r)
         for key in r.type_distribution:
             assert key in sd
 
     def test_all_values_are_python_native(self):
+        """All values are python native."""
         r = _make_report()
         sd = summary_dict(r)
         for val in sd.values():
@@ -229,6 +250,7 @@ class TestSummaryDict:
             )
 
     def test_total_anomalies_correct(self):
+        """Total anomalies correct."""
         n, n_anomaly = 60, 6
         r = _make_report(n=n, n_anomaly=n_anomaly)
         sd = summary_dict(r)

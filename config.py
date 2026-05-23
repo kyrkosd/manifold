@@ -59,6 +59,7 @@ class PipelineConfig(BaseModel):
 
 
 def default_config() -> PipelineConfig:
+    """Default config."""
     return PipelineConfig()
 
 

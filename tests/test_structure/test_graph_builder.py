@@ -59,21 +59,25 @@ class TestBuildAdjacency:
     """Tests for the structural correctness of the adjacency matrix returned by build()."""
 
     def test_shape_is_d_by_d(self):
+        """Shape is d by d."""
         # Graph nodes are features (columns), not samples (rows).
         data = _independent_data(n=50, d=8)
         assert build(data).adjacency.shape == (8, 8)
 
     def test_is_symmetric(self):
+        """Is symmetric."""
         # The feature graph is undirected; adjacency must equal its transpose.
         adj = build(_independent_data()).adjacency
         np.testing.assert_allclose(adj, adj.T, atol=1e-8)
 
     def test_zero_diagonal(self):
+        """Zero diagonal."""
         # No self-loops: diagonal entries must all be zero.
         adj = build(_independent_data()).adjacency
         np.testing.assert_allclose(np.diag(adj), 0.0, atol=1e-10)
 
     def test_non_negative(self):
+        """Non negative."""
         # Edge weights must be non-negative after thresholding.
         assert np.all(build(_independent_data()).adjacency >= 0)
 
@@ -86,30 +90,36 @@ class TestBuildGraph:
     """Tests for the FeatureGraph wrapper, node labels, stats, and edge cases."""
 
     def test_returns_feature_graph(self):
+        """Returns feature graph."""
         # The return type must always be FeatureGraph.
         assert isinstance(build(_independent_data()), FeatureGraph)
 
     def test_nodes_match_feature_count(self):
+        """Nodes match feature count."""
         # Number of node labels must equal d.
         assert len(build(_independent_data(n=50, d=5)).nodes) == 5
 
     def test_nodes_are_string_feature_indices(self):
+        """Nodes are string feature indices."""
         # Node identifiers are the string representations of column indices.
         assert build(_independent_data(n=50, d=4)).nodes == ["0", "1", "2", "3"]
 
     def test_all_stats_keys_present(self):
+        """All stats keys present."""
         # All four stats keys must be populated regardless of graph structure.
         stats = build(_independent_data()).stats
         expected = {"n_edges", "density", "n_components", "avg_degree"}
         assert expected.issubset(stats.keys())
 
     def test_nan_in_data_does_not_crash(self):
+        """Nan in data does not crash."""
         # NaN values are imputed with 0; build() must not raise.
         data = _independent_data()
         data[0, 0] = np.nan
         assert isinstance(build(data), FeatureGraph)
 
     def test_correlated_data_has_edges(self):
+        """Correlated data has edges."""
         # Highly correlated feature pairs should survive the adaptive threshold.
         assert build(_correlated_data()).stats["n_edges"] > 0
 
@@ -121,6 +131,7 @@ class TestBuildGraph:
 class TestBuildLocal:
     """Tests for Build Local."""
     def test_returns_feature_graph(self):
+        """Returns feature graph."""
         data = _independent_data(n=80, d=6)
         mask = np.zeros(80, dtype=bool)
         mask[:40] = True   # select first half of rows
@@ -128,6 +139,7 @@ class TestBuildLocal:
         assert isinstance(result, FeatureGraph)
 
     def test_adjacency_shape_unchanged(self):
+        """Adjacency shape unchanged."""
         # d (columns) is fixed; shape of adjacency does not depend on mask.
         data = _independent_data(n=80, d=6)
         mask = np.ones(80, dtype=bool)
@@ -136,6 +148,7 @@ class TestBuildLocal:
         assert result.adjacency.shape == (6, 6)
 
     def test_mask_selects_subset(self):
+        """Mask selects subset."""
         # build_local with all-True mask should equal build().
         data = _independent_data(n=60, d=5, seed=7)
         mask = np.ones(60, dtype=bool)
@@ -151,28 +164,33 @@ class TestBuildLocal:
 class TestCorrelationGraph:
     """Tests for Correlation Graph."""
     def test_shape(self):
+        """Shape."""
         data = _independent_data(n=50, d=4)
         result = _correlation_graph(data)
         assert result.shape == (4, 4)
 
     def test_zero_diagonal(self):
+        """Zero diagonal."""
         # Self-correlations are excluded from the graph.
         data = _independent_data()
         result = _correlation_graph(data)
         np.testing.assert_allclose(np.diag(result), 0.0)
 
     def test_values_in_unit_interval(self):
+        """Values in unit interval."""
         # Absolute correlation is in [0, 1].
         data = _independent_data()
         result = _correlation_graph(data)
         assert np.all(result >= 0) and np.all(result <= 1.0 + 1e-8)
 
     def test_symmetric(self):
+        """Symmetric."""
         data = _independent_data()
         result = _correlation_graph(data)
         np.testing.assert_allclose(result, result.T, atol=1e-10)
 
     def test_perfectly_correlated_features_near_one(self):
+        """Perfectly correlated features near one."""
         # Two identical features must have |corr| ≈ 1.
         rng = np.random.default_rng(10)
         base = rng.standard_normal(50)
@@ -188,27 +206,32 @@ class TestCorrelationGraph:
 class TestMIGraph:
     """Tests for MIGraph."""
     def test_shape(self):
+        """Shape."""
         data = _independent_data(n=50, d=5)
         result = _mutual_information_graph(data)
         assert result.shape == (5, 5)
 
     def test_zero_diagonal(self):
+        """Zero diagonal."""
         data = _independent_data()
         result = _mutual_information_graph(data)
         np.testing.assert_allclose(np.diag(result), 0.0)
 
     def test_symmetric(self):
+        """Symmetric."""
         data = _independent_data()
         result = _mutual_information_graph(data)
         np.testing.assert_allclose(result, result.T, atol=1e-8)
 
     def test_values_in_unit_interval(self):
+        """Values in unit interval."""
         # MI is normalised to [0, 1] by dividing by the maximum.
         data = _independent_data()
         result = _mutual_information_graph(data)
         assert np.all(result >= 0) and np.all(result <= 1.0 + 1e-8)
 
     def test_constant_feature_gives_zero_column(self):
+        """Constant feature gives zero column."""
         # Constant feature has zero MI with everything; column must be zero.
         rng = np.random.default_rng(5)
         data = rng.standard_normal((50, 3))
@@ -224,22 +247,26 @@ class TestMIGraph:
 class TestPartialCorrelationGraph:
     """Tests for Partial Correlation Graph."""
     def test_shape(self):
+        """Shape."""
         data = _independent_data(n=80, d=5)
         result = _partial_correlation_graph(data)
         assert result.shape == (5, 5)
 
     def test_zero_diagonal(self):
+        """Zero diagonal."""
         data = _independent_data(n=80, d=5)
         result = _partial_correlation_graph(data)
         np.testing.assert_allclose(np.diag(result), 0.0)
 
     def test_values_in_unit_interval(self):
+        """Values in unit interval."""
         # Absolute partial correlation is in [0, 1].
         data = _independent_data(n=80, d=5)
         result = _partial_correlation_graph(data)
         assert np.all(result >= 0) and np.all(result <= 1.0 + 1e-8)
 
     def test_small_data_falls_back_gracefully(self):
+        """Small data falls back gracefully."""
         # With fewer samples than features, GraphicalLasso fails; pseudoinverse kicks in.
         data = _independent_data(n=8, d=6)
         result = _partial_correlation_graph(data)  # must not raise
@@ -249,12 +276,14 @@ class TestPartialCorrelationGraph:
 class TestPrecisionToPartialCorr:
     """Tests for Precision To Partial Corr."""
     def test_identity_precision_gives_zero_partial_corr(self):
+        """Identity precision gives zero partial corr."""
         # Identity precision matrix → no off-diagonal partial correlation.
         prec_mat = np.eye(4)
         result = _precision_to_partial_corr(prec_mat)
         np.testing.assert_allclose(result, 0.0, atol=1e-10)
 
     def test_output_clipped_to_unit_interval(self):
+        """Output clipped to unit interval."""
         # Even with a numerically ill-conditioned matrix, output must be in [0, 1].
         prec_mat = np.full((3, 3), 100.0)
         np.fill_diagonal(prec_mat, 200.0)
@@ -269,6 +298,7 @@ class TestPrecisionToPartialCorr:
 class TestGraphCombineAndThreshold:
     """Tests for Graph Combine And Threshold."""
     def test_adaptive_threshold_formula(self):
+        """Adaptive threshold formula."""
         # Known matrix: upper triangle = [0.1, 0.9]; mean=0.5, std≈0.4.
         combined = np.array([[0.0, 0.5], [0.5, 0.0]])  # mean of two matrices
         upper = np.array([0.5])
@@ -276,6 +306,7 @@ class TestGraphCombineAndThreshold:
         assert _adaptive_threshold(combined) == pytest.approx(expected)
 
     def test_combine_graphs_elementwise_mean(self):
+        """Combine graphs elementwise mean."""
         # Three (2,2) matrices → element-wise mean.
         a = np.array([[0.0, 0.3], [0.3, 0.0]])
         b = np.array([[0.0, 0.6], [0.6, 0.0]])
@@ -284,6 +315,7 @@ class TestGraphCombineAndThreshold:
         np.testing.assert_allclose(result, np.array([[0.0, 0.6], [0.6, 0.0]]))
 
     def test_threshold_graph_zeros_below(self):
+        """Threshold graph zeros below."""
         # Edges with weight < threshold must become 0.
         w = np.array([[0.0, 0.2, 0.8], [0.2, 0.0, 0.5], [0.8, 0.5, 0.0]])
         result = _threshold_graph(w, 0.6)
@@ -291,6 +323,7 @@ class TestGraphCombineAndThreshold:
         assert result[0, 2] == pytest.approx(0.8)   # 0.8 >= 0.6 → kept
 
     def test_threshold_graph_does_not_modify_original(self):
+        """Threshold graph does not modify original."""
         # _threshold_graph must return a copy, not modify in-place.
         w = np.array([[0.0, 0.3], [0.3, 0.0]])
         original = w.copy()
@@ -305,14 +338,17 @@ class TestGraphCombineAndThreshold:
 class TestValidateGraph:
     """Tests for Validate Graph."""
     def test_valid_graph_returns_true(self):
+        """Valid graph returns true."""
         # A symmetric, non-negative, zero-diagonal matrix is valid.
         assert _validate_graph(np.array([[0.0, 0.5], [0.5, 0.0]])) is True
 
     def test_non_symmetric_returns_false(self):
+        """Non symmetric returns false."""
         # Asymmetric matrix must fail validation.
         assert _validate_graph(np.array([[0.0, 0.3], [0.7, 0.0]])) is False
 
     def test_non_zero_diagonal_returns_false(self):
+        """Non zero diagonal returns false."""
         # A self-loop (non-zero diagonal) must fail validation.
         assert _validate_graph(np.array([[1.0, 0.5], [0.5, 1.0]])) is False
 
@@ -324,12 +360,14 @@ class TestValidateGraph:
 class TestComputeGraphStats:
     """Tests for Compute Graph Stats."""
     def test_stats_keys_present(self):
+        """Stats keys present."""
         # All four stat keys must be populated for any valid graph.
         g = np.array([[0.0, 0.7, 0.0], [0.7, 0.0, 0.4], [0.0, 0.4, 0.0]])
         stats = _compute_graph_stats(g)
         assert set(stats.keys()) == {"n_edges", "density", "n_components", "avg_degree"}
 
     def test_path_graph_stats_values(self):
+        """Path graph stats values."""
         # 3-node path graph: 2 edges, density=2/3, 1 component.
         g = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
         stats = _compute_graph_stats(g)
