@@ -75,6 +75,7 @@ def _make_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 class TestBuild:
+    """Tests for Build."""
     def test_returns_chart_instance(self):
         chart, _ = _make_chart()
         assert isinstance(chart, Chart)
@@ -112,6 +113,7 @@ class TestBuild:
 # ---------------------------------------------------------------------------
 
 class TestRoundTrip:
+    """Tests for Round Trip."""
     def test_reconstruction_error_bounded(self):
         # chart_inverse(chart_map(p)) = V@V.T@p, projecting onto chart span.
         # Residual is the normal-space component; bounded by the data norm.
@@ -133,6 +135,7 @@ class TestRoundTrip:
 # ---------------------------------------------------------------------------
 
 class TestExpandRegion:
+    """Tests for Expand Region."""
     def test_region_indices_unchanged(self):
         data, _ = _subspace_data()
         indices = np.arange(20, dtype=np.intp)
@@ -164,6 +167,7 @@ class TestExpandRegion:
 # ---------------------------------------------------------------------------
 
 class TestChartMapAndInverse:
+    """Tests for Chart Map And Inverse."""
     def test_chart_map_is_linear_projection(self):
         # chart_map(p) = qr_mat.T @ p.
         rng = np.random.default_rng(5)
@@ -188,6 +192,7 @@ class TestChartMapAndInverse:
 # ---------------------------------------------------------------------------
 
 class TestSelectBasisAdaptive:
+    """Tests for Select Basis Adaptive."""
     def test_returns_correct_length(self):
         data, _ = _subspace_data(n=30)
         ref = _reference_basis(data)

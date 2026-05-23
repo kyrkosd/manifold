@@ -107,6 +107,7 @@ def _bad_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 class TestValidate:
+    """Tests for Validate."""
     def test_good_chart_is_valid(self):
         chart, region_data = _good_chart()
         valid, score, _reason = validate(chart, region_data)
@@ -128,6 +129,7 @@ class TestValidate:
 # ---------------------------------------------------------------------------
 
 class TestCheckInjectivity:
+    """Tests for Check Injectivity."""
     def test_good_chart_passes_injectivity(self):
         chart, region_data = _good_chart()
         assert _check_injectivity(chart, region_data, threshold=0.8) is True
@@ -146,6 +148,7 @@ class TestCheckInjectivity:
 # ---------------------------------------------------------------------------
 
 class TestCheckContinuity:
+    """Tests for Check Continuity."""
     def test_good_chart_continuous(self):
         chart, region_data = _good_chart()
         assert _check_continuity(chart, region_data) is True
@@ -160,6 +163,7 @@ class TestCheckContinuity:
 # ---------------------------------------------------------------------------
 
 class TestCheckInvertibility:
+    """Tests for Check Invertibility."""
     def test_good_chart_invertible(self):
         chart, region_data = _good_chart()
         assert _check_invertibility(chart, region_data, tolerance=0.5) is True
@@ -174,6 +178,7 @@ class TestCheckInvertibility:
 # ---------------------------------------------------------------------------
 
 class TestComputeDistortion:
+    """Tests for Compute Distortion."""
     def test_orthonormal_basis_has_distortion_one(self):
         # Orthonormal columns → singular values all 1 → condition number 1.
         chart, _ = _good_chart()
@@ -185,6 +190,7 @@ class TestComputeDistortion:
 # ---------------------------------------------------------------------------
 
 class TestQualityScore:
+    """Tests for Quality Score."""
     def test_good_chart_score_above_half(self):
         chart, region_data = _good_chart()
         assert _quality_score(chart, region_data) > 0.5
@@ -200,6 +206,7 @@ class TestQualityScore:
 # ---------------------------------------------------------------------------
 
 class TestSplitRegion:
+    """Tests for Split Region."""
     def test_returns_two_parts(self):
         chart, region_data = _good_chart()
         parts = _split_region(chart, region_data)

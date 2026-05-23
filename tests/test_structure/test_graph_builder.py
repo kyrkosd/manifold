@@ -119,6 +119,7 @@ class TestBuildGraph:
 # ---------------------------------------------------------------------------
 
 class TestBuildLocal:
+    """Tests for Build Local."""
     def test_returns_feature_graph(self):
         data = _independent_data(n=80, d=6)
         mask = np.zeros(80, dtype=bool)
@@ -148,6 +149,7 @@ class TestBuildLocal:
 # ---------------------------------------------------------------------------
 
 class TestCorrelationGraph:
+    """Tests for Correlation Graph."""
     def test_shape(self):
         data = _independent_data(n=50, d=4)
         result = _correlation_graph(data)
@@ -184,6 +186,7 @@ class TestCorrelationGraph:
 # ---------------------------------------------------------------------------
 
 class TestMIGraph:
+    """Tests for MIGraph."""
     def test_shape(self):
         data = _independent_data(n=50, d=5)
         result = _mutual_information_graph(data)
@@ -219,6 +222,7 @@ class TestMIGraph:
 # ---------------------------------------------------------------------------
 
 class TestPartialCorrelationGraph:
+    """Tests for Partial Correlation Graph."""
     def test_shape(self):
         data = _independent_data(n=80, d=5)
         result = _partial_correlation_graph(data)
@@ -243,6 +247,7 @@ class TestPartialCorrelationGraph:
 
 
 class TestPrecisionToPartialCorr:
+    """Tests for Precision To Partial Corr."""
     def test_identity_precision_gives_zero_partial_corr(self):
         # Identity precision matrix → no off-diagonal partial correlation.
         prec_mat = np.eye(4)
@@ -262,6 +267,7 @@ class TestPrecisionToPartialCorr:
 # ---------------------------------------------------------------------------
 
 class TestGraphCombineAndThreshold:
+    """Tests for Graph Combine And Threshold."""
     def test_adaptive_threshold_formula(self):
         # Known matrix: upper triangle = [0.1, 0.9]; mean=0.5, std≈0.4.
         combined = np.array([[0.0, 0.5], [0.5, 0.0]])  # mean of two matrices
@@ -297,6 +303,7 @@ class TestGraphCombineAndThreshold:
 # ---------------------------------------------------------------------------
 
 class TestValidateGraph:
+    """Tests for Validate Graph."""
     def test_valid_graph_returns_true(self):
         # A symmetric, non-negative, zero-diagonal matrix is valid.
         assert _validate_graph(np.array([[0.0, 0.5], [0.5, 0.0]])) is True
@@ -315,6 +322,7 @@ class TestValidateGraph:
 # ---------------------------------------------------------------------------
 
 class TestComputeGraphStats:
+    """Tests for Compute Graph Stats."""
     def test_stats_keys_present(self):
         # All four stat keys must be populated for any valid graph.
         g = np.array([[0.0, 0.7, 0.0], [0.7, 0.0, 0.4], [0.0, 0.4, 0.0]])

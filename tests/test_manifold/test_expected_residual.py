@@ -106,6 +106,7 @@ def _make_spectral(data: np.ndarray, structure: StructureReport) -> SpectralData
 # ---------------------------------------------------------------------------
 
 class TestComputeDistribution:
+    """Tests for Compute Distribution."""
     def test_returns_expected_residual_distribution(self):
         data, _ = _make_manifold_data()
         structure = _make_structure(data)
@@ -164,6 +165,7 @@ class TestComputeDistribution:
 # ---------------------------------------------------------------------------
 
 class TestEncodeDecodeResiduals:
+    """Tests for Encode Decode Residuals."""
     def test_residuals_shape(self):
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
@@ -187,6 +189,7 @@ class TestEncodeDecodeResiduals:
 # ---------------------------------------------------------------------------
 
 class TestDecomposeToBands:
+    """Tests for Decompose To Bands."""
     def test_returns_dict_with_band_keys(self):
         data, _ = _make_manifold_data(n=40)
         structure = _make_structure(data)
@@ -222,6 +225,7 @@ class TestDecomposeToBands:
 # ---------------------------------------------------------------------------
 
 class TestFitDistribution:
+    """Tests for Fit Distribution."""
     def test_returns_two_floats(self):
         norms = np.array([0.1, 0.2, 0.15, 0.3])
         mean, var = _fit_distribution(norms)

@@ -57,6 +57,7 @@ def _ortho_cols(d: int, k: int, seed: int = 0) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestComputeSpace:
+    """Tests for Compute Space."""
     def test_returns_tangent_space_instance(self):
         # compute_space must return a TangentSpace dataclass.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
@@ -100,6 +101,7 @@ class TestComputeSpace:
 # ---------------------------------------------------------------------------
 
 class TestDerivativesAndBasis:
+    """Tests for Derivatives And Basis."""
     def test_chart_derivatives_shape(self):
         # Jacobian of φ⁻¹ at (0,0) must be (3, 2) for a sphere chart.
         jacobian = _chart_derivatives(_sphere_chart_inverse, np.array([0.0, 0.0]), eps=1e-5)
@@ -123,6 +125,7 @@ class TestDerivativesAndBasis:
 # ---------------------------------------------------------------------------
 
 class TestNormalSpace:
+    """Tests for Normal Space."""
     def test_normal_orthogonal_to_tangent(self):
         # Every normal vector must be orthogonal to every tangent vector.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
@@ -147,6 +150,7 @@ class TestNormalSpace:
 # ---------------------------------------------------------------------------
 
 class TestProjections:
+    """Tests for Projections."""
     def test_tangent_plus_normal_recovers_vector(self):
         # For S² at north pole, v = v_tangent + v_normal for any ambient vector.
         ts = compute_space(_NORTH_POLE, _sphere_chart_map, _sphere_chart_inverse)
@@ -175,6 +179,7 @@ class TestProjections:
 # ---------------------------------------------------------------------------
 
 class TestTangentVariation:
+    """Tests for Tangent Variation."""
     def test_single_space_returns_zero(self):
         # One space → no pairs → variation = 0.
         tangent_b = _ortho_cols(3, 2)

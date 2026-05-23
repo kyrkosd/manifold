@@ -75,6 +75,7 @@ def contaminated_pair() -> tuple[np.ndarray, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 class TestCleanData:
+    """Tests for Clean Data."""
     def test_pipeline_returns_final_report(self, pipeline, clean_data):
         result = pipeline.run(clean_data)
         assert isinstance(result, FinalReport)
@@ -126,6 +127,7 @@ class TestCleanData:
 # ---------------------------------------------------------------------------
 
 class TestContaminatedData:
+    """Tests for Contaminated Data."""
     def test_pipeline_completes(self, pipeline, contaminated_pair):
         data, _ = contaminated_pair
         result = pipeline.run(data)
@@ -173,6 +175,7 @@ class TestContaminatedData:
 # ---------------------------------------------------------------------------
 
 class TestCreatePipeline:
+    """Tests for Create Pipeline."""
     def test_no_args(self):
         p = create_pipeline()
         assert isinstance(p, FourierManifoldPipeline)

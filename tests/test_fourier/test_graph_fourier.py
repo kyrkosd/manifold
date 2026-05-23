@@ -40,6 +40,7 @@ def _data(n: int = 20, d: int = 4, seed: int = 0) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestGraphFourierInit:
+    """Tests for Graph Fourier Init."""
     def test_eigenvectors_shape(self):
         # K4 has 4 nodes; eigenvector matrix must be square (4, 4).
         engine = GraphFourierEngine(_k4_graph())
@@ -78,6 +79,7 @@ class TestGraphFourierInit:
 # ---------------------------------------------------------------------------
 
 class TestTransformAndInverse:
+    """Tests for Transform And Inverse."""
     def test_transform_shape(self):
         # Forward GFT must preserve the (n, d) data shape.
         engine = GraphFourierEngine(_k4_graph())
@@ -120,6 +122,7 @@ class TestTransformAndInverse:
 # ---------------------------------------------------------------------------
 
 class TestDisconnectedGraph:
+    """Tests for Disconnected Graph."""
     def test_all_zero_adjacency_does_not_raise(self):
         # Fully disconnected graph: all-zero Laplacian, all-zero eigenvalues.
         adj = np.zeros((4, 4))

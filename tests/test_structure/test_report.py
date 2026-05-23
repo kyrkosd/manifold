@@ -29,6 +29,7 @@ def _make_graph(d: int = 4) -> FeatureGraph:
 # ---------------------------------------------------------------------------
 
 class TestStructureReport:
+    """Tests for Structure Report."""
     def test_construction_stores_all_fields(self):
         # Every field must be stored exactly as provided.
         graph = _make_graph()
@@ -68,6 +69,7 @@ class TestStructureReport:
 # ---------------------------------------------------------------------------
 
 class TestBuild:
+    """Tests for Build."""
     def test_type_is_always_graph(self):
         # MVP always detects GRAPH structure.
         report = build(_make_graph(), dim_result=3)
@@ -110,6 +112,7 @@ class TestBuild:
 # ---------------------------------------------------------------------------
 
 class TestDiscoverStructure:
+    """Tests for Discover Structure."""
     def test_returns_structure_report(self):
         # End-to-end: discover_structure must return a StructureReport.
         rng = np.random.default_rng(99)

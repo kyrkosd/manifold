@@ -5,10 +5,12 @@ from pydantic import BaseModel, Field
 
 
 class IngestionConfig(BaseModel):
+    """Configuration for the data ingestion phase."""
     normalization_method: str = "standard"
 
 
 class StructureConfig(BaseModel):
+    """Configuration for the structure discovery phase."""
     graph_threshold_method: str = "adaptive"
     dimensionality_methods: list[str] = Field(
         default_factory=lambda: ["eigenvalue_gap", "mle"]
@@ -16,12 +18,14 @@ class StructureConfig(BaseModel):
 
 
 class FourierConfig(BaseModel):
+    """Configuration for the Fourier analysis phase."""
     band_method: str = "spectral_gaps"
     min_bands: int = 3
     max_bands: int = 20
 
 
 class ManifoldConfig(BaseModel):
+    """Configuration for the manifold construction phase."""
     n_charts: int | str = "auto"
     overlap_factor: float = 0.2
     max_chart_retries: int = 3
@@ -29,18 +33,21 @@ class ManifoldConfig(BaseModel):
 
 
 class AnomalyConfig(BaseModel):
+    """Configuration for the anomaly detection phase."""
     threshold_method: str = "adaptive"
     contamination: float = 0.05
     multiple_testing: str = "bonferroni"
 
 
 class FAISSConfig(BaseModel):
+    """Configuration for the FAISS nearest-neighbour index."""
     metric: str = "L2"
     k_neighbors: int = 20
     batch_size: int = 10000
 
 
 class PipelineConfig(BaseModel):
+    """Top-level pipeline configuration aggregating all phase configs."""
     ingestion: IngestionConfig = Field(default_factory=IngestionConfig)
     structure: StructureConfig = Field(default_factory=StructureConfig)
     fourier: FourierConfig = Field(default_factory=FourierConfig)

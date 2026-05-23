@@ -31,6 +31,7 @@ def _report(n: int = 40, d: int = 5, seed: int = 0) -> tuple[np.ndarray, Structu
 # ---------------------------------------------------------------------------
 
 class TestAnalyzeFourierOutput:
+    """Tests for Analyze Fourier Output."""
     def test_returns_spectral_data(self):
         # End-to-end call must produce a SpectralData instance.
         data, report = _report()
@@ -67,6 +68,7 @@ class TestAnalyzeFourierOutput:
 # ---------------------------------------------------------------------------
 
 class TestAnalyzeFourierErrors:
+    """Tests for Analyze Fourier Errors."""
     def test_none_graph_raises_value_error(self):
         # Missing feature graph must raise ValueError with a descriptive message.
         bad_report = StructureReport(

@@ -59,6 +59,7 @@ def _make_report(n: int = 60, n_bands: int = 3, n_anomaly: int = 6,
 # ---------------------------------------------------------------------------
 
 class TestToJson:
+    """Tests for To Json."""
     def test_returns_string(self):
         r = _make_report()
         assert isinstance(to_json(r), str)
@@ -116,6 +117,7 @@ class TestToJson:
 # ---------------------------------------------------------------------------
 
 class TestToCsv:
+    """Tests for To Csv."""
     def test_creates_file(self):
         r = _make_report()
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
@@ -181,6 +183,7 @@ class TestToCsv:
 # ---------------------------------------------------------------------------
 
 class TestToDataframe:
+    """Tests for To Dataframe."""
     def test_returns_dataframe(self):
         r = _make_report()
         assert isinstance(to_dataframe(r), pd.DataFrame)
@@ -201,6 +204,7 @@ class TestToDataframe:
 # ---------------------------------------------------------------------------
 
 class TestSummaryDict:
+    """Tests for Summary Dict."""
     def test_returns_dict(self):
         r = _make_report()
         assert isinstance(summary_dict(r), dict)

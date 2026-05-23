@@ -84,6 +84,7 @@ def band_anomaly_result() -> tuple[FinalReport, np.ndarray, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 class TestBandSpecificPipeline:
+    """Tests for Band Specific Pipeline."""
     def test_pipeline_completes(self, band_anomaly_result):
         result, _, _ = band_anomaly_result
         assert isinstance(result, FinalReport)
@@ -104,6 +105,7 @@ class TestBandSpecificPipeline:
 
 
 class TestL2BaselineComparison:
+    """Tests for L2Baseline Comparison."""
     def test_fmas_rank_ge_l2_rank_for_anomalies(self, band_anomaly_result):
         """Planted anomalies should rank at least as high in FMAS as in raw L2.
 

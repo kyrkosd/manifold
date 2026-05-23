@@ -69,6 +69,7 @@ def _make_atlas_fixture(n: int = 120, d: int = 5, n_charts: int = 3, seed: int =
 # ---------------------------------------------------------------------------
 
 class TestAtlasBuild:
+    """Tests for Atlas Build."""
     def test_returns_atlas_instance(self):
         atlas, *_ = _make_atlas_fixture()
         assert isinstance(atlas, Atlas)
@@ -113,6 +114,7 @@ class TestAtlasBuild:
 # ---------------------------------------------------------------------------
 
 class TestPartitionIntoRegions:
+    """Tests for Partition Into Regions."""
     def test_returns_list_of_arrays(self):
         data = _make_embedded_plane()
         structure = _make_structure(data)
@@ -151,6 +153,7 @@ class TestPartitionIntoRegions:
 # ---------------------------------------------------------------------------
 
 class TestVerifyCoverage:
+    """Tests for Verify Coverage."""
     def test_full_coverage_returns_true(self):
         from manifold.chart import Chart
         from manifold.eigenvector_alignment import AlignedBasis
@@ -179,6 +182,7 @@ class TestVerifyCoverage:
 # ---------------------------------------------------------------------------
 
 class TestAssignPrimaryCharts:
+    """Tests for Assign Primary Charts."""
     def test_shape_is_n_points(self):
         def _stub(indices, score):
             return type("C", (), {
@@ -220,6 +224,7 @@ class TestAssignPrimaryCharts:
 # ---------------------------------------------------------------------------
 
 class TestFindOverlaps:
+    """Tests for Find Overlaps."""
     def test_disjoint_charts_give_empty_overlaps(self):
         def _stub(indices):
             return type("C", (), {"region_indices": np.array(indices)})()

@@ -39,6 +39,7 @@ def _coeffs(n: int = 10, d: int = 6, seed: int = 0) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestSpectralGapsAndBoundaries:
+    """Tests for Spectral Gaps And Boundaries."""
     def test_flat_spectrum_has_no_gaps(self):
         # All ratios equal 1; no ratio exceeds 3× median → empty gap list.
         assert _find_spectral_gaps(np.ones(6)) == []
@@ -68,6 +69,7 @@ class TestSpectralGapsAndBoundaries:
 # ---------------------------------------------------------------------------
 
 class TestBandHelpers:
+    """Tests for Band Helpers."""
     def test_uniform_bands_cover_all_indices(self):
         # Three uniform bands over d=6 must span {0, …, 5} without gaps.
         bounds = _create_uniform_bands(d=6, n_bands=3)
@@ -107,6 +109,7 @@ class TestBandHelpers:
 # ---------------------------------------------------------------------------
 
 class TestLabelBands:
+    """Tests for Label Bands."""
     def test_one_band_labelled_all(self):
         assert _label_bands([(0, 5)]) == ["all"]
 
@@ -127,6 +130,7 @@ class TestLabelBands:
 # ---------------------------------------------------------------------------
 
 class TestDecompose:
+    """Tests for Decompose."""
     def test_returns_frequency_bands(self):
         # decompose must produce at least one FrequencyBand object.
         mean = (_coeffs() ** 2).mean(axis=0)

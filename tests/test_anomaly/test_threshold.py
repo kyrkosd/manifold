@@ -40,6 +40,7 @@ def _make_band_scores(n: int = 100, n_bands: int = 3, seed: int = 0) -> BandScor
 # ---------------------------------------------------------------------------
 
 class TestApply:
+    """Tests for Apply."""
     def test_returns_anomaly_flags(self):
         bs = _make_band_scores()
         result = apply(bs)
@@ -91,6 +92,7 @@ class TestApply:
 # ---------------------------------------------------------------------------
 
 class TestAdaptiveThreshold:
+    """Tests for Adaptive Threshold."""
     def test_gaussian_data_near_3sigma(self):
         # For N(0,1) data, threshold ≈ 0 + 3*1.4826*0.675 ≈ 3.
         rng = np.random.default_rng(0)
@@ -118,6 +120,7 @@ class TestAdaptiveThreshold:
 # ---------------------------------------------------------------------------
 
 class TestPercentileThreshold:
+    """Tests for Percentile Threshold."""
     def test_99th_percentile(self):
         scores = np.arange(100, dtype=float)
         assert _percentile_threshold(scores, 99.0) == pytest.approx(99.0 * 0.99, abs=0.1)
@@ -135,6 +138,7 @@ class TestPercentileThreshold:
 # ---------------------------------------------------------------------------
 
 class TestMultipleTestingCorrection:
+    """Tests for Multiple Testing Correction."""
     def test_single_band_unchanged(self):
         thresholds = {0: 3.0}
         corrected = _multiple_testing_correction(thresholds)
@@ -162,6 +166,7 @@ class TestMultipleTestingCorrection:
 # ---------------------------------------------------------------------------
 
 class TestFlagPoints:
+    """Tests for Flag Points."""
     def test_above_threshold_is_true(self):
         scores = np.array([1.0, 3.0, 5.0])
         flags = _flag_points(scores, 2.0)

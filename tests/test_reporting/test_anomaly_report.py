@@ -65,6 +65,7 @@ def _make_results(n: int = 80, n_bands: int = 3, n_anomaly: int = 8,
 # ---------------------------------------------------------------------------
 
 class TestReport:
+    """Tests for Report."""
     def test_returns_anomaly_report(self):
         results, data = _make_results()
         r = report(results, data)
@@ -84,6 +85,7 @@ class TestReport:
 # ---------------------------------------------------------------------------
 
 class TestPerPointTable:
+    """Tests for Per Point Table."""
     def test_is_dataframe(self):
         results, _ = _make_results()
         assert isinstance(_per_point_table(results), pd.DataFrame)
@@ -136,6 +138,7 @@ class TestPerPointTable:
 # ---------------------------------------------------------------------------
 
 class TestTypeDistribution:
+    """Tests for Type Distribution."""
     def test_returns_dict_with_three_keys(self):
         results, _ = _make_results()
         td = _type_distribution(results)
@@ -181,6 +184,7 @@ class TestTypeDistribution:
 # ---------------------------------------------------------------------------
 
 class TestTopAnomalies:
+    """Tests for Top Anomalies."""
     def test_returns_list(self):
         results, _ = _make_results()
         assert isinstance(_top_anomalies(results), list)
@@ -235,6 +239,7 @@ class TestTopAnomalies:
 # ---------------------------------------------------------------------------
 
 class TestStatisticalSummary:
+    """Tests for Statistical Summary."""
     def test_returns_dict(self):
         results, _ = _make_results()
         assert isinstance(_statistical_summary(results), dict)

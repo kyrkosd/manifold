@@ -56,6 +56,7 @@ def manifold_fixture():
 # ---------------------------------------------------------------------------
 
 class TestScore:
+    """Tests for Score."""
     def test_returns_band_scores(self, manifold_fixture):
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
@@ -99,6 +100,7 @@ class TestScore:
 # ---------------------------------------------------------------------------
 
 class TestScoreBandAgainstExpected:
+    """Tests for Score Band Against Expected."""
     def test_zero_mean_zero_var_at_mean_gives_zero(self):
         # band_norms = expected_mean = 0 → z = 0.
         z = _score_band_against_expected(np.zeros(5), 0.0, 0.0)
@@ -134,6 +136,7 @@ class TestScoreBandAgainstExpected:
 # ---------------------------------------------------------------------------
 
 class TestAggregateScores:
+    """Tests for Aggregate Scores."""
     def test_default_is_max_abs(self):
         band_scores = {0: np.array([1.0, 3.0]), 1: np.array([2.0, 1.0])}
         result = _aggregate_scores(band_scores)
@@ -155,6 +158,7 @@ class TestAggregateScores:
 # ---------------------------------------------------------------------------
 
 class TestWeightBands:
+    """Tests for Weight Bands."""
     def test_uniform_sums_to_one(self):
         bands = [
             FrequencyBand(0, 1, "low", 1.0),

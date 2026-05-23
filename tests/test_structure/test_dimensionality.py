@@ -45,6 +45,7 @@ def _linear_subspace(n: int, intrinsic_dim: int, ambient_dim: int,
 # ---------------------------------------------------------------------------
 
 class TestEstimate:
+    """Tests for Estimate."""
     def test_returns_positive_int(self):
         # estimate() must always return a positive integer.
         data = _linear_subspace(n=100, intrinsic_dim=2, ambient_dim=8)
@@ -83,6 +84,7 @@ class TestEstimate:
 # ---------------------------------------------------------------------------
 
 class TestEigenvalueGap:
+    """Tests for Eigenvalue Gap."""
     def test_1d_data_returns_1(self):
         # All variance in one direction → largest ratio at index 0 → dim = 1.
         rng = np.random.default_rng(0)
@@ -110,6 +112,7 @@ class TestEigenvalueGap:
 # ---------------------------------------------------------------------------
 
 class TestLocalPCAEstimate:
+    """Tests for Local PCAEstimate."""
     def test_falls_back_for_small_n(self):
         # n=5 ≤ k=20: fallback to eigenvalue gap must not raise.
         data = _linear_subspace(n=5, intrinsic_dim=2, ambient_dim=6, noise=0.1)
@@ -132,6 +135,7 @@ class TestLocalPCAEstimate:
 # ---------------------------------------------------------------------------
 
 class TestPCADim:
+    """Tests for PCADim."""
     def test_single_point_returns_full_dim(self):
         # A 1-point neighbourhood has undefined PCA; returns ambient dimension.
         result = _pca_dim(np.ones((1, 5)))
@@ -163,6 +167,7 @@ class TestPCADim:
 # ---------------------------------------------------------------------------
 
 class TestMLEEstimate:
+    """Tests for MLEEstimate."""
     def test_very_small_n_returns_1(self):
         # n=2 → k < _MIN_K_MLE → early return of 1.
         data = np.random.default_rng(3).standard_normal((2, 4))
@@ -180,6 +185,7 @@ class TestMLEEstimate:
 # ---------------------------------------------------------------------------
 
 class TestLevinaBickel:
+    """Tests for Levina Bickel."""
     def test_single_actual_neighbour_returns_1(self):
         # Only 1 column after skipping self → not enough for log-ratios → 1.
         distances = np.array([[0.0, 1.0]])
@@ -210,6 +216,7 @@ class TestLevinaBickel:
 # ---------------------------------------------------------------------------
 
 class TestConsensus:
+    """Tests for Consensus."""
     def test_median_of_estimates(self):
         # Median of [2, 3, 4] is 3; clamped to [1, d-1=9].
         result = _consensus_dimension([2, 3, 4], n_features=10)

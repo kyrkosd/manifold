@@ -49,6 +49,7 @@ def manifold_fixture():
 # ---------------------------------------------------------------------------
 
 class TestCompute:
+    """Tests for Compute."""
     def test_returns_residual_data(self, manifold_fixture):
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
@@ -94,6 +95,7 @@ class TestCompute:
 # ---------------------------------------------------------------------------
 
 class TestNormalResidual:
+    """Tests for Normal Residual."""
     def test_output_shape(self, manifold_fixture):
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
@@ -124,6 +126,7 @@ class TestNormalResidual:
 # ---------------------------------------------------------------------------
 
 class TestDecomposeNormalToBands:
+    """Tests for Decompose Normal To Bands."""
     def test_returns_dict_with_band_keys(self, manifold_fixture):
         mf, data = manifold_fixture
         residuals = np.random.default_rng(7).standard_normal(data.shape)

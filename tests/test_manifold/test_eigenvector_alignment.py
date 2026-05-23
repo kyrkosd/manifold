@@ -49,6 +49,7 @@ def _eigen_basis(d: int = 4, k: int = 3, seed: int = 0) -> EigenBasis:
 # ---------------------------------------------------------------------------
 
 class TestCorrectSigns:
+    """Tests for Correct Signs."""
     def test_flipped_sign_is_restored(self):
         # Flipping one column and correcting must recover the original.
         ref = _ortho_basis(4, 3, seed=1)
@@ -78,6 +79,7 @@ class TestCorrectSigns:
 # ---------------------------------------------------------------------------
 
 class TestAlignOrdering:
+    """Tests for Align Ordering."""
     def test_permuted_columns_are_reordered(self):
         # Swapping cols 0 and 2 of a reference; ordering must restore them.
         ref = _ortho_basis(5, 3, seed=4)
@@ -119,6 +121,7 @@ class TestAlignOrdering:
 # ---------------------------------------------------------------------------
 
 class TestProcrustesRotation:
+    """Tests for Procrustes Rotation."""
     def test_result_is_orthogonal(self):
         # rotation @ rotation.T must be the identity for any input.
         ref = _ortho_basis(4, 3, seed=7)
@@ -153,6 +156,7 @@ class TestProcrustesRotation:
 # ---------------------------------------------------------------------------
 
 class TestAlignmentQualityHelpers:
+    """Tests for Alignment Quality Helpers."""
     def test_identical_bases_give_score_one(self):
         # Perfect column match → mean |dot| = 1.
         vecs = _ortho_basis(4, 3, seed=12)
@@ -183,6 +187,7 @@ class TestAlignmentQualityHelpers:
 # ---------------------------------------------------------------------------
 
 class TestAlignToReference:
+    """Tests for Align To Reference."""
     def test_returns_aligned_basis(self):
         # align_to_reference must return an AlignedBasis instance.
         ref = _eigen_basis(seed=14)

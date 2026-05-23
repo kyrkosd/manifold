@@ -25,6 +25,7 @@ from ingestion.types import NormParams
 # ---------------------------------------------------------------------------
 
 class TestNormalize:
+    """Tests for Normalize."""
     def test_output_shape_preserved(self):
         # Normalisation must not alter the (n, d) shape of the input.
         rng = np.random.default_rng(0)
@@ -85,6 +86,7 @@ class TestNormalize:
 # ---------------------------------------------------------------------------
 
 class TestZeroMean:
+    """Tests for Zero Mean."""
     def test_subtracts_column_means(self):
         # Column 0 mean = 3.0, column 1 mean = 20.0; centred columns must be 0-mean.
         arr = np.array([[1.0, 10.0], [3.0, 20.0], [5.0, 30.0]])
@@ -117,6 +119,7 @@ class TestZeroMean:
 # ---------------------------------------------------------------------------
 
 class TestUnitVariance:
+    """Tests for Unit Variance."""
     def test_scales_to_unit_variance(self):
         # Pre-centred data should have std exactly 1 after unit-variance scaling.
         arr = np.array([[2.0, 10.0], [4.0, 20.0], [6.0, 30.0]])
@@ -150,6 +153,7 @@ class TestUnitVariance:
 # ---------------------------------------------------------------------------
 
 class TestInverseNormalize:
+    """Tests for Inverse Normalize."""
     def test_roundtrip(self):
         # Forward then inverse must recover the original array up to float precision.
         rng = np.random.default_rng(3)
@@ -185,6 +189,7 @@ class TestInverseNormalize:
 # ---------------------------------------------------------------------------
 
 class TestSelectMethod:
+    """Tests for Select Method."""
     def test_always_returns_standard(self):
         # In the MVP only "standard" normalisation is supported.
         arr = np.ones((5, 3))

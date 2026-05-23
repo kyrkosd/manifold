@@ -16,6 +16,7 @@ from ingestion.types import CleanData, NormParams, QualityReport
 # ---------------------------------------------------------------------------
 
 class TestNormParams:
+    """Tests for Norm Params."""
     def test_basic_construction(self):
         # All three fields must be stored exactly as provided.
         means = np.array([1.0, 2.0])
@@ -39,6 +40,7 @@ class TestNormParams:
 # ---------------------------------------------------------------------------
 
 class TestQualityReport:
+    """Tests for Quality Report."""
     def test_defaults(self):
         # constant_dims defaults to empty list; suitability_score defaults to 1.0.
         r = QualityReport(n_samples=10, n_features=3, missing_pct=0.0, duplicate_count=0)
@@ -75,6 +77,7 @@ class TestQualityReport:
 # ---------------------------------------------------------------------------
 
 class TestCleanData:
+    """Tests for Clean Data."""
     def test_construction(self):
         # CleanData bundles the normalised array, parameters, and quality report.
         arr = np.zeros((5, 2))

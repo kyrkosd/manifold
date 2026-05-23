@@ -38,6 +38,7 @@ def _coeffs(n: int = 10, d: int = 4, seed: int = 0) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestPerPointAndMeanPower:
+    """Tests for Per Point And Mean Power."""
     def test_per_point_shape_preserved(self):
         # Squaring does not change the (n, d) shape.
         assert _per_point_power(_coeffs(n=8, d=5)).shape == (8, 5)
@@ -69,6 +70,7 @@ class TestPerPointAndMeanPower:
 # ---------------------------------------------------------------------------
 
 class TestCumulativeAndDominant:
+    """Tests for Cumulative And Dominant."""
     def test_cumulative_last_is_one(self):
         # Normalised cumsum must end at exactly 1.0 for any non-zero spectrum.
         result = _cumulative_power(np.array([1.0, 2.0, 3.0, 4.0]))
@@ -99,6 +101,7 @@ class TestCumulativeAndDominant:
 # ---------------------------------------------------------------------------
 
 class TestSpectralCentroidAndCompare:
+    """Tests for Spectral Centroid And Compare."""
     def test_centroid_is_float(self):
         # Return type must always be Python float.
         result = _spectral_centroid(np.array([1.0, 2.0, 3.0]), _basis(3).eigenvalues)
@@ -130,6 +133,7 @@ class TestSpectralCentroidAndCompare:
 # ---------------------------------------------------------------------------
 
 class TestComputeIntegration:
+    """Tests for Compute Integration."""
     def test_all_keys_present(self):
         # All five keys must appear regardless of input shape.
         result = compute(_coeffs(n=10, d=4), _basis())

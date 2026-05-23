@@ -43,6 +43,7 @@ def _valid_array(n: int = 20, d: int = 3) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestValidateErrors:
+    """Tests for Validate Errors."""
     def test_non_numeric_ndarray_raises(self):
         # String dtype cannot be cast to float64; pipeline must abort immediately.
         with pytest.raises(ValidationError):
@@ -88,6 +89,7 @@ class TestValidateErrors:
 # ---------------------------------------------------------------------------
 
 class TestValidateSuccess:
+    """Tests for Validate Success."""
     def test_ndarray_output_shape_and_dtype(self):
         # Validated output must be float64 and preserve the input shape.
         arr = _valid_array()
@@ -152,6 +154,7 @@ class TestValidateSuccess:
 # ---------------------------------------------------------------------------
 
 class TestCheckDimensions:
+    """Tests for Check Dimensions."""
     def test_valid_2d(self):
         assert _check_dimensions(np.ones((5, 3))) is True
 
@@ -181,6 +184,7 @@ class TestCheckDimensions:
 # ---------------------------------------------------------------------------
 
 class TestCheckCompleteness:
+    """Tests for Check Completeness."""
     def test_no_nans(self):
         # All values present → completeness = 1.0.
         assert _check_completeness(np.ones((5, 3))) == pytest.approx(1.0)
@@ -206,6 +210,7 @@ class TestCheckCompleteness:
 # ---------------------------------------------------------------------------
 
 class TestCheckTypes:
+    """Tests for Check Types."""
     def test_float_array_ok(self):
         # Default float64 dtype is numeric.
         assert _check_types(np.ones((3, 3))) is True
@@ -239,6 +244,7 @@ class TestCheckTypes:
 # ---------------------------------------------------------------------------
 
 class TestCheckRanges:
+    """Tests for Check Ranges."""
     def test_finite_ok(self):
         # All finite values; no infinities → passes.
         assert _check_ranges(np.ones((3, 3))) is True
@@ -264,6 +270,7 @@ class TestCheckRanges:
 # ---------------------------------------------------------------------------
 
 class TestCheckConstantDims:
+    """Tests for Check Constant Dims."""
     def test_no_constant(self):
         # Random normal data almost certainly has non-zero variance in every column.
         rng = np.random.default_rng(1)
@@ -296,6 +303,7 @@ class TestCheckConstantDims:
 # ---------------------------------------------------------------------------
 
 class TestCheckDuplicates:
+    """Tests for Check Duplicates."""
     def test_no_duplicates(self):
         # Random normal rows are almost certainly unique.
         rng = np.random.default_rng(2)
@@ -319,6 +327,7 @@ class TestCheckDuplicates:
 # ---------------------------------------------------------------------------
 
 class TestCheckMinSamples:
+    """Tests for Check Min Samples."""
     def test_sufficient_samples(self):
         # 30 rows / 3 features = 10×; meets the rule-of-thumb exactly.
         arr = np.ones((30, 3))
@@ -340,6 +349,7 @@ class TestCheckMinSamples:
 # ---------------------------------------------------------------------------
 
 class TestEstimateSuitability:
+    """Tests for Estimate Suitability."""
     # Suitability formula: 1.0 - 0.5*(missing/100) - 0.3*(const/features) - 0.2*(dup/samples)
     # Each deduction term is independent and the result is clamped to [0, 1].
 

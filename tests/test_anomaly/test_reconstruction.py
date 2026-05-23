@@ -54,6 +54,7 @@ def manifold_fixture():
 # ---------------------------------------------------------------------------
 
 class TestReconstruct:
+    """Tests for Reconstruct."""
     def test_returns_two_arrays(self, manifold_fixture):
         mf, data = manifold_fixture
         result = reconstruct(data, mf)
@@ -92,6 +93,7 @@ class TestReconstruct:
 # ---------------------------------------------------------------------------
 
 class TestFindChart:
+    """Tests for Find Chart."""
     def test_returns_chart_at_assigned_index(self, manifold_fixture):
         mf, data = manifold_fixture
         for i in [0, 5, 10]:
@@ -105,6 +107,7 @@ class TestFindChart:
 # ---------------------------------------------------------------------------
 
 class TestEncodeAndDecode:
+    """Tests for Encode And Decode."""
     def test_encode_applies_chart_map(self, manifold_fixture):
         mf, data = manifold_fixture
         chart = mf.atlas.charts[0]
@@ -136,6 +139,7 @@ class TestEncodeAndDecode:
 # ---------------------------------------------------------------------------
 
 class TestBatchReconstruct:
+    """Tests for Batch Reconstruct."""
     def test_same_result_as_reconstruct(self, manifold_fixture):
         mf, data = manifold_fixture
         r1, res1 = reconstruct(data, mf)
