@@ -9,18 +9,16 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from common import nn_utils
-from common.types import EigenBasis, FrequencyBand, FourierType, StructureType
+from sklearn.decomposition import PCA
+from common.types import AlignmentQuality, FourierType, StructureType
 from fourier import SpectralData, analyze_fourier
-from manifold.atlas import build as build_atlas
-from manifold.chart import build as build_chart, _define_chart_map, _compute_chart_inverse
+from manifold.chart import Chart, _compute_chart_inverse, _compute_coordinates, _define_chart_map
 from manifold.eigenvector_alignment import AlignedBasis
 from manifold.expected_residual import (
     ExpectedResidualDistribution,
     _decompose_to_bands,
     _encode_decode_residuals,
     _fit_distribution,
-    _project_residuals_to_normal,
     compute,
 )
 from structure.report import StructureReport
@@ -61,11 +59,6 @@ def _make_chart_for_data(data: np.ndarray, structure: StructureReport):
     We bypass GFT-chart validation here because expected_residual tests are about
     the residual computation logic, not the chart-building pipeline.
     """
-    from sklearn.decomposition import PCA
-    from manifold.chart import Chart, _define_chart_map, _compute_chart_inverse, _compute_coordinates
-    from manifold.eigenvector_alignment import AlignedBasis
-    from common.types import AlignmentQuality
-
     k = structure.intrinsic_dim
     pca = PCA(n_components=k)
     pca.fit(data)

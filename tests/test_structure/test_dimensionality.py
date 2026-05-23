@@ -7,7 +7,6 @@ where the true intrinsic dimension is unambiguous.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from structure.dimensionality import (
     _confidence_interval,

@@ -7,9 +7,7 @@ the local GFT captures the manifold structure well and charts pass validation.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
-from common import nn_utils
 from common.types import FourierType, StructureType
 from fourier import SpectralData, analyze_fourier
 from manifold.atlas import (
@@ -155,10 +153,6 @@ class TestPartitionIntoRegions:
 class TestVerifyCoverage:
     """Tests for Verify Coverage."""
     def test_full_coverage_returns_true(self):
-        from manifold.chart import Chart
-        from manifold.eigenvector_alignment import AlignedBasis
-        from common.types import AlignmentQuality
-
         # Build minimal stub charts that together cover points 0..9.
         def _stub_chart(indices):
             return type("C", (), {"region_indices": np.array(indices)})()

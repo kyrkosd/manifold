@@ -11,7 +11,7 @@ import pytest
 
 import structure.graph_builder as graph_builder
 from common import nn_utils
-from common.types import EigenBasis
+from common.types import AlignmentQuality
 from manifold.chart import Chart, build, _define_chart_map, _compute_chart_inverse
 from manifold.chart_validator import (
     _check_continuity,
@@ -73,8 +73,6 @@ def _bad_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
     rand_vecs, _ = np.linalg.qr(rand_vecs)
     rand_vecs = rand_vecs[:, :intrinsic]
 
-    from manifold.eigenvector_alignment import AlignedBasis
-    from common.types import AlignmentQuality
     # Synthesise a dummy AlignedBasis wrapping the random vectors.
     dummy_basis = AlignedBasis(
         eigenvectors=rand_vecs,

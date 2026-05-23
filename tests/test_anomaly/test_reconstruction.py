@@ -23,7 +23,6 @@ from anomaly.reconstruction import (
 
 @pytest.fixture(scope="module")
 def manifold_fixture():
-    from sklearn.decomposition import PCA
     from common.types import FourierType, StructureType
     from fourier import analyze_fourier
     from manifold import build_manifold

@@ -9,11 +9,9 @@ coordinates array must have the right shape.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 import structure.graph_builder as graph_builder
 from common import nn_utils
-from common.exceptions import ChartError
 from common.types import EigenBasis
 from manifold.chart import (
     Chart,
@@ -24,7 +22,7 @@ from manifold.chart import (
     _select_basis_adaptive,
     build,
 )
-from manifold.eigenvector_alignment import AlignedBasis, align_to_reference
+from manifold.eigenvector_alignment import align_to_reference
 
 
 # ---------------------------------------------------------------------------

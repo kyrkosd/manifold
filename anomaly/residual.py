@@ -63,20 +63,20 @@ def compute(
 
 def _normal_residual(
     residual: np.ndarray,
-    point: np.ndarray,
+    _point: np.ndarray,
     chart,
 ) -> np.ndarray:
-    """Project *residual* onto the normal space of *chart* at *point*.
+    """Project *residual* onto the normal space of *chart* at *_point*.
 
     For MVP linear charts the tangent space is constant, so the result does
-    not depend on *point*.  Computing the normal basis here is exact for
+    not depend on *_point*.  Computing the normal basis here is exact for
     linear charts; for curved manifolds use _batch_normal_residuals which
     applies the centroid approximation.
 
     Parameters
     ----------
     residual : (d,) reconstruction residual.
-    point : (d,) original data point (unused for linear charts; kept for API).
+    _point : (d,) original data point (unused for linear charts; kept for API).
     chart : Chart with selected_vectors.
 
     Returns
@@ -89,7 +89,7 @@ def _normal_residual(
 
 def _batch_normal_residuals(
     residuals: np.ndarray,
-    data: np.ndarray,
+    _data: np.ndarray,
     manifold,
 ) -> np.ndarray:
     """Project all residuals onto their chart's normal space (batched by chart).
@@ -99,7 +99,7 @@ def _batch_normal_residuals(
     Parameters
     ----------
     residuals : (n, d) raw residuals.
-    data : (n, d) original data (unused for linear charts).
+    _data : (n, d) original data (unused for linear charts).
     manifold : Manifold with atlas.
 
     Returns

@@ -8,7 +8,7 @@ import pytest
 from anomaly import AnomalyResults
 from anomaly.band_scorer import BandScores
 from anomaly.residual import ResidualData
-from anomaly.threshold import AnomalyFlags, apply as apply_threshold
+from anomaly.threshold import apply as apply_threshold
 from reporting.anomaly_report import (
     AnomalyReport,
     _per_point_table,

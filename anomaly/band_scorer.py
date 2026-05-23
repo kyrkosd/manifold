@@ -134,13 +134,13 @@ def _aggregate_scores(
     return abs_matrix @ w
 
 
-def _weight_bands(bands: list[FrequencyBand], method: str = "uniform") -> np.ndarray:
+def _weight_bands(bands: list[FrequencyBand], _method: str = "uniform") -> np.ndarray:
     """Return band weights for the aggregate score.
 
     Parameters
     ----------
     bands : list of FrequencyBand.
-    method : "uniform" assigns equal weight to every band.
+    _method : "uniform" assigns equal weight to every band.
 
     Returns
     -------

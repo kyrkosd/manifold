@@ -150,7 +150,7 @@ def _project_to_normal(vector: np.ndarray, normal_basis: np.ndarray) -> np.ndarr
 
 
 def _tangent_variation(
-    tangent_spaces: list[np.ndarray], threshold: float = 0.1
+    tangent_spaces: list[np.ndarray], _threshold: float = 0.1
 ) -> float:
     """Mean max principal angle between consecutive tangent spaces.
 
@@ -160,7 +160,7 @@ def _tangent_variation(
     Parameters
     ----------
     tangent_spaces : sequence of (ambient_dim, chart_dim) bases.
-    threshold : unused cutoff kept for API compatibility.
+    _threshold : unused cutoff kept for API compatibility.
 
     Returns
     -------

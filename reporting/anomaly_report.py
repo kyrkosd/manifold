@@ -31,13 +31,13 @@ class AnomalyReport:
     summary: dict = field(default_factory=dict)
 
 
-def report(results: AnomalyResults, data: np.ndarray) -> AnomalyReport:
+def report(results: AnomalyResults, _data: np.ndarray) -> AnomalyReport:
     """Assemble a complete AnomalyReport from *results*.
 
     Parameters
     ----------
     results : AnomalyResults from anomaly.detect_anomalies.
-    data : (n, d) original data matrix (shape used for summary only).
+    _data : (n, d) original data matrix (reserved for future summary use).
 
     Returns
     -------

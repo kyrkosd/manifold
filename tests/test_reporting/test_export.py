@@ -11,7 +11,6 @@ import tempfile
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from anomaly import AnomalyResults
 from anomaly.band_scorer import BandScores

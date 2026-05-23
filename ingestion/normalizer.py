@@ -86,14 +86,14 @@ def inverse_normalize(data: np.ndarray, params: NormParams) -> np.ndarray:
     return data * params.stds + params.means
 
 
-def _select_method(data: np.ndarray) -> str:  # noqa: ARG001
+def _select_method(_data: np.ndarray) -> str:
     """Return the normalisation method to apply.
 
     Always returns ``"standard"`` in the MVP; reserved for future heuristics.
 
     Parameters
     ----------
-    data : (n, d) array (not inspected; reserved for future use).
+    _data : (n, d) array (not inspected; reserved for future use).
 
     Returns
     -------

@@ -23,7 +23,6 @@ from ingestion.validator import (
     _check_ranges,
     _check_types,
     _estimate_suitability,
-    _generate_quality_report,
     validate,
 )
 from ingestion.types import QualityReport
