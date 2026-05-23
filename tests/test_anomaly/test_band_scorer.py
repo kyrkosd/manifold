@@ -18,37 +18,7 @@ from anomaly.band_scorer import (
 from anomaly.reconstruction import reconstruct
 from anomaly.residual import compute as compute_residuals
 from anomaly.threshold import _adaptive_threshold, _flag_points
-from common.types import FrequencyBand, FourierType, StructureType
-from fourier import analyze_fourier
-from manifold import build_manifold
-from structure.report import StructureReport
-import structure.graph_builder as gb
-
-
-# ---------------------------------------------------------------------------
-# Module-scoped manifold fixture
-# ---------------------------------------------------------------------------
-
-@pytest.fixture(scope="module", name="manifold_fixture")
-def _manifold_fixture():
-    """Manifold fixture."""
-    rng = np.random.default_rng(2)
-    d, intrinsic, n = 5, 2, 100
-    orth_mat, _ = np.linalg.qr(rng.standard_normal((d, intrinsic)))
-    basis = orth_mat[:, :intrinsic]
-    coords = rng.standard_normal((n, intrinsic))
-    data = coords @ basis.T + rng.standard_normal((n, d)) * 0.02
-
-    fg = gb.build(data)
-    structure = StructureReport(
-        type=StructureType.GRAPH, intrinsic_dim=intrinsic, graph=fg,
-        ordering=None, periodicity=False,
-        recommended_fourier=FourierType.GRAPH_FOURIER, confidence=1.0,
-    )
-    spectral = analyze_fourier(data, structure)
-    config = {"n_charts": 3, "overlap_factor": 0.2, "max_retries": 3}
-    mf = build_manifold(data, spectral, structure, config)
-    return mf, data
+from common.types import FrequencyBand
 
 
 # ---------------------------------------------------------------------------
