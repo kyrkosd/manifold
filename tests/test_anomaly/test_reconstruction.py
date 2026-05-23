@@ -97,15 +97,13 @@ class TestReconstruct:
 # _find_chart
 # ---------------------------------------------------------------------------
 
-class TestFindChart:
-    """Tests for Find Chart."""
-    def test_returns_chart_at_assigned_index(self, manifold_fixture):
-        """Returns chart at assigned index."""
-        mf, _ = manifold_fixture
-        for i in [0, 5, 10]:
-            expected_ci = int(mf.atlas.primary_assignments[i])
-            chart = _find_chart(i, mf)
-            assert chart is mf.atlas.charts[expected_ci]
+def test_returns_chart_at_assigned_index(manifold_fixture):
+    """Returns chart at assigned index."""
+    mf, _ = manifold_fixture
+    for i in [0, 5, 10]:
+        expected_ci = int(mf.atlas.primary_assignments[i])
+        chart = _find_chart(i, mf)
+        assert chart is mf.atlas.charts[expected_ci]
 
 
 # ---------------------------------------------------------------------------

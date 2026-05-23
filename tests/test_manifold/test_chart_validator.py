@@ -185,13 +185,11 @@ class TestCheckInvertibility:
 # _compute_distortion
 # ---------------------------------------------------------------------------
 
-class TestComputeDistortion:
-    """Tests for Compute Distortion."""
-    def test_orthonormal_basis_has_distortion_one(self):
-        """Orthonormal basis has distortion one."""
-        # Orthonormal columns → singular values all 1 → condition number 1.
-        chart, _ = _good_chart()
-        assert _compute_distortion(chart) == pytest.approx(1.0, abs=1e-6)
+def test_orthonormal_basis_has_distortion_one():
+    """Orthonormal basis has distortion one."""
+    # Orthonormal columns → singular values all 1 → condition number 1.
+    chart, _ = _good_chart()
+    assert _compute_distortion(chart) == pytest.approx(1.0, abs=1e-6)
 
 
 # ---------------------------------------------------------------------------

@@ -109,33 +109,31 @@ class TestBandSpecificPipeline:
         assert result.anomaly_report.summary["total_anomalies"] > 0
 
 
-class TestL2BaselineComparison:
-    """Tests for L2Baseline Comparison."""
-    def test_fmas_rank_ge_l2_rank_for_anomalies(self, band_anomaly_result):
-        """Planted anomalies should rank at least as high in FMAS as in raw L2.
+def test_fmas_rank_ge_l2_rank_for_anomalies(band_anomaly_result):
+    """Planted anomalies should rank at least as high in FMAS as in raw L2.
 
-        For band-specific anomalies the L2 signal is suppressed by the noisy
-        band; FMAS band-specific scores should not do worse than L2.
-        """
-        result, mask, data = band_anomaly_result
-        table = result.anomaly_report.table
-        scores = table.set_index("point_index")["overall_score"]
-        true_indices = np.where(mask)[0]
-        present = [i for i in true_indices if i in scores.index]
-        if not present:
-            pytest.skip("None of the planted anomaly indices in table")
+    For band-specific anomalies the L2 signal is suppressed by the noisy
+    band; FMAS band-specific scores should not do worse than L2.
+    """
+    result, mask, data = band_anomaly_result
+    table = result.anomaly_report.table
+    scores = table.set_index("point_index")["overall_score"]
+    true_indices = np.where(mask)[0]
+    present = [i for i in true_indices if i in scores.index]
+    if not present:
+        pytest.skip("None of the planted anomaly indices in table")
 
-        n = len(data)
-        # FMAS percentile ranks (higher = more anomalous)
-        all_scores = np.array([scores.get(i, 0.0) for i in range(n)])
-        fmas_ranks = all_scores.argsort().argsort()
-        fmas_mean_rank = np.mean([fmas_ranks[i] for i in present])
+    n = len(data)
+    # FMAS percentile ranks (higher = more anomalous)
+    all_scores = np.array([scores.get(i, 0.0) for i in range(n)])
+    fmas_ranks = all_scores.argsort().argsort()
+    fmas_mean_rank = np.mean([fmas_ranks[i] for i in present])
 
-        # L2 percentile ranks
-        l2_ranks = _l2_rank(data)
-        l2_mean_rank = np.mean([l2_ranks[i] for i in present])
+    # L2 percentile ranks
+    l2_ranks = _l2_rank(data)
+    l2_mean_rank = np.mean([l2_ranks[i] for i in present])
 
-        # FMAS should rank planted anomalies at least as high as L2 does.
-        assert fmas_mean_rank >= l2_mean_rank * 0.7, (
-            f"FMAS mean rank ({fmas_mean_rank:.1f}) far below L2 ({l2_mean_rank:.1f})"
-        )
+    # FMAS should rank planted anomalies at least as high as L2 does.
+    assert fmas_mean_rank >= l2_mean_rank * 0.7, (
+        f"FMAS mean rank ({fmas_mean_rank:.1f}) far below L2 ({l2_mean_rank:.1f})"
+    )

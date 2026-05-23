@@ -72,19 +72,17 @@ class TestAnalyzeFourierOutput:
 # analyze_fourier — error handling
 # ---------------------------------------------------------------------------
 
-class TestAnalyzeFourierErrors:
-    """Tests for Analyze Fourier Errors."""
-    def test_none_graph_raises_value_error(self):
-        """None graph raises value error."""
-        # Missing feature graph must raise ValueError with a descriptive message.
-        bad_report = StructureReport(
-            type=StructureType.LINEAR,
-            intrinsic_dim=1,
-            graph=None,
-            ordering=None,
-            periodicity=False,
-            recommended_fourier=FourierType.STANDARD_FFT,
-            confidence=1.0,
-        )
-        with pytest.raises(ValueError, match="graph is None"):
-            analyze_fourier(np.ones((5, 3)), bad_report)
+def test_none_graph_raises_value_error():
+    """None graph raises value error."""
+    # Missing feature graph must raise ValueError with a descriptive message.
+    bad_report = StructureReport(
+        type=StructureType.LINEAR,
+        intrinsic_dim=1,
+        graph=None,
+        ordering=None,
+        periodicity=False,
+        recommended_fourier=FourierType.STANDARD_FFT,
+        confidence=1.0,
+    )
+    with pytest.raises(ValueError, match="graph is None"):
+        analyze_fourier(np.ones((5, 3)), bad_report)

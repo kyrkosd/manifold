@@ -81,15 +81,13 @@ class TestQualityReport:
 # CleanData — post-normalisation data ready for downstream phases
 # ---------------------------------------------------------------------------
 
-class TestCleanData:
-    """Tests for Clean Data."""
-    def test_construction(self):
-        """Construction."""
-        # CleanData bundles the normalised array, parameters, and quality report.
-        arr = np.zeros((5, 2))
-        params = NormParams(means=np.zeros(2), stds=np.ones(2), method="standard")
-        report = QualityReport(n_samples=5, n_features=2, missing_pct=0.0, duplicate_count=0)
-        cd = CleanData(data=arr, norm_params=params, quality=report)
-        assert cd.data is arr           # identity, not equality
-        assert cd.norm_params is params
-        assert cd.quality is report
+def test_clean_data_construction():
+    """Construction."""
+    # CleanData bundles the normalised array, parameters, and quality report.
+    arr = np.zeros((5, 2))
+    params = NormParams(means=np.zeros(2), stds=np.ones(2), method="standard")
+    report = QualityReport(n_samples=5, n_features=2, missing_pct=0.0, duplicate_count=0)
+    cd = CleanData(data=arr, norm_params=params, quality=report)
+    assert cd.data is arr           # identity, not equality
+    assert cd.norm_params is params
+    assert cd.quality is report

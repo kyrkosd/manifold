@@ -45,6 +45,10 @@ class FourierManifoldPipeline:
         self.config = config or default_config()
         self._log = logging.getLogger(__name__)
 
+    def validate_config(self) -> list[str]:
+        """Return any configuration warnings for the current pipeline config."""
+        return self.config.validate_values()
+
     def run(self, data: np.ndarray | pd.DataFrame) -> FinalReport:
         """Execute the full pipeline and return a FinalReport.
 
