@@ -50,8 +50,8 @@ def _make_contaminated_tabular(n: int = 300, d: int = 5, intrinsic: int = 2,
     return data, anomaly_mask
 
 
-@pytest.fixture(scope="module")
-def pipeline() -> FourierManifoldPipeline:
+@pytest.fixture(scope="module", name="pipeline")
+def _pipeline() -> FourierManifoldPipeline:
     """Pipeline."""
     cfg = PipelineConfig(
         manifold=ManifoldConfig(n_charts="auto", overlap_factor=0.2, max_chart_retries=3),
@@ -61,14 +61,14 @@ def pipeline() -> FourierManifoldPipeline:
     return FourierManifoldPipeline(cfg)
 
 
-@pytest.fixture(scope="module")
-def clean_data() -> np.ndarray:
+@pytest.fixture(scope="module", name="clean_data")
+def _clean_data() -> np.ndarray:
     """Clean data."""
     return _make_clean_tabular()
 
 
-@pytest.fixture(scope="module")
-def contaminated_pair() -> tuple[np.ndarray, np.ndarray]:
+@pytest.fixture(scope="module", name="contaminated_pair")
+def _contaminated_pair() -> tuple[np.ndarray, np.ndarray]:
     """Contaminated pair."""
     return _make_contaminated_tabular()
 

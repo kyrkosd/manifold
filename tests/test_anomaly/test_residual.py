@@ -17,8 +17,8 @@ from anomaly.residual import (
 # Module-scoped manifold fixture
 # ---------------------------------------------------------------------------
 
-@pytest.fixture(scope="module")
-def manifold_fixture():
+@pytest.fixture(scope="module", name="manifold_fixture")
+def _manifold_fixture():
     """Manifold fixture."""
     from common.types import FourierType, StructureType
     from fourier import analyze_fourier

@@ -66,8 +66,8 @@ def _l2_rank(data: np.ndarray) -> np.ndarray:
 # Fixture
 # ---------------------------------------------------------------------------
 
-@pytest.fixture(scope="module")
-def band_anomaly_result() -> tuple[FinalReport, np.ndarray, np.ndarray]:
+@pytest.fixture(scope="module", name="band_anomaly_result")
+def _band_anomaly_result() -> tuple[FinalReport, np.ndarray, np.ndarray]:
     """Band anomaly result."""
     data, mask = _band_specific_dataset()
     cfg = PipelineConfig(
