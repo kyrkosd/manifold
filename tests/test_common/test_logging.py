@@ -48,4 +48,4 @@ def test_setup_logging_idempotent() -> None:
 
 def test_setup_logging_custom_format_does_not_raise() -> None:
     """Setup logging custom format does not raise."""
-    setup_logging(format="%(levelname)s: %(message)s")
+    setup_logging(log_format="%(levelname)s: %(message)s")

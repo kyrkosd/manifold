@@ -70,7 +70,7 @@ def validate_range(value: float, low: float, high: float, name: str) -> None:
     ValueError
         If ``value`` is outside ``[low, high]``.
     """
-    if not (low <= value <= high):
+    if value < low or value > high:
         raise ValueError(f"'{name}' must be in [{low}, {high}]; got {value}.")
 
 

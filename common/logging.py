@@ -29,7 +29,7 @@ def get_logger(name: str) -> logging.Logger:
 
 def setup_logging(
     level: int | str = logging.INFO,
-    format: str | None = None,
+    log_format: str | None = None,
 ) -> None:
     """Configure the root ``fmas`` logger.
 
@@ -39,14 +39,14 @@ def setup_logging(
     ----------
     level:
         Logging level (e.g. ``logging.DEBUG`` or the string ``"WARNING"``).
-    format:
+    log_format:
         Log record format string; defaults to the FMAS standard format.
     """
     global _CONFIGURED  # noqa: PLW0603
     if _CONFIGURED:
         return
     handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter(format or _DEFAULT_FORMAT))
+    handler.setFormatter(logging.Formatter(log_format or _DEFAULT_FORMAT))
     root = logging.getLogger("fmas")
     root.addHandler(handler)
     root.setLevel(level)

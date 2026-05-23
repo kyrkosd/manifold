@@ -279,8 +279,6 @@ class TestBandSpecificAnomalyDetection:
 
     def test_fmas_advantage_over_l2(self):
         """FMAS recall > L2 recall for band-specific anomalies."""
-        from anomaly.threshold import _adaptive_threshold, _flag_points
-
         per_band_norms, total, anomaly_mask, b1_normal = self._make_data()
 
         # L2 recall

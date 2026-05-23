@@ -66,9 +66,9 @@ def default_config() -> PipelineConfig:
 def validate_config(config: PipelineConfig) -> list[str]:
     """Return a list of warning strings for out-of-range config values."""
     warnings: list[str] = []
-    if not (0 < config.anomaly.contamination < 0.5):
+    if config.anomaly.contamination <= 0 or config.anomaly.contamination >= 0.5:
         warnings.append("contamination should be in (0, 0.5)")
-    if not (0 < config.manifold.overlap_factor < 1):
+    if config.manifold.overlap_factor <= 0 or config.manifold.overlap_factor >= 1:
         warnings.append("overlap_factor should be in (0, 1)")
     if config.fourier.min_bands > config.fourier.max_bands:
         warnings.append("min_bands > max_bands")
