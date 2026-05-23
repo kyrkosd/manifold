@@ -13,7 +13,7 @@ import structure.graph_builder as graph_builder
 from common import nn_utils
 from common.types import AlignmentQuality
 from fourier.graph_fourier import GraphFourierEngine
-from manifold.chart import Chart, build, _define_chart_map, _compute_chart_inverse
+from manifold.chart import Chart, ChartBuildParams, build, _define_chart_map, _compute_chart_inverse
 from manifold.chart_validator import (
     _check_continuity,
     _check_injectivity,
@@ -54,11 +54,13 @@ def _good_chart(seed: int = 1) -> tuple[Chart, np.ndarray]:
         region_data=region_data,
         region_indices=region_indices,
         full_data=data,
-        graph_builder=graph_builder,
-        intrinsic_dim=2,
         reference_basis=ref,
-        faiss_index=idx,
-        overlap_factor=0.2,
+        params=ChartBuildParams(
+            graph_builder=graph_builder,
+            intrinsic_dim=2,
+            faiss_index=idx,
+            overlap_factor=0.2,
+        ),
     )
     return chart, region_data
 

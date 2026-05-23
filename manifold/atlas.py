@@ -45,6 +45,44 @@ class Atlas:
     faiss_index: Any = field(repr=False)               # faiss.Index
 
 
+@dataclass
+class _BuildCtx:
+    """Internal context shared across chart-build attempts for one atlas."""
+
+    data: np.ndarray
+    structure: StructureReport
+    faiss_index: Any
+    overlap_factor: float
+    max_retries: int
+
+
+def _charts_from_data(
+    data: np.ndarray,
+    spectral: SpectralData,
+    structure: StructureReport,
+    config: dict,
+    faiss_index,
+) -> list:
+    """Parse atlas config and build all charts for the data partition."""
+    n_charts = config.get("n_charts", "auto")
+    overlap_factor = float(config.get("overlap_factor", 0.2))
+    max_retries = int(config.get("max_retries", 3))
+    regions = _partition_into_regions(data, spectral, structure, n_charts)
+    ctx = _BuildCtx(
+        data=data, structure=structure, faiss_index=faiss_index,
+        overlap_factor=overlap_factor, max_retries=max_retries,
+    )
+    return _build_all_charts(regions, spectral, ctx)
+
+
+def _compute_coverage_pct(charts: list, n_points: int) -> float:
+    """Return the fraction of n_points covered by at least one chart."""
+    covered: set[int] = set()
+    for c in charts:
+        covered.update(c.region_indices.tolist())
+    return len(covered) / n_points if n_points > 0 else 0.0
+
+
 def build(
     data: np.ndarray,
     spectral: SpectralData,
@@ -66,28 +104,14 @@ def build(
     Atlas
     """
     n_points = data.shape[0]
-    n_charts = config.get("n_charts", "auto")
-    overlap_factor = float(config.get("overlap_factor", 0.2))
-    max_retries = int(config.get("max_retries", 3))
-
     faiss_index = nn_utils.build_faiss_index(data)
-    regions = _partition_into_regions(data, spectral, structure, n_charts)
-    charts = _build_all_charts(
-        data, regions, structure, spectral, faiss_index, overlap_factor, max_retries
-    )
-
-    covered = set()
-    for c in charts:
-        covered.update(c.region_indices.tolist())
-    coverage_pct = len(covered) / n_points if n_points > 0 else 0.0
-
+    charts = _charts_from_data(data, spectral, structure, config, faiss_index)
+    coverage_pct = _compute_coverage_pct(charts, n_points)
     if not _verify_coverage(charts, n_points):
         log.warning("Atlas does not fully cover all %d points (%.1f%% covered).",
                     n_points, 100 * coverage_pct)
-
     primary_assignments = _assign_primary_charts(charts, n_points)
     overlaps = _find_overlaps(charts)
-
     return Atlas(
         charts=charts,
         primary_assignments=primary_assignments,
@@ -139,13 +163,9 @@ def _partition_into_regions(
 
 
 def _build_all_charts(
-    data: np.ndarray,
     regions: list[np.ndarray],
-    structure: StructureReport,
     spectral: SpectralData,
-    faiss_index,
-    overlap_factor: float,
-    max_retries: int,
+    ctx: _BuildCtx,
 ) -> list:
     """Build a Chart for each region, with retry-on-failure splitting.
 
@@ -154,13 +174,9 @@ def _build_all_charts(
 
     Parameters
     ----------
-    data : (n, d) full dataset.
     regions : list of (n_region,) index arrays.
-    structure : StructureReport.
     spectral : SpectralData (provides global EigenBasis for initial reference).
-    faiss_index : pre-built FAISS index.
-    overlap_factor : passed to chart.build().
-    max_retries : maximum split-and-retry attempts per region.
+    ctx : _BuildCtx with data, structure, faiss_index, overlap_factor, max_retries.
 
     Returns
     -------
@@ -168,12 +184,8 @@ def _build_all_charts(
     """
     reference_basis = spectral.basis
     charts = []
-
     for region_indices in regions:
-        chart = _attempt_build(
-            region_indices, data, structure, faiss_index,
-            reference_basis, overlap_factor, max_retries,
-        )
+        chart = _attempt_build(region_indices, reference_basis, ctx)
         if chart is not None:
             charts.append(chart)
             if len(charts) == 1:
@@ -182,53 +194,43 @@ def _build_all_charts(
                     eigenvectors=charts[0].local_basis.eigenvectors,
                     eigenvalues=charts[0].local_basis.eigenvalues,
                 )
-
     return charts
 
 
 def _attempt_build(
     region_indices: np.ndarray,
-    data: np.ndarray,
-    structure: StructureReport,
-    faiss_index,
     reference_basis: EigenBasis,
-    overlap_factor: float,
-    max_retries: int,
+    ctx: _BuildCtx,
 ):
     """Try to build a chart for *region_indices*, splitting on ChartError."""
+    build_params = chart_mod.ChartBuildParams(
+        graph_builder=graph_builder_mod,
+        intrinsic_dim=ctx.structure.intrinsic_dim,
+        faiss_index=ctx.faiss_index,
+        overlap_factor=ctx.overlap_factor,
+    )
     pending = [region_indices]
     retries = 0
-
-    while pending and retries <= max_retries:
+    while pending and retries <= ctx.max_retries:
         curr = pending.pop(0)
         if len(curr) < 4:
             retries += 1
             continue
         try:
-            return chart_mod.build(
-                region_data=data[curr],
-                region_indices=curr,
-                full_data=data,
-                graph_builder=graph_builder_mod,
-                intrinsic_dim=structure.intrinsic_dim,
-                reference_basis=reference_basis,
-                faiss_index=faiss_index,
-                overlap_factor=overlap_factor,
-            )
+            return chart_mod.build(ctx.data[curr], curr, ctx.data, reference_basis, build_params)
         except ChartError:
             retries += 1
             log.debug("ChartError on region of size %d; splitting (retry %d/%d).",
-                      len(curr), retries, max_retries)
+                      len(curr), retries, ctx.max_retries)
             if len(curr) >= 8:
                 km = KMeans(n_clusters=2, random_state=0, n_init=5)
-                labels = km.fit_predict(data[curr])
+                labels = km.fit_predict(ctx.data[curr])
                 for k in range(2):
                     sub = curr[labels == k]
                     if len(sub) >= 4:
                         pending.append(sub)
-
     log.warning("Could not build chart for region of %d points after %d retries.",
-                len(region_indices), max_retries)
+                len(region_indices), ctx.max_retries)
     return None
 
 

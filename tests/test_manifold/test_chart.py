@@ -16,6 +16,7 @@ from common.types import EigenBasis
 from fourier.graph_fourier import GraphFourierEngine
 from manifold.chart import (
     Chart,
+    ChartBuildParams,
     _compute_chart_inverse,
     _compute_coordinates,
     _define_chart_map,
@@ -59,11 +60,13 @@ def _make_chart(seed: int = 0) -> tuple[Chart, np.ndarray]:
         region_data=region_data,
         region_indices=region_indices,
         full_data=data,
-        graph_builder=graph_builder,
-        intrinsic_dim=2,
         reference_basis=ref,
-        faiss_index=idx,
-        overlap_factor=0.2,
+        params=ChartBuildParams(
+            graph_builder=graph_builder,
+            intrinsic_dim=2,
+            faiss_index=idx,
+            overlap_factor=0.2,
+        ),
     )
     return chart, region_data
 

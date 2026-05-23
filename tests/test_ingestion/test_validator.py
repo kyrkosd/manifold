@@ -398,12 +398,11 @@ class TestEstimateSuitability:
     # Suitability formula: 1.0 - 0.5*(missing/100) - 0.3*(const/features) - 0.2*(dup/samples)
     # Each deduction term is independent and the result is clamped to [0, 1].
 
-    def _make_report(self, missing_pct=0.0, constant_dims=None, duplicate_count=0,
-                     n_samples=100, n_features=5):
+    def _make_report(self, missing_pct=0.0, constant_dims=None, duplicate_count=0):
         # Helper creates a QualityReport with suitability_score=0.0 (to be computed).
         return QualityReport(
-            n_samples=n_samples,
-            n_features=n_features,
+            n_samples=100,
+            n_features=5,
             missing_pct=missing_pct,
             duplicate_count=duplicate_count,
             constant_dims=constant_dims or [],
@@ -427,7 +426,7 @@ class TestEstimateSuitability:
     def test_all_constant_dims_deducts_30pct(self):
         """All constant dims deducts 30pct."""
         # All 5 of 5 features are constant → deduction = 0.3 * 1.0 = 0.3 → score = 0.7.
-        r = self._make_report(constant_dims=[0, 1, 2, 3, 4], n_features=5)
+        r = self._make_report(constant_dims=[0, 1, 2, 3, 4])
         score = _estimate_suitability(r)
         assert score == pytest.approx(0.7)
 

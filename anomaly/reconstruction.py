@@ -72,6 +72,23 @@ def _decode(coords: np.ndarray, chart) -> np.ndarray:
     return chart.chart_inverse(coords)
 
 
+def _reconstruct_batch(
+    batch_data: np.ndarray,
+    batch_assign: np.ndarray,
+    charts: list,
+) -> np.ndarray:
+    """Project one batch of points through their assigned chart bases."""
+    result = np.zeros_like(batch_data)
+    for ci, chart in enumerate(charts):
+        mask = batch_assign == ci
+        if not mask.any():
+            continue
+        local_data = batch_data[mask]
+        basis_vecs = chart.selected_vectors
+        result[mask] = (local_data @ basis_vecs) @ basis_vecs.T
+    return result
+
+
 def _batch_reconstruct(
     data: np.ndarray,
     manifold,
@@ -96,22 +113,9 @@ def _batch_reconstruct(
     reconstructed = np.zeros_like(data)
     assignments = manifold.atlas.primary_assignments
     charts = manifold.atlas.charts
-
     for start in range(0, n, batch_size):
         end = min(start + batch_size, n)
-        batch_data = data[start:end]
-        batch_assign = assignments[start:end]
-
-        for ci, chart in enumerate(charts):
-            local_mask = batch_assign == ci
-            if not local_mask.any():
-                continue
-            local_data = batch_data[local_mask]           # (m, d)
-            basis_vecs = chart.selected_vectors            # (d, k)
-            # Encode: coords = basis_vecs.T @ local_data.T → (k, m); 
-            # decode: basis_vecs @ coords → (d, m)
-            coords = local_data @ basis_vecs               # (m, k)
-            recon = coords @ basis_vecs.T                  # (m, d)
-            reconstructed[start:end][local_mask] = recon
-
+        reconstructed[start:end] = _reconstruct_batch(
+            data[start:end], assignments[start:end], charts
+        )
     return reconstructed, data - reconstructed

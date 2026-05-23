@@ -23,41 +23,38 @@ from reporting.anomaly_report import (
 # Shared fixture builder
 # ---------------------------------------------------------------------------
 
+def _make_band_scores(rng, n: int, n_bands: int, n_anomaly: int) -> BandScores:
+    per_band: dict[int, np.ndarray] = {}
+    for b in range(n_bands):
+        scores = rng.standard_normal(n)
+        scores[-n_anomaly:] += 15.0
+        per_band[b] = scores
+    abs_mat = np.abs(np.column_stack(list(per_band.values())))
+    overall = np.max(abs_mat, axis=1)
+    weights = np.ones(n_bands) / n_bands
+    return BandScores(per_band=per_band, overall=overall, weights=weights)
+
+
 def _make_results(n: int = 80, n_bands: int = 3, n_anomaly: int = 8,
                   seed: int = 0) -> tuple[AnomalyResults, np.ndarray]:
     rng = np.random.default_rng(seed)
     d = 5
-
-    per_band: dict[int, np.ndarray] = {}
-    for b in range(n_bands):
-        scores = rng.standard_normal(n)
-        scores[-n_anomaly:] += 15.0      # plant anomalies with high z
-        per_band[b] = scores
-
-    abs_mat = np.abs(np.column_stack(list(per_band.values())))
-    overall = np.max(abs_mat, axis=1)
-    weights = np.ones(n_bands) / n_bands
-    band_scores = BandScores(per_band=per_band, overall=overall, weights=weights)
-
+    band_scores = _make_band_scores(rng, n, n_bands, n_anomaly)
     flags = apply_threshold(band_scores)
-
     total = rng.standard_normal((n, d))
     normal = rng.standard_normal((n, d)) * 0.05
-    per_band_norms = {b: np.abs(per_band[b]) for b in range(n_bands)}
     residual_data = ResidualData(
         total_residuals=total,
         normal_residuals=normal,
-        per_band_norms=per_band_norms,
+        per_band_norms={b: np.abs(band_scores.per_band[b]) for b in range(n_bands)},
     )
-
     results = AnomalyResults(
         scores=band_scores,
         flags=flags,
         residual_data=residual_data,
         n_anomalies=int(np.sum(flags.overall_flags)),
     )
-    data = rng.standard_normal((n, d))
-    return results, data
+    return results, rng.standard_normal((n, d))
 
 
 # ---------------------------------------------------------------------------

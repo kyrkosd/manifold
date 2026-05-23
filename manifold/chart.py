@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from scipy.stats import spearmanr
@@ -49,15 +50,62 @@ class Chart:
     ambient_dim: int
 
 
+@dataclass
+class ChartBuildParams:
+    """Fixed build-time parameters for constructing a single chart patch.
+
+    Parameters
+    ----------
+    graph_builder : module with build(data) -> FeatureGraph.
+    intrinsic_dim : target intrinsic dimension.
+    faiss_index : pre-built FAISS index over the full dataset.
+    overlap_factor : fraction of region size to include as boundary overlap.
+    """
+
+    graph_builder: Any
+    intrinsic_dim: int
+    faiss_index: Any
+    overlap_factor: float = 0.2
+
+
+@dataclass
+class _ChartSpec:
+    """Intermediate components used to assemble a Chart dataclass."""
+
+    region_indices: np.ndarray
+    expanded_indices: np.ndarray
+    aligned: AlignedBasis
+    sel_indices: list[int]
+    intrinsic_dim: int
+    ambient_dim: int
+
+
+def _assemble_chart(region_data: np.ndarray, spec: _ChartSpec) -> Chart:
+    """Construct a Chart dataclass from pre-computed eigenbasis components."""
+    sel_vectors = spec.aligned.eigenvectors[:, spec.sel_indices]
+    chart_map = _define_chart_map(sel_vectors)
+    chart_inverse = _compute_chart_inverse(sel_vectors)
+    coordinates = _compute_coordinates(region_data, chart_map)
+    return Chart(
+        region_indices=spec.region_indices,
+        expanded_indices=spec.expanded_indices,
+        local_basis=spec.aligned,
+        selected_indices=spec.sel_indices,
+        selected_vectors=sel_vectors,
+        coordinates=coordinates,
+        chart_map=chart_map,
+        chart_inverse=chart_inverse,
+        intrinsic_dim=spec.intrinsic_dim,
+        ambient_dim=spec.ambient_dim,
+    )
+
+
 def build(
     region_data: np.ndarray,
     region_indices: np.ndarray,
     full_data: np.ndarray,
-    graph_builder,
-    intrinsic_dim: int,
     reference_basis: EigenBasis,
-    faiss_index,
-    overlap_factor: float = 0.2,
+    params: ChartBuildParams,
 ) -> Chart:
     """Build a manifold chart for the given region.
 
@@ -66,11 +114,9 @@ def build(
     region_data : (n_region, d) data points in this chart's core region.
     region_indices : (n_region,) indices into *full_data*.
     full_data : (n, d) full dataset.
-    graph_builder : module with build_local(data, mask) -> FeatureGraph.
-    intrinsic_dim : target intrinsic dimension.
     reference_basis : global EigenBasis used for alignment.
-    faiss_index : pre-built FAISS index over *full_data*.
-    overlap_factor : fraction of region size to include as boundary overlap.
+    params : ChartBuildParams with graph_builder, intrinsic_dim, faiss_index,
+        and overlap_factor.
 
     Returns
     -------
@@ -82,31 +128,20 @@ def build(
         When chart validation fails (injectivity hard gate not met).
     """
     region_indices_arr, expanded_indices = _expand_region(
-        region_indices, full_data, faiss_index, overlap_factor
+        region_indices, full_data, params.faiss_index, params.overlap_factor
     )
     expanded_data = full_data[expanded_indices]
-
-    aligned = _build_local_eigenbasis(expanded_data, graph_builder, reference_basis)
-    sel_indices = _select_basis_adaptive(aligned, region_data, intrinsic_dim)
-    sel_vectors = aligned.eigenvectors[:, sel_indices]
-
-    chart_map = _define_chart_map(sel_vectors)
-    chart_inverse = _compute_chart_inverse(sel_vectors)
-    coordinates = _compute_coordinates(region_data, chart_map)
-
-    chart = Chart(
+    aligned = _build_local_eigenbasis(expanded_data, params.graph_builder, reference_basis)
+    sel_indices = _select_basis_adaptive(aligned, region_data, params.intrinsic_dim)
+    spec = _ChartSpec(
         region_indices=region_indices_arr,
         expanded_indices=expanded_indices,
-        local_basis=aligned,
-        selected_indices=sel_indices,
-        selected_vectors=sel_vectors,
-        coordinates=coordinates,
-        chart_map=chart_map,
-        chart_inverse=chart_inverse,
-        intrinsic_dim=intrinsic_dim,
+        aligned=aligned,
+        sel_indices=sel_indices,
+        intrinsic_dim=params.intrinsic_dim,
         ambient_dim=full_data.shape[1],
     )
-
+    chart = _assemble_chart(region_data, spec)
     valid, _score, reason = chart_validator.validate(chart, region_data)
     if not valid:
         raise ChartError(
@@ -114,6 +149,29 @@ def build(
             recovery_suggestion="Split region into smaller sub-regions.",
         )
     return chart
+
+
+def _collect_outside_neighbours(
+    nbr_indices: np.ndarray,
+    region_set: set[int],
+) -> set[int]:
+    """Return neighbour indices that lie outside region_set."""
+    outside: set[int] = set()
+    for row in nbr_indices:
+        for idx in row:
+            if int(idx) not in region_set:
+                outside.add(int(idx))
+    return outside
+
+
+def _sample_boundary(outside: set[int], n_overlap: int) -> list[int]:
+    """Return a deterministic random sample of up to n_overlap outside indices."""
+    outside_list = sorted(outside)
+    if len(outside_list) <= n_overlap:
+        return outside_list
+    return np.random.default_rng(0).choice(
+        outside_list, size=n_overlap, replace=False
+    ).tolist()
 
 
 def _expand_region(
@@ -139,26 +197,10 @@ def _expand_region(
     """
     region_set = set(region_indices.tolist())
     region_pts = full_data[region_indices]
-
-    # Find each region point's nearest neighbours (k=10 as boundary probe).
     _dists, nbr_indices = nn_utils.query_knn(faiss_index, region_pts, k=10)
-
-    # Collect outside neighbours (boundary points).
-    outside = set()
-    for row in nbr_indices:
-        for idx in row:
-            if int(idx) not in region_set:
-                outside.add(int(idx))
-
-    # Keep only overlap_factor * n_region outside neighbours (random sample).
+    outside = _collect_outside_neighbours(nbr_indices, region_set)
     n_overlap = max(1, int(overlap_factor * len(region_indices)))
-    outside_list = sorted(outside)
-    rng = np.random.default_rng(0)
-    if len(outside_list) > n_overlap:
-        chosen = rng.choice(outside_list, size=n_overlap, replace=False).tolist()
-    else:
-        chosen = outside_list
-
+    chosen = _sample_boundary(outside, n_overlap)
     expanded = np.array(sorted(region_set | set(chosen)), dtype=np.intp)
     return region_indices, expanded
 

@@ -24,33 +24,34 @@ from reporting.export import summary_dict, to_csv, to_dataframe, to_json
 # Shared helpers
 # ---------------------------------------------------------------------------
 
-def _make_report(n: int = 60, n_bands: int = 3, n_anomaly: int = 6,
-                 seed: int = 0) -> AnomalyReport:
-    rng = np.random.default_rng(seed)
-    d = 4
+def _make_band_scores(rng, n: int, n_bands: int, n_anomaly: int) -> BandScores:
     per_band: dict[int, np.ndarray] = {}
     for b in range(n_bands):
         scores = rng.standard_normal(n)
         scores[-n_anomaly:] += 15.0
         per_band[b] = scores
-
     abs_mat = np.abs(np.column_stack(list(per_band.values())))
     overall = np.max(abs_mat, axis=1)
     weights = np.ones(n_bands) / n_bands
-    band_scores = BandScores(per_band=per_band, overall=overall, weights=weights)
-    flags = apply_threshold(band_scores)
+    return BandScores(per_band=per_band, overall=overall, weights=weights)
 
+
+def _make_report(n: int = 60, n_bands: int = 3, n_anomaly: int = 6,
+                 seed: int = 0) -> AnomalyReport:
+    rng = np.random.default_rng(seed)
+    d = 4
+    band_scores = _make_band_scores(rng, n, n_bands, n_anomaly)
+    flags = apply_threshold(band_scores)
     rd = ResidualData(
         total_residuals=rng.standard_normal((n, d)),
         normal_residuals=rng.standard_normal((n, d)),
-        per_band_norms={b: np.abs(per_band[b]) for b in range(n_bands)},
+        per_band_norms={b: np.abs(band_scores.per_band[b]) for b in range(n_bands)},
     )
     results = AnomalyResults(
         scores=band_scores, flags=flags, residual_data=rd,
         n_anomalies=int(np.sum(flags.overall_flags)),
     )
-    data = rng.standard_normal((n, d))
-    return report(results, data)
+    return report(results, rng.standard_normal((n, d)))
 
 
 # ---------------------------------------------------------------------------

@@ -29,6 +29,29 @@ class BandScores:
     weights: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
+def _score_all_charts(
+    assignments: np.ndarray,
+    manifold,
+    residual_data: ResidualData,
+    band_indices: list[int],
+    n: int,
+) -> dict[int, np.ndarray]:
+    """Compute per-band z-scores for every point, grouped by chart assignment."""
+    per_band: dict[int, np.ndarray] = {bi: np.zeros(n) for bi in band_indices}
+    for ci, exp in manifold.expected_residuals.items():
+        mask = assignments == ci
+        if not mask.any():
+            continue
+        for bi in band_indices:
+            band_norms = residual_data.per_band_norms[bi][mask]
+            expected_mean = exp.per_band_mean.get(bi, 0.0)
+            expected_var = exp.per_band_var.get(bi, 0.0)
+            per_band[bi][mask] = _score_band_against_expected(
+                band_norms, expected_mean, expected_var
+            )
+    return per_band
+
+
 def score(
     residual_data: ResidualData,
     manifold,
@@ -54,24 +77,9 @@ def score(
     bands = manifold.spectral.bands
     band_indices = sorted(residual_data.per_band_norms.keys())
     n = residual_data.per_band_norms[band_indices[0]].shape[0] if band_indices else 0
-
-    per_band: dict[int, np.ndarray] = {bi: np.zeros(n) for bi in band_indices}
-
-    for ci, exp in manifold.expected_residuals.items():
-        mask = assignments == ci
-        if not mask.any():
-            continue
-        for bi in band_indices:
-            band_norms = residual_data.per_band_norms[bi][mask]
-            expected_mean = exp.per_band_mean.get(bi, 0.0)
-            expected_var = exp.per_band_var.get(bi, 0.0)
-            per_band[bi][mask] = _score_band_against_expected(
-                band_norms, expected_mean, expected_var
-            )
-
+    per_band = _score_all_charts(assignments, manifold, residual_data, band_indices, n)
     weights = _weight_bands(bands)
     overall = _aggregate_scores(per_band)
-
     return BandScores(per_band=per_band, overall=overall, weights=weights)
 
 

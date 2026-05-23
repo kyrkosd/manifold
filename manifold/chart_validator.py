@@ -161,6 +161,24 @@ def _compute_distortion(chart) -> float:
     return float(s[0] / s[-1])
 
 
+def _injectivity_proxy(data: np.ndarray, chart_map) -> float:
+    """Estimate injectivity via Spearman correlation of ambient vs chart distances."""
+    n = data.shape[0]
+    if n < 2:
+        return 1.0
+    coords = np.stack([chart_map(row) for row in data])
+    rng = np.random.default_rng(99)
+    n_pairs = min(200, n * (n - 1) // 2)
+    i_idx = rng.integers(0, n, size=n_pairs)
+    j_idx = rng.integers(0, n, size=n_pairs)
+    same = i_idx == j_idx
+    j_idx[same] = (j_idx[same] + 1) % n
+    amb = np.linalg.norm(data[i_idx] - data[j_idx], axis=1)
+    cd = np.linalg.norm(coords[i_idx] - coords[j_idx], axis=1)
+    corr, _ = spearmanr(amb, cd)
+    return float(np.clip(corr if not np.isnan(corr) else 0.0, 0.0, 1.0))
+
+
 def _quality_score(chart, data: np.ndarray) -> float:
     """Composite quality score in [0, 1].
 
@@ -172,26 +190,9 @@ def _quality_score(chart, data: np.ndarray) -> float:
     data : (n, d) region data.
     """
     alignment = float(np.clip(chart.local_basis.alignment_score, 0.0, 1.0))
-
     distortion = _compute_distortion(chart)
     distortion_score = float(np.clip(1.0 / (1.0 + distortion), 0.0, 1.0))
-
-    n = data.shape[0]
-    if n >= 2:
-        coords = np.stack([chart.chart_map(row) for row in data])
-        rng = np.random.default_rng(99)
-        n_pairs = min(200, n * (n - 1) // 2)
-        i_idx = rng.integers(0, n, size=n_pairs)
-        j_idx = rng.integers(0, n, size=n_pairs)
-        same = i_idx == j_idx
-        j_idx[same] = (j_idx[same] + 1) % n
-        amb = np.linalg.norm(data[i_idx] - data[j_idx], axis=1)
-        cd = np.linalg.norm(coords[i_idx] - coords[j_idx], axis=1)
-        corr, _ = spearmanr(amb, cd)
-        injectivity = float(np.clip(corr if not np.isnan(corr) else 0.0, 0.0, 1.0))
-    else:
-        injectivity = 1.0
-
+    injectivity = _injectivity_proxy(data, chart.chart_map)
     return float((alignment + distortion_score + injectivity) / 3.0)
 
 
