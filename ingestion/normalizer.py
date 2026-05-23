@@ -7,6 +7,7 @@ from __future__ import annotations
 import numpy as np
 
 from common.logging import get_logger
+
 from .types import NormParams
 
 _log = get_logger(__name__)

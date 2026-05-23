@@ -12,12 +12,12 @@ from typing import Any
 import numpy as np
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
+import manifold.chart as chart_mod
+import structure.graph_builder as graph_builder_mod
 from common import nn_utils
 from common.exceptions import ChartError
 from common.types import EigenBasis
 from fourier import SpectralData
-import manifold.chart as chart_mod
-import structure.graph_builder as graph_builder_mod
 from structure.report import StructureReport
 
 log = logging.getLogger(__name__)

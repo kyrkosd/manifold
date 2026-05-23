@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import spearmanr
 from sklearn.cluster import KMeans
 
-from manifold.tangent import _project_to_tangent, compute_space
+from manifold.tangent import _project_to_tangent
 
 
 def validate(

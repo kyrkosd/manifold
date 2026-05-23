@@ -5,15 +5,15 @@ data points assigned to that patch.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from scipy.stats import spearmanr
 
 from common import nn_utils
 from common.exceptions import ChartError
-from common.types import AlignmentQuality, EigenBasis
+from common.types import EigenBasis
 from fourier.graph_fourier import GraphFourierEngine
 from manifold.eigenvector_alignment import AlignedBasis, align_to_reference
 

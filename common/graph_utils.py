@@ -165,7 +165,7 @@ def dijkstra(graph: np.ndarray, start: int) -> np.ndarray:
 
 
 def graph_diameter(graph: np.ndarray) -> float:
-    """Compute the diameter (maximum finite shortest-path distance) of the graph.
+    """Compute the diameter (maximum shortest-path distance) of the graph.
 
     Parameters
     ----------
@@ -175,13 +175,14 @@ def graph_diameter(graph: np.ndarray) -> float:
     Returns
     -------
     float
-        Maximum finite pairwise shortest-path distance, or ``inf`` if the
-        graph is disconnected and no finite distances exist.
+        Maximum pairwise shortest-path distance, or ``inf`` if the graph is
+        disconnected (any pair of nodes is mutually unreachable).
     """
     sparse = csr_matrix(graph)
     all_distances = _dijkstra(sparse)
-    finite = all_distances[np.isfinite(all_distances)]
-    return float(np.max(finite)) if len(finite) > 0 else float("inf")
+    if np.any(np.isinf(all_distances)):
+        return float("inf")
+    return float(np.max(all_distances))
 
 
 def clustering_coefficient(adjacency: np.ndarray) -> float:

@@ -5,8 +5,8 @@ and index rebuilding when the underlying data changes.
 """
 from __future__ import annotations
 
-import numpy as np
 import faiss
+import numpy as np
 
 _SMALL_DATA_THRESHOLD = 10_000
 _DEFAULT_NPROBE = 10
@@ -103,8 +103,11 @@ def query_radius(
         Length-q list; each element is an integer array of neighbour indices.
     """
     pts = np.ascontiguousarray(points, dtype=np.float32)
-    lims, _D, I = index.range_search(pts, radius ** 2)
-    return [I[lims[i] : lims[i + 1]] for i in range(len(pts))]
+    # FAISS range_search uses strict inequality (d < threshold), so radius=0
+    # would exclude self.  Use a tiny floor so exact matches are always included.
+    threshold = max(radius ** 2, 1e-10)
+    lims, _D, idx = index.range_search(pts, threshold)
+    return [idx[lims[i] : lims[i + 1]] for i in range(len(pts))]
 
 
 def batch_knn(

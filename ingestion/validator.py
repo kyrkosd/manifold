@@ -13,6 +13,7 @@ import pandas as pd
 
 from common.exceptions import ValidationError
 from common.logging import get_logger
+
 from .types import QualityReport
 
 _log = get_logger(__name__)

@@ -13,6 +13,7 @@ import numpy as np
 
 from common.types import EigenBasis, FrequencyBand
 from structure.report import StructureReport
+
 from . import band_decomposition, power_spectrum
 from .graph_fourier import GraphFourierEngine
 

@@ -12,12 +12,12 @@ from typing import Any
 
 import numpy as np
 
-from fourier import SpectralData
-from structure.report import StructureReport
 import manifold.atlas as atlas_mod
 import manifold.expected_residual as expected_residual_mod
+from fourier import SpectralData
 from manifold.atlas import Atlas
 from manifold.expected_residual import ExpectedResidualDistribution
+from structure.report import StructureReport
 
 __all__ = ["Manifold", "build_manifold"]
 

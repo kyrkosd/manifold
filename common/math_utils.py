@@ -146,24 +146,38 @@ def smooth_check(
     points: np.ndarray,
     eps: float = 1e-5,
 ) -> bool:
-    """Return True if ‖J(pᵢ₊₁)−J(pᵢ)‖_F / ‖pᵢ₊₁−pᵢ‖ < 1/eps at each consecutive pair.
+    """Return True if the function appears smooth at each consecutive pair.
+
+    Two conditions are checked per consecutive pair (pᵢ, pᵢ₊₁):
+    1. Jacobian Lipschitz: ‖J(pᵢ₊₁)−J(pᵢ)‖_F / ‖step‖ < 1/eps.
+    2. Taylor residual: ‖f(pᵢ₊₁) − f(pᵢ) − J(pᵢ)·step‖ / ‖step‖² < 1/eps.
+       For smooth functions the residual is O(‖step‖²); for discontinuous
+       functions it is O(1), so the ratio explodes.
+
     Parameters
     ----------
     func : function under test.
     points : (n, d) ordered evaluation points.
-    eps : step size for Jacobians and Lipschitz bound (1/eps).
+    eps : finite-difference step for Jacobians; also sets Lipschitz bound 1/eps.
     Returns
     -------
-    bool : True when Lipschitz condition holds at every consecutive pair.
+    bool : True when both conditions hold at every consecutive pair.
     """
     if len(points) < 2:
         return True
     jacobians = [numerical_jacobian(func, p, eps=eps) for p in points]
+    values = [np.atleast_1d(func(p)) for p in points]
+    bound = 1.0 / eps
     for i in range(len(points) - 1):
-        step = np.linalg.norm(points[i + 1] - points[i])
+        step_vec = points[i + 1] - points[i]
+        step = np.linalg.norm(step_vec)
         if step < 1e-12:
             continue
-        if np.linalg.norm(jacobians[i + 1] - jacobians[i], ord="fro") / step > 1.0 / eps:
+        if np.linalg.norm(jacobians[i + 1] - jacobians[i], ord="fro") / step > bound:
+            return False
+        predicted = jacobians[i] @ step_vec
+        residual = np.linalg.norm(values[i + 1] - values[i] - predicted)
+        if residual / (step ** 2) > bound:
             return False
     return True
 
@@ -198,7 +212,7 @@ def solve_ode(
     -------
     np.ndarray : (n_steps, n) solution; rows are time steps.
     """
-    result = solve_ivp(func, t_span, y0, method=method)
+    result = solve_ivp(func, t_span, y0, method=method, rtol=1e-8, atol=1e-10)
     if not result.success:
         raise RuntimeError(f"ODE integration failed: {result.message}")
     return result.y.T
