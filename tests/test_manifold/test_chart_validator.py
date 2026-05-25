@@ -13,7 +13,15 @@ import structure.graph_builder as graph_builder
 from common import nn_utils
 from common.types import AlignmentQuality
 from fourier.graph_fourier import GraphFourierEngine
-from manifold.chart import Chart, ChartBasis, ChartBuildParams, ChartRegion, build, _define_chart_map, _compute_chart_inverse
+from manifold.chart import (
+    Chart,
+    ChartBasis,
+    ChartBuildParams,
+    ChartRegion,
+    _compute_chart_inverse,
+    _define_chart_map,
+    build,
+)
 from manifold.chart_validator import (
     _check_continuity,
     _check_injectivity,

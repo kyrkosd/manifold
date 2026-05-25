@@ -12,7 +12,14 @@ import pytest
 from sklearn.decomposition import PCA
 from common.types import AlignmentQuality, FourierType, StructureType
 from fourier import SpectralData, analyze_fourier
-from manifold.chart import Chart, ChartBasis, ChartRegion, _compute_chart_inverse, _compute_coordinates, _define_chart_map
+from manifold.chart import (
+    Chart,
+    ChartBasis,
+    ChartRegion,
+    _compute_chart_inverse,
+    _compute_coordinates,
+    _define_chart_map
+)    
 from manifold.eigenvector_alignment import AlignedBasis
 from manifold.expected_residual import (
     ExpectedResidualDistribution,

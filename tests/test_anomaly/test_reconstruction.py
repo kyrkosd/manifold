@@ -6,7 +6,6 @@ The module-scoped fixture is built once and shared across all tests.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 from anomaly.reconstruction import (
     _batch_reconstruct,
     _decode,
