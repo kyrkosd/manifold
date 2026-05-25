@@ -33,6 +33,7 @@ class TestScore:
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
         result = score(rd, mf)
+        # score() must return the container type consumed by threshold.apply().
         assert isinstance(result, BandScores)
 
     def test_per_band_keys_match_bands(self, manifold_fixture):
@@ -41,6 +42,7 @@ class TestScore:
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
         result = score(rd, mf)
+        # Keys must be 0-based integer indices matching the spectral band list.
         assert set(result.per_band.keys()) == set(range(len(mf.spectral.bands)))
 
     def test_overall_shape(self, manifold_fixture):
@@ -49,11 +51,12 @@ class TestScore:
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
         result = score(rd, mf)
+        # One scalar score per input point.
         assert result.overall.shape == (len(data),)
 
     def test_overall_is_max_abs_per_band(self, manifold_fixture):
         """Overall is max abs per band."""
-        # overall[i] = max |z_b[i]| across bands.
+        # overall[i] = max |z_b[i]| across bands — worst-case band dominates.
         mf, data = manifold_fixture
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
@@ -67,6 +70,7 @@ class TestScore:
         _, raw = reconstruct(data, mf)
         rd = compute_residuals(raw, data, mf)
         result = score(rd, mf)
+        # One weight per band; used by weighted-mean aggregation.
         assert len(result.weights) == len(mf.spectral.bands)
 
 
@@ -78,36 +82,39 @@ class TestScoreBandAgainstExpected:
     """Tests for Score Band Against Expected."""
     def test_zero_mean_zero_var_at_mean_gives_zero(self):
         """Zero mean zero var at mean gives zero."""
-        # band_norms = expected_mean = 0 → z = 0.
+        # band_norms = expected_mean = 0 → numerator is zero → z = 0.
         z = _score_band_against_expected(np.zeros(5), 0.0, 0.0)
         np.testing.assert_allclose(z, 0.0, atol=1e-10)
 
     def test_standard_z_score_formula(self):
         """Standard z score formula."""
-        # z = (x - μ) / σ.
+        # z = (x - μ) / σ; variance=0.25 → σ=0.5.
         norms = np.array([1.5, 2.0, 0.5])
-        z = _score_band_against_expected(norms, 1.0, 0.25)  # σ = 0.5
+        z = _score_band_against_expected(norms, 1.0, 0.25)
         expected = (norms - 1.0) / 0.5
         np.testing.assert_allclose(z, expected, atol=1e-10)
 
     def test_positive_deviation_gives_positive_z(self):
         """Positive deviation gives positive z."""
+        # norm > expected_mean → z > 0 signals an elevated band.
         z = _score_band_against_expected(np.array([2.0]), 1.0, 1.0)
         assert z[0] > 0.0
 
     def test_negative_deviation_gives_negative_z(self):
         """Negative deviation gives negative z."""
+        # norm < expected_mean → z < 0 signals a suppressed band.
         z = _score_band_against_expected(np.array([0.0]), 1.0, 1.0)
         assert z[0] < 0.0
 
     def test_zero_var_nonzero_diff_gives_large_z(self):
         """Zero var nonzero diff gives large z."""
-        # expected_var=0, band_norm >> expected_mean → large z.
+        # expected_var=0 → σ falls back to a tiny epsilon so z becomes very large.
         z = _score_band_against_expected(np.array([5.0]), 0.0, 0.0)
         assert abs(z[0]) > 1e5
 
     def test_zero_var_zero_diff_gives_zero_z(self):
         """Zero var zero diff gives zero z."""
+        # norm == expected_mean → numerator is zero regardless of σ → z = 0.
         z = _score_band_against_expected(np.array([1.0]), 1.0, 0.0)
         np.testing.assert_allclose(z, 0.0, atol=1e-10)
 
@@ -120,12 +127,14 @@ class TestAggregateScores:
     """Tests for Aggregate Scores."""
     def test_default_is_max_abs(self):
         """Default is max abs."""
+        # Point 0: max(|1|,|2|)=2; point 1: max(|3|,|1|)=3.
         band_scores = {0: np.array([1.0, 3.0]), 1: np.array([2.0, 1.0])}
         result = _aggregate_scores(band_scores)
         np.testing.assert_allclose(result, [2.0, 3.0])
 
     def test_weighted_mean(self):
         """Weighted mean."""
+        # Equal weights of 0.5: (2*0.5 + 4*0.5) = 3.
         band_scores = {0: np.array([2.0]), 1: np.array([4.0])}
         weights = np.array([0.5, 0.5])
         result = _aggregate_scores(band_scores, weights=weights)
@@ -133,6 +142,7 @@ class TestAggregateScores:
 
     def test_empty_returns_empty(self):
         """Empty returns empty."""
+        # No bands → no scores; must not raise.
         result = _aggregate_scores({})
         assert len(result) == 0
 

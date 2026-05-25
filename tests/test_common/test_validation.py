@@ -21,6 +21,10 @@ from common.validation import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Shared test types
+# ---------------------------------------------------------------------------
+
 # Minimal enum used throughout the enum-related tests.
 class _Color(Enum):
     RED = "red"

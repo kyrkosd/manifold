@@ -209,10 +209,13 @@ def _expand_region(
     """
     region_set = set(region_indices.tolist())
     region_pts = full_data[region_indices]
+    # k=10 neighbours per region point; neighbours outside the core become candidates.
     _dists, nbr_indices = nn_utils.query_knn(faiss_index, region_pts, k=10)
     outside = _collect_outside_neighbours(nbr_indices, region_set)
+    # n_overlap is at least 1 so every chart has some boundary context.
     n_overlap = max(1, int(overlap_factor * len(region_indices)))
     chosen = _sample_boundary(outside, n_overlap)
+    # Expanded set is sorted so downstream indexing is deterministic.
     expanded = np.array(sorted(region_set | set(chosen)), dtype=np.intp)
     return region_indices, expanded
 
@@ -254,20 +257,22 @@ def _injectivity_score(vectors: np.ndarray, data: np.ndarray) -> float:
     """
     n = data.shape[0]
     chart_map = _define_chart_map(vectors)
-
     coords = _compute_coordinates(data, chart_map)
 
+    # Sample random pairs to keep cost O(n_pairs) rather than O(n²).
     rng = np.random.default_rng(1)
     n_pairs = min(500, n * (n - 1) // 2)
     if n >= 2:
         i_idx = rng.integers(0, n, size=n_pairs)
         j_idx = rng.integers(0, n, size=n_pairs)
+        # Avoid i==j pairs; shift j forward by 1 (mod n) when equal.
         same = i_idx == j_idx
         j_idx[same] = (j_idx[same] + 1) % n
 
         amb_dists = np.linalg.norm(data[i_idx] - data[j_idx], axis=1)
         chart_dists = np.linalg.norm(coords[i_idx] - coords[j_idx], axis=1)
         corr, _ = spearmanr(amb_dists, chart_dists)
+        # NaN arises when all distances are identical (degenerate data); treat as 0.
         return float(corr) if not np.isnan(corr) else 0.0
     return 0.0
 
@@ -295,14 +300,18 @@ def _select_basis_adaptive(
     vecs = aligned_basis.eigenvectors   # (d, k)
     k = vecs.shape[1]
     # Start with highest-eigenvalue columns (descending: last intrinsic_dim).
+    # These carry the most variance and are usually the best initial guess.
     best_indices = list(range(k - intrinsic_dim, k))
     best_score = _injectivity_score(vecs[:, best_indices], region_data)
 
     remaining = [i for i in range(k) if i not in best_indices]
     attempts = 0
+    # Greedy one-swap search: try replacing each selected index with an
+    # unused candidate and keep the swap if it improves injectivity.
     for swap_out_pos in range(intrinsic_dim):
         for candidate in remaining:
             if attempts >= 10:
+                # Hard cap prevents O(k²) cost on large eigenbases.
                 break
             trial = best_indices.copy()
             trial[swap_out_pos] = candidate

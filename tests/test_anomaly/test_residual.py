@@ -22,6 +22,7 @@ class TestCompute:
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
+        # compute() must return the container consumed by band_scorer.score().
         assert isinstance(result, ResidualData)
 
     def test_total_residuals_stored(self, manifold_fixture):
@@ -29,6 +30,7 @@ class TestCompute:
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
+        # Raw residuals are stored unmodified for downstream L2 comparison.
         np.testing.assert_array_equal(result.total_residuals, raw_residuals)
 
     def test_normal_residuals_shape(self, manifold_fixture):
@@ -36,6 +38,7 @@ class TestCompute:
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
+        # Normal component lives in ambient space; same shape as input data.
         assert result.normal_residuals.shape == data.shape
 
     def test_per_band_keys_match_spectral_bands(self, manifold_fixture):
@@ -44,6 +47,7 @@ class TestCompute:
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
         expected_keys = set(range(len(mf.spectral.bands)))
+        # Keys are 0-based integer indices into mf.spectral.bands.
         assert set(result.per_band_norms.keys()) == expected_keys
 
     def test_per_band_norms_shape(self, manifold_fixture):
@@ -51,6 +55,7 @@ class TestCompute:
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
+        # One scalar norm per data point for each frequency band.
         for norms in result.per_band_norms.values():
             assert norms.shape == (len(data),)
 
@@ -59,6 +64,7 @@ class TestCompute:
         mf, data = manifold_fixture
         _, raw_residuals = reconstruct(data, mf)
         result = compute(raw_residuals, data, mf)
+        # Norms are Euclidean magnitudes; must never be negative.
         for norms in result.per_band_norms.values():
             assert np.all(norms >= 0.0)
 

@@ -20,7 +20,11 @@ from anomaly.threshold import (
 # ---------------------------------------------------------------------------
 
 def _make_band_scores(n: int = 100, n_bands: int = 3, seed: int = 0) -> BandScores:
-    """Return BandScores with n normal points and 5 planted high-score anomalies."""
+    """Return BandScores with n normal points and 5 planted high-score anomalies.
+
+    Anomaly z-scores are offset by +20 so they are far above any realistic
+    threshold — this makes tests robust to the exact threshold formula used.
+    """
     rng = np.random.default_rng(seed)
     n_anomaly = 5
     per_band: dict[int, np.ndarray] = {}
@@ -29,9 +33,10 @@ def _make_band_scores(n: int = 100, n_bands: int = 3, seed: int = 0) -> BandScor
         anomaly = rng.standard_normal(n_anomaly) + 20.0   # very high z-score
         per_band[b] = np.concatenate([normal, anomaly])
 
+    # overall = max |z| per point, matching the default _aggregate_scores mode.
     abs_matrix = np.abs(np.column_stack(list(per_band.values())))
     overall = np.max(abs_matrix, axis=1)
-    weights = np.ones(n_bands) / n_bands
+    weights = np.ones(n_bands) / n_bands   # uniform weights
     return BandScores(per_band=per_band, overall=overall, weights=weights)
 
 
@@ -45,6 +50,7 @@ class TestApply:
         """Returns anomaly flags."""
         bs = _make_band_scores()
         result = apply(bs)
+        # apply() must return the container consumed by generate_report().
         assert isinstance(result, AnomalyFlags)
 
     def test_per_band_flags_shape(self):
@@ -52,6 +58,7 @@ class TestApply:
         n, n_bands = 80, 3
         bs = _make_band_scores(n=n, n_bands=n_bands)
         result = apply(bs)
+        # One boolean flag per point per band.
         for flags in result.per_band_flags.values():
             assert flags.shape == (n,)
             assert flags.dtype == bool
@@ -68,11 +75,12 @@ class TestApply:
         """Overall flags bool."""
         bs = _make_band_scores()
         result = apply(bs)
+        # dtype must be bool, not int — downstream code uses bitwise operators.
         assert result.overall_flags.dtype == bool
 
     def test_planted_anomalies_are_flagged(self):
         """Planted anomalies are flagged."""
-        # Last 5 points have z-score ≈ 20 — must be flagged overall.
+        # Last 5 points have z-score ≈ 20 — far above any realistic threshold.
         n, n_anomaly = 100, 5
         bs = _make_band_scores(n=n)
         result = apply(bs)
@@ -85,12 +93,14 @@ class TestApply:
         n_bands = 3
         bs = _make_band_scores(n_bands=n_bands)
         result = apply(bs)
+        # One threshold entry per band so callers can inspect per-band cutoffs.
         assert set(result.thresholds.keys()) == set(range(n_bands))
 
     def test_overall_threshold_positive(self):
         """Overall threshold positive."""
         bs = _make_band_scores()
         result = apply(bs)
+        # MAD-based threshold is always non-negative for non-negative score inputs.
         assert result.overall_threshold >= 0.0
 
 

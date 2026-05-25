@@ -19,7 +19,7 @@ from manifold.chart import (
     _compute_chart_inverse,
     _compute_coordinates,
     _define_chart_map
-)    
+)
 from manifold.eigenvector_alignment import AlignedBasis
 from manifold.expected_residual import (
     ExpectedResidualDistribution,

@@ -148,9 +148,12 @@ def _partition_into_regions(
         k = max(2, int(n_charts))
 
     # Low-frequency GFT columns capture global manifold structure.
+    # Use twice the intrinsic dim of low-frequency columns; these capture
+    # the dominant manifold structure without high-frequency noise.
     n_low = min(2 * structure.intrinsic_dim, spectral.coefficients.shape[1])
     low_freq = spectral.coefficients[:, :n_low]
 
+    # MiniBatchKMeans is faster than KMeans at scale; fixed seed for reproducibility.
     km = MiniBatchKMeans(n_clusters=k, random_state=0, n_init=3, max_iter=300)
     labels = km.fit_predict(low_freq)
 
@@ -182,6 +185,7 @@ def _build_all_charts(
     -------
     list[Chart]
     """
+    # The global spectral basis serves as the initial Procrustes reference.
     reference_basis = spectral.basis
     charts = []
     for region_indices in regions:
@@ -189,7 +193,9 @@ def _build_all_charts(
         if chart is not None:
             charts.append(chart)
             if len(charts) == 1:
-                # Align all subsequent charts to the first chart's local basis.
+                # Switch reference to the first successful chart so all
+                # subsequent charts align to a locally fitted basis rather
+                # than the global one — better consistency across patches.
                 reference_basis = EigenBasis(
                     eigenvectors=charts[0].basis.local.eigenvectors,
                     eigenvalues=charts[0].basis.local.eigenvalues,
@@ -209,10 +215,12 @@ def _attempt_build(
         faiss_index=ctx.faiss_index,
         overlap_factor=ctx.overlap_factor,
     )
+    # BFS queue of sub-regions to try; starts with the full region.
     pending = [region_indices]
     retries = 0
     while pending and retries <= ctx.max_retries:
         curr = pending.pop(0)
+        # Fewer than 4 points cannot form a valid chart (need at least 2 per dim).
         if len(curr) < 4:
             retries += 1
             continue
@@ -222,6 +230,8 @@ def _attempt_build(
             retries += 1
             log.debug("ChartError on region of size %d; splitting (retry %d/%d).",
                       len(curr), retries, ctx.max_retries)
+            # Split into two halves and enqueue each; requires ≥8 points so
+            # each half meets the minimum-4 threshold.
             if len(curr) >= 8:
                 km = KMeans(n_clusters=2, random_state=0, n_init=5)
                 labels = km.fit_predict(ctx.data[curr])

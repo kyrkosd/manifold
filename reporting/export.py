@@ -14,9 +14,14 @@ from reporting.anomaly_report import AnomalyReport
 
 
 class _NumpyEncoder(json.JSONEncoder):
-    """JSON encoder that converts numpy scalars and arrays to Python natives."""
+    """JSON encoder that converts numpy scalars and arrays to Python natives.
+
+    The standard json module raises TypeError on numpy types; this subclass
+    handles them before falling back to the default encoder.
+    """
 
     def default(self, obj):
+        # Each branch converts one numpy family to its Python equivalent.
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
@@ -24,6 +29,7 @@ class _NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, np.bool_):
             return bool(obj)
         if isinstance(obj, np.ndarray):
+            # Recursion-safe: tolist() returns plain Python scalars/lists.
             return obj.tolist()
         return super().default(obj)
 
@@ -93,6 +99,7 @@ def summary_dict(report: AnomalyReport) -> dict:
     dict with str keys and Python-native values.
     """
     merged: dict = {}
+    # summary holds aggregate counts; type_distribution holds per-type counts.
     for key, val in report.summary.items():
         merged[key] = _to_native(val)
     for key, val in report.type_distribution.items():
@@ -101,11 +108,16 @@ def summary_dict(report: AnomalyReport) -> dict:
 
 
 def _to_native(val):
-    """Convert a numpy scalar to the equivalent Python built-in type."""
+    """Convert a numpy scalar to the equivalent Python built-in type.
+
+    Non-numpy values are returned unchanged so this is safe to call on
+    mixed dicts without pre-checking each value's type.
+    """
     if isinstance(val, np.integer):
         return int(val)
     if isinstance(val, np.floating):
         return float(val)
     if isinstance(val, np.bool_):
         return bool(val)
+    # str, int, float, None, etc. — pass through unmodified.
     return val

@@ -109,19 +109,23 @@ class FourierManifoldPipeline:
         )
 
     # ------------------------------------------------------------------
-    # Private phase helpers
+    # Private phase helpers — each wraps one FMAS phase with the
+    # appropriate config slice; keeps run() readable as a sequencer.
     # ------------------------------------------------------------------
 
     def _ingest(self, data: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Run Phase 1 (ingestion) and return the cleaned numpy array."""
         clean = ingest(data)
         return clean.data
 
     def _discover_structure(self, data: np.ndarray) -> StructureReport:
+        """Run Phase 2 (structure discovery) and return a StructureReport."""
         return structure_mod.discover_structure(data)
 
     def _fourier_analyze(
         self, data: np.ndarray, structure: StructureReport
     ) -> SpectralData:
+        """Run Phase 3 (graph Fourier analysis) and return SpectralData."""
         return analyze_fourier(data, structure)
 
     def _build_manifold(
@@ -130,6 +134,11 @@ class FourierManifoldPipeline:
         spectral: SpectralData,
         structure: StructureReport,
     ) -> Manifold:
+        """Run Phase 4 (manifold atlas construction) and return a Manifold.
+
+        ManifoldConfig uses max_chart_retries but the atlas builder expects
+        the key "max_retries" — the translation happens here.
+        """
         config_dict = {
             "n_charts": self.config.manifold.n_charts,
             "overlap_factor": self.config.manifold.overlap_factor,
@@ -140,11 +149,13 @@ class FourierManifoldPipeline:
     def _detect_anomalies(
         self, data: np.ndarray, manifold: Manifold
     ) -> AnomalyResults:
+        """Run Phase 5 (anomaly scoring and flagging) and return AnomalyResults."""
         return detect_anomalies(data, manifold)
 
     def _generate_report(
         self, results: AnomalyResults, data: np.ndarray
     ) -> AnomalyReport:
+        """Run Phase 6 (reporting) and return the final AnomalyReport."""
         return generate_report(results, data)
 
 

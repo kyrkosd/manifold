@@ -25,12 +25,14 @@ class TestReconstruct:
         """Returns two arrays."""
         mf, data = manifold_fixture
         result = reconstruct(data, mf)
+        # Unpack as (reconstructed, residuals).
         assert len(result) == 2
 
     def test_reconstructed_shape(self, manifold_fixture):
         """Reconstructed shape."""
         mf, data = manifold_fixture
         reconstructed, _ = reconstruct(data, mf)
+        # Must be broadcastable with the original data for residual = data - p̂.
         assert reconstructed.shape == data.shape
 
     def test_residuals_shape(self, manifold_fixture):
@@ -41,6 +43,7 @@ class TestReconstruct:
 
     def test_residuals_equal_data_minus_reconstructed(self, manifold_fixture):
         """Residuals equal data minus reconstructed."""
+        # Fundamental identity: residual = data - projection onto chart.
         mf, data = manifold_fixture
         reconstructed, residuals = reconstruct(data, mf)
         np.testing.assert_allclose(residuals, data - reconstructed, atol=1e-12)
@@ -48,13 +51,13 @@ class TestReconstruct:
     def test_reconstructed_lies_in_chart_span(self, manifold_fixture):
         """Reconstructed lies in chart span."""
         # p̂ = basis_vecs @ basis_vecs.T @ p is in span(basis_vecs);
-        # the residual has zero projection onto basis_vecs.
+        # so the residual (p - p̂) must be orthogonal to every basis column.
         mf, data = manifold_fixture
         _, residuals = reconstruct(data, mf)
         for i in range(len(data)):
             ci = int(mf.atlas.primary_assignments[i])
             basis_vecs = mf.atlas.charts[ci].basis.selected_vectors
-            # residual should be orthogonal to basis_vecs's columns
+            # residual ⊥ chart basis → inner products are all zero.
             np.testing.assert_allclose(
                 basis_vecs.T @ residuals[i], np.zeros(basis_vecs.shape[1]), atol=1e-10
             )
@@ -117,6 +120,7 @@ class TestBatchReconstruct:
     """Tests for Batch Reconstruct."""
     def test_same_result_as_reconstruct(self, manifold_fixture):
         """Same result as reconstruct."""
+        # Batching is a memory optimisation; results must be numerically identical.
         mf, data = manifold_fixture
         r1, res1 = reconstruct(data, mf)
         r2, res2 = _batch_reconstruct(data, mf, batch_size=5000)
@@ -125,6 +129,8 @@ class TestBatchReconstruct:
 
     def test_small_batch_gives_same_result(self, manifold_fixture):
         """Small batch gives same result."""
+        # batch_size=10 forces many small slices; edge cases at chunk boundaries
+        # must not change the output.
         mf, data = manifold_fixture
         r_big, _ = _batch_reconstruct(data, mf, batch_size=10_000)
         r_small, _ = _batch_reconstruct(data, mf, batch_size=10)

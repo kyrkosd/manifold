@@ -1,12 +1,23 @@
-"""Pipeline configuration hierarchy using Pydantic BaseModel."""
+"""Pipeline configuration hierarchy using Pydantic BaseModel.
+
+Each phase of the FMAS pipeline has its own config class. PipelineConfig
+aggregates them all and delegates validation to each sub-config's
+validate_values(), which returns a list of human-readable warning strings
+rather than raising — this lets callers surface all problems at once.
+"""
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
 
+# ---------------------------------------------------------------------------
+# Phase-level configs
+# ---------------------------------------------------------------------------
+
 class IngestionConfig(BaseModel):
     """Configuration for the data ingestion phase."""
 
+    # "standard" → zero-mean unit-variance; "minmax" and "robust" also accepted.
     normalization_method: str = "standard"
 
     def validate_values(self) -> list[str]:
@@ -21,7 +32,9 @@ class IngestionConfig(BaseModel):
 class StructureConfig(BaseModel):
     """Configuration for the structure discovery phase."""
 
+    # "adaptive" builds the k-NN graph with a data-driven threshold.
     graph_threshold_method: str = "adaptive"
+    # Multiple methods are run and the consensus intrinsic dim is used.
     dimensionality_methods: list[str] = Field(
         default_factory=lambda: ["eigenvalue_gap", "mle"]
     )
@@ -38,9 +51,10 @@ class StructureConfig(BaseModel):
 class FourierConfig(BaseModel):
     """Configuration for the Fourier analysis phase."""
 
+    # "spectral_gaps" detects band boundaries from eigenvalue distribution gaps.
     band_method: str = "spectral_gaps"
-    min_bands: int = 3
-    max_bands: int = 20
+    min_bands: int = 3   # lower bound prevents degenerate single-band output
+    max_bands: int = 20  # upper bound avoids over-segmentation on small graphs
 
     def validate_values(self) -> list[str]:
         """Return semantic validation warnings for this config."""
@@ -57,9 +71,13 @@ class FourierConfig(BaseModel):
 class ManifoldConfig(BaseModel):
     """Configuration for the manifold construction phase."""
 
+    # "auto" sets k ≈ sqrt(n/100), clamped to [2, 20].
     n_charts: int | str = "auto"
+    # Fraction of each chart's core region added as an overlap buffer.
     overlap_factor: float = 0.2
+    # Number of times a chart may be split before the region is abandoned.
     max_chart_retries: int = 3
+    # Minimum Procrustes alignment score for a chart to pass validation.
     alignment_threshold: float = 0.5
 
     def validate_values(self) -> list[str]:
@@ -79,13 +97,17 @@ class ManifoldConfig(BaseModel):
 class AnomalyConfig(BaseModel):
     """Configuration for the anomaly detection phase."""
 
+    # "adaptive" uses MAD-based thresholding; "percentile" uses a fixed quantile.
     threshold_method: str = "adaptive"
+    # Expected fraction of anomalies in the dataset; drives threshold calibration.
     contamination: float = 0.05
+    # Multiple-testing correction applied across spectral bands.
     multiple_testing: str = "bonferroni"
 
     def validate_values(self) -> list[str]:
         """Return semantic validation warnings for this config."""
         warnings: list[str] = []
+        # contamination > 0.5 would flag the majority as anomalous.
         if self.contamination <= 0 or self.contamination >= 0.5:
             warnings.append("contamination should be in (0, 0.5)")
         return warnings
@@ -98,9 +120,9 @@ class AnomalyConfig(BaseModel):
 class FAISSConfig(BaseModel):
     """Configuration for the FAISS nearest-neighbour index."""
 
-    metric: str = "L2"
-    k_neighbors: int = 20
-    batch_size: int = 10000
+    metric: str = "L2"       # "L2" or "IP" (inner product)
+    k_neighbors: int = 20    # k used for region expansion and graph construction
+    batch_size: int = 10000  # points processed per FAISS query call
 
     def validate_values(self) -> list[str]:
         """Return semantic validation warnings for this config."""
@@ -113,6 +135,10 @@ class FAISSConfig(BaseModel):
         """Return True when validate_values produces no warnings."""
         return not self.validate_values()
 
+
+# ---------------------------------------------------------------------------
+# Top-level aggregate config
+# ---------------------------------------------------------------------------
 
 class PipelineConfig(BaseModel):
     """Top-level pipeline configuration aggregating all phase configs."""
@@ -129,6 +155,7 @@ class PipelineConfig(BaseModel):
     def validate_values(self) -> list[str]:
         """Aggregate validation warnings across all phase configs."""
         warnings: list[str] = []
+        # Collect warnings from every sub-config so all problems surface at once.
         for sub in (self.ingestion, self.structure, self.fourier,
                     self.manifold, self.anomaly, self.faiss):
             warnings.extend(sub.validate_values())
@@ -139,8 +166,12 @@ class PipelineConfig(BaseModel):
         return not self.validate_values()
 
 
+# ---------------------------------------------------------------------------
+# Convenience helpers
+# ---------------------------------------------------------------------------
+
 def default_config() -> PipelineConfig:
-    """Default config."""
+    """Return a PipelineConfig populated entirely with default values."""
     return PipelineConfig()
 
 
