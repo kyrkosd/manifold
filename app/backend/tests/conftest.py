@@ -110,9 +110,10 @@ def projector() -> ManifoldProjector:
 
 
 @pytest.fixture(scope="module")
-def projection(projector, run_dir) -> ProjectionResult:
+def projection(tmp_path_factory) -> ProjectionResult:
     """Provide the full ProjectionResult for the synthetic run."""
-    return projector.project(run_dir)
+    rdir = _make_run_dir(tmp_path_factory.mktemp("run"))
+    return ManifoldProjector().project(rdir)
 
 
 # ---------------------------------------------------------------------------

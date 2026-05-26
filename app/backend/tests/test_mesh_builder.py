@@ -9,7 +9,6 @@ import pytest
 
 from backend.models.schemas import ManifoldViewerData
 from backend.services.manifold_projector import ClusterProjection, ProjectionResult
-##from backend.services.mesh_builder import MeshBuilder
 
 _MAX_SURFACE_POINTS = 2_000
 
@@ -75,14 +74,14 @@ class TestSurfaceMesh:
     def test_too_few_points_returns_empty(self, builder):
         """Verify fewer than 4 points yields an empty face list."""
         pts = np.random.default_rng(0).standard_normal((3, 3))
-        verts, faces = builder.build_surface_mesh(pts)
+        _, faces = builder.build_surface_mesh(pts)
         assert faces == []
 
     def test_large_set_subsampled(self, builder):
         """Verify large inputs are subsampled to at most MAX_SURFACE_POINTS vertices."""
         rng = np.random.default_rng(0)
         pts = rng.standard_normal((10_000, 3))
-        verts, faces = builder.build_surface_mesh(pts)
+        verts, _ = builder.build_surface_mesh(pts)
         assert len(verts) <= _MAX_SURFACE_POINTS + 1
 
     def test_face_indices_valid(self, builder):
@@ -98,7 +97,7 @@ class TestSurfaceMesh:
     def test_no_degenerate_faces(self, builder):
         """Verify no face contains a repeated vertex index."""
         pts = _sphere_points(300)
-        verts, faces = builder.build_surface_mesh(pts)
+        _, faces = builder.build_surface_mesh(pts)
         for f in faces:
             assert len(set(f)) == 3, f"Degenerate (repeated-vertex) face: {f}"
 
@@ -127,7 +126,7 @@ class TestClusterMesh:
     def test_tiny_cluster_no_crash(self, builder):
         """Verify a 2-point cluster returns an empty face list without raising."""
         pts = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
-        verts, faces = builder.build_cluster_mesh(pts)
+        _, faces = builder.build_cluster_mesh(pts)
         assert faces == []
 
     def test_cluster_face_indices_valid(self, builder):

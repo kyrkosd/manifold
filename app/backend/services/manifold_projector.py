@@ -59,10 +59,19 @@ class ManifoldProjector:
     def project(self, run_dir: Path) -> ProjectionResult:
         """Full projection pipeline. Expects run_dir to contain FMAS outputs."""
         coeff = self._load_coefficients(run_dir)
-        power = self._load_power_spectrum(run_dir, coeff)
-        anomaly = self._load_anomaly(run_dir, n_points=len(coeff))
-        manifold = self._load_manifold(run_dir, n_points=len(coeff))
-        cluster_labels = self._load_cluster_labels(run_dir, n_points=len(coeff))
+        n = len(coeff)
+        power_raw = self._load_power_spectrum(run_dir)
+        power = power_raw if power_raw is not None else np.mean(np.abs(coeff) ** 2, axis=0)
+        anomaly_raw = self._load_anomaly(run_dir)
+        anomaly = anomaly_raw if anomaly_raw is not None else {
+            "flags": [False] * n, "scores": [0.0] * n, "types": ["normal"] * n,
+        }
+        manifold_raw = self._load_manifold(run_dir)
+        manifold = manifold_raw if manifold_raw is not None else {
+            "n_charts": 1, "chart_assignments": [0] * n,
+            "intrinsic_dim": 2, "alignment_qualities": [1.0],
+        }
+        cluster_labels = self._load_cluster_labels(run_dir)
 
         axes = self.select_top3_axes(power)
         positions_all = self._project_to_3d(coeff, axes)
@@ -85,14 +94,14 @@ class ManifoldProjector:
             div_axes = None
 
             if (
-                len(normal_idx) >= 5 
+                len(normal_idx) >= 5
                 and self._check_cluster_overlap(cluster_pos, normal_pos)
             ):
                 div_axes = self._find_divergent_axes(cidx, normal_idx, coeff)
                 cluster_pos = self._reproject_cluster(
-                    cidx, 
-                    coeff, 
-                    div_axes, 
+                    cidx,
+                    coeff,
+                    div_axes,
                     positions_all.mean(axis=0),
                 )
                 reprojected = True
@@ -129,8 +138,16 @@ class ManifoldProjector:
         if index < 0 or index >= len(coeff):
             raise HTTPException(status_code=404, detail=f"Point index {index} out of range.")
 
-        anomaly = self._load_anomaly(run_dir, n_points=len(coeff))
-        manifold = self._load_manifold(run_dir, n_points=len(coeff))
+        n = len(coeff)
+        anomaly_raw = self._load_anomaly(run_dir)
+        anomaly = anomaly_raw if anomaly_raw is not None else {
+            "flags": [False] * n, "scores": [0.0] * n, "types": ["normal"] * n,
+        }
+        manifold_raw = self._load_manifold(run_dir)
+        manifold = manifold_raw if manifold_raw is not None else {
+            "n_charts": 1, "chart_assignments": [0] * n,
+            "intrinsic_dim": 2, "alignment_qualities": [1.0],
+        }
         col_names = self._load_column_names(run_dir)
 
         score  = float(anomaly.get("scores", [0.0] * len(coeff))[index])
@@ -178,32 +195,26 @@ class ManifoldProjector:
             return np.random.default_rng(0).standard_normal((50, 10))
         return np.load(path)
 
-    def _load_power_spectrum(self, run_dir: Path, coeff: np.ndarray) -> np.ndarray:
+    def _load_power_spectrum(self, run_dir: Path) -> np.ndarray | None:
+        """Load precomputed power spectrum; returns None if absent."""
         path = run_dir / "power_spectrum.npy"
         if path.exists():
             return np.load(path)
-        return np.mean(np.abs(coeff) ** 2, axis=0)
+        return None
 
-    def _load_anomaly(self, run_dir: Path, n_points: int) -> dict:
+    def _load_anomaly(self, run_dir: Path) -> dict | None:
+        """Load anomaly results from JSON; returns None if absent."""
         path = run_dir / "anomaly_results.json"
         if path.exists():
             return json.loads(path.read_text())
-        return {
-            "flags": [False] * n_points,
-            "scores": [0.0] * n_points,
-            "types": ["normal"] * n_points,
-        }
+        return None
 
-    def _load_manifold(self, run_dir: Path, n_points: int) -> dict:
+    def _load_manifold(self, run_dir: Path) -> dict | None:
+        """Load manifold info from JSON; returns None if absent."""
         path = run_dir / "manifold_info.json"
         if path.exists():
             return json.loads(path.read_text())
-        return {
-            "n_charts": 1,
-            "chart_assignments": [0] * n_points,
-            "intrinsic_dim": 2,
-            "alignment_qualities": [1.0],
-        }
+        return None
 
 
     def _load_cluster_labels(self, run_dir: Path) -> np.ndarray | None:
@@ -277,7 +288,7 @@ class ManifoldProjector:
         self,
         cluster_idx: list[int],
         normal_idx: list[int],
-        coeff: np.ndarray,   
+        coeff: np.ndarray,
     ) -> list[int]:
         cluster_power = np.mean(np.abs(coeff[cluster_idx]) ** 2, axis=0)
         normal_power  = np.mean(np.abs(coeff[normal_idx])  ** 2, axis=0)

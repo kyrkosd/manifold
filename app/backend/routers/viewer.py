@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-import numpy as np
 
 from fastapi import APIRouter, Body, HTTPException
 
@@ -76,6 +75,7 @@ async def get_point_detail(run_id: str, point_index: int) -> PointDetailResponse
 @router.get("/viewer/{run_id}/cluster/{cluster_id}")
 async def get_cluster_detail(run_id: str, cluster_id: int) -> dict:
     """Return summary info about a specific anomaly cluster."""
+    import numpy as np
     run_dir = _run_dir(run_id)
 
     labels_path = run_dir / "cluster_labels.npy"

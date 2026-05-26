@@ -20,7 +20,7 @@ class TestStoreAndRetrieve:
     def test_roundtrip(self, store, sample_df):
         """Verify stored DataFrame can be retrieved with identical rows and columns."""
         did = store.store(sample_df, {"source_type": "file"})
-        df2, meta = store.retrieve(did)
+        df2, _ = store.retrieve(did)
         assert len(df2) == len(sample_df)
         assert list(df2.columns) == list(sample_df.columns)
 
@@ -93,7 +93,8 @@ class TestMaxLimit:
         try:
             store = DataStore(data_dir=tmp_path / "data")
             df = pd.DataFrame({"x": [1.0, 2.0]})
-            ids = [store.store(df, {}) for _ in range(4)]
+            for _ in range(4):
+                store.store(df, {})
             assert len(store.list_datasets()) == 3
         finally:
             ds_mod.MAX_DATASETS = original
