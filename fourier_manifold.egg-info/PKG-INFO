@@ -13,14 +13,14 @@ Requires-Dist: pydantic>=2.6
 Provides-Extra: app
 Requires-Dist: fastapi>=0.115; extra == "app"
 Requires-Dist: uvicorn[standard]>=0.34; extra == "app"
-Requires-Dist: python-multipart>=0.0.18; extra == "app"
+Requires-Dist: python-multipart>=0.0.22; extra == "app"
 Requires-Dist: openpyxl>=3.1; extra == "app"
 Requires-Dist: sqlalchemy>=2.0; extra == "app"
 Requires-Dist: psycopg2-binary>=2.9; extra == "app"
-Requires-Dist: pymysql>=1.1; extra == "app"
+Requires-Dist: pymysql>=1.1.1; extra == "app"
 Requires-Dist: aiosqlite>=0.20; extra == "app"
 Requires-Dist: trimesh>=4.5; extra == "app"
-Requires-Dist: orjson>=3.10; extra == "app"
+Requires-Dist: orjson>=3.11.6; extra == "app"
 Provides-Extra: dev
 Requires-Dist: pytest>=9.0.3; extra == "dev"
 Requires-Dist: pytest-cov>=5.0; extra == "dev"

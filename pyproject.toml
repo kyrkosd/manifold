@@ -21,14 +21,14 @@ dependencies = [
 app = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
-    "python-multipart>=0.0.18",
+    "python-multipart>=0.0.22",
     "openpyxl>=3.1",
     "sqlalchemy>=2.0",
     "psycopg2-binary>=2.9",
-    "pymysql>=1.1",
+    "pymysql>=1.1.1",
     "aiosqlite>=0.20",
     "trimesh>=4.5",
-    "orjson>=3.10",
+    "orjson>=3.11.6",
 ]
 dev = [
     "pytest>=9.0.3",
