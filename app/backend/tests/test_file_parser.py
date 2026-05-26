@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
+
 import pytest
 
 from backend.services.file_parser import (
@@ -91,21 +93,18 @@ class TestCleanColumnNames:
 
     def test_whitespace_stripped(self):
         """Verify leading/trailing whitespace is removed from column names."""
-        import pandas as pd
         df = pd.DataFrame({"  foo  ": [1], "bar ": [2]})
         df = _clean_column_names(df)
         assert list(df.columns) == ["foo", "bar"]
 
     def test_spaces_to_underscores(self):
         """Verify spaces within column names are replaced with underscores."""
-        import pandas as pd
         df = pd.DataFrame({"hello world": [1]})
         df = _clean_column_names(df)
         assert df.columns[0] == "hello_world"
 
     def test_duplicates_renamed(self):
         """Verify duplicate column names are made unique."""
-        import pandas as pd
         df = pd.DataFrame([[1, 2, 3]], columns=["a", "a", "a"])
         df = _clean_column_names(df)
         assert len(set(df.columns)) == 3

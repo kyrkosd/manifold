@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
+from scipy.spatial import Delaunay
+from scipy.spatial import Delaunay
+from sklearn.neighbors import NearestNeighbors
 
 import numpy as np
 
@@ -122,7 +125,6 @@ class MeshBuilder:
         pts: np.ndarray,
     ) -> tuple[list[list[float]], list[list[int]]]:
         """Outer faces of a 3-D Delaunay triangulation (= convex-hull surface)."""
-        from scipy.spatial import Delaunay
         tri = Delaunay(pts)
         mask = np.ones(len(tri.simplices), dtype=bool)
         outer_faces = self._extract_boundary_faces(tri.simplices, mask)
@@ -135,7 +137,6 @@ class MeshBuilder:
         alpha: float | None = None,
     ) -> tuple[list[list[float]], list[list[int]]]:
         """Alpha-shape mesh: keep only Delaunay tetrahedra with small circumradii."""
-        from scipy.spatial import Delaunay
         tri = Delaunay(pts)
 
         if alpha is None:
@@ -172,7 +173,6 @@ class MeshBuilder:
 
     def _auto_alpha(self, pts: np.ndarray) -> float:
         """alpha = 2 / mean_k-NN_distance (inversely proportional to local density)."""
-        from sklearn.neighbors import NearestNeighbors
         k = min(7, len(pts) - 1)
         nn = NearestNeighbors(n_neighbors=k + 1).fit(pts)
         dists, _ = nn.kneighbors(pts)

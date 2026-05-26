@@ -1,5 +1,6 @@
 """Tests for backend/services/manifold_projector.py."""
 from __future__ import annotations
+from fastapi import HTTPException
 
 import json
 
@@ -145,7 +146,6 @@ class TestPointDetail:
 
     def test_out_of_range_raises(self, projector, run_dir):
         """Verify out-of-range index raises HTTPException."""
-        from fastapi import HTTPException
         with pytest.raises(HTTPException):
             projector.point_detail(run_dir, 99_999)
 

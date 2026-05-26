@@ -1,6 +1,7 @@
 """Pipeline launch and status router for the FMAS import interface."""
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 
@@ -81,7 +82,6 @@ async def list_runs() -> list[dict]:
         if run_dir.is_dir():
             status_path = run_dir / "status.json"
             if status_path.exists():
-                import json
                 payload = json.loads(status_path.read_text())
             else:
                 payload = {"status": "prepared"}

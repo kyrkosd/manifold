@@ -1,6 +1,7 @@
 """Shared pytest fixtures for the FMAS import interface tests."""
 from __future__ import annotations
 
+import sqlite3
 import json
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 
+from backend.main import app
 from backend.services.data_store import DataStore
 from backend.services.manifold_projector import ManifoldProjector, ProjectionResult
 from backend.services.mesh_builder import MeshBuilder
@@ -156,7 +158,6 @@ def xlsx_path() -> Path:
 @pytest.fixture
 def sqlite_db(tmp_path) -> str:
     """SQLite in-memory-style DB written to a temp file."""
-    import sqlite3
     db_path = tmp_path / "test.db"
     rng = np.random.default_rng(0)
     n = 100
@@ -195,7 +196,6 @@ def app_client(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "runs").mkdir()
 
-    from backend.main import app
     return TestClient(app)
 
 
@@ -207,6 +207,5 @@ async def async_client(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "runs").mkdir()
 
-    from backend.main import app
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client

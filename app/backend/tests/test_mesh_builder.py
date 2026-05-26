@@ -9,7 +9,7 @@ import pytest
 
 from backend.models.schemas import ManifoldViewerData
 from backend.services.manifold_projector import ClusterProjection, ProjectionResult
-from backend.services.mesh_builder import MeshBuilder
+##from backend.services.mesh_builder import MeshBuilder
 
 _MAX_SURFACE_POINTS = 2_000
 

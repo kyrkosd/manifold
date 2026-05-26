@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+from fastapi import HTTPException
 
 import numpy as np
 
@@ -70,7 +71,7 @@ class ManifoldProjector:
         scores = np.array(anomaly.get("scores", [0.0] * len(coeff)), dtype=float)
         types = anomaly.get("types", ["normal"] * len(coeff))
 
-        classification = self._classify_points(flags, types, cluster_labels)
+        classification = self._classify_points(flags, cluster_labels)
         normal_idx = classification["normal"]
         isolated_idx = classification["isolated"]
         regional = classification["regional"]
@@ -84,7 +85,7 @@ class ManifoldProjector:
             div_axes = None
 
             if len(normal_idx) >= 5 and self._check_cluster_overlap(cluster_pos, normal_pos):
-                div_axes = self._find_divergent_axes(cidx, normal_idx, coeff, power)
+                div_axes = self._find_divergent_axes(cidx, normal_idx, coeff)
                 cluster_pos = self._reproject_cluster(cidx, coeff, div_axes, positions_all.mean(axis=0))
                 reprojected = True
 
@@ -117,7 +118,6 @@ class ManifoldProjector:
         """Return per-point anomaly detail for the viewer side-panel."""
         coeff = self._load_coefficients(run_dir)
         if index < 0 or index >= len(coeff):
-            from fastapi import HTTPException
             raise HTTPException(status_code=404, detail=f"Point index {index} out of range.")
 
         anomaly = self._load_anomaly(run_dir, n_points=len(coeff))
@@ -184,7 +184,7 @@ class ManifoldProjector:
             return json.loads(path.read_text())
         return {"n_charts": 1, "chart_assignments": [0] * n_points, "intrinsic_dim": 2, "alignment_qualities": [1.0]}
 
-    def _load_cluster_labels(self, run_dir: Path, n_points: int) -> np.ndarray | None:
+    def _load_cluster_labels(self, run_dir: Path) -> np.ndarray | None:
         path = run_dir / "cluster_labels.npy"
         if path.exists():
             return np.load(path)
@@ -218,7 +218,6 @@ class ManifoldProjector:
     def _classify_points(
         self,
         flags: np.ndarray,
-        types: list[str],
         cluster_labels: np.ndarray | None,
     ) -> dict:
         normal   = [int(i) for i in np.where(~flags)[0]]
@@ -256,8 +255,7 @@ class ManifoldProjector:
         self,
         cluster_idx: list[int],
         normal_idx: list[int],
-        coeff: np.ndarray,
-        power: np.ndarray,
+        coeff: np.ndarray,       
     ) -> list[int]:
         cluster_power = np.mean(np.abs(coeff[cluster_idx]) ** 2, axis=0)
         normal_power  = np.mean(np.abs(coeff[normal_idx])  ** 2, axis=0)

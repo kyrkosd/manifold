@@ -4,8 +4,9 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+import numpy as np
 
-from fastapi import APIRouter, Body, HTTPException, Response
+from fastapi import APIRouter, Body, HTTPException
 
 from backend.config import RUNS_DIR
 from backend.models.schemas import ManifoldViewerData, PointDetailResponse
@@ -81,7 +82,6 @@ async def get_cluster_detail(run_id: str, cluster_id: int) -> dict:
     if not labels_path.exists():
         raise HTTPException(status_code=404, detail="No cluster data for this run.")
 
-    import numpy as np
     labels = np.load(labels_path)
     cluster_mask = labels == cluster_id
     if not cluster_mask.any():

@@ -1,9 +1,12 @@
 """Tests for backend/services/data_store.py."""
 from __future__ import annotations
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 import threading
 ##import time
 
+import backend.services.data_store as ds_mod
 import numpy as np
 import pandas as pd
 import pytest
@@ -70,8 +73,6 @@ class TestDeleteAndCleanup:
 
     def test_cleanup_old_removes_stale(self, store, sample_df):
         """Verify datasets older than max_age_hours are removed."""
-        from datetime import datetime, timedelta, timezone
-        from unittest.mock import patch
 
         store.store(sample_df, {})
         future = datetime.now(timezone.utc) + timedelta(hours=25)
@@ -87,7 +88,6 @@ class TestMaxLimit:
 
     def test_evicts_oldest_when_full(self, tmp_path):
         """When MAX_DATASETS is exceeded the oldest entry is evicted."""
-        import backend.services.data_store as ds_mod
         original = ds_mod.MAX_DATASETS
         ds_mod.MAX_DATASETS = 3
         try:

@@ -9,6 +9,9 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pipeline import FourierManifoldPipeline  # type: ignore[import]
+from config import default_config  # type: ignore[import]
+
 import numpy as np
 
 log = logging.getLogger(__name__)
@@ -81,8 +84,6 @@ class PipelineBridge:
     def _run_pipeline(self, run_dir: Path) -> None:
         run_id = run_dir.name
         try:
-            from pipeline import FourierManifoldPipeline  # type: ignore[import]
-            from config import default_config  # type: ignore[import]
 
             data = np.load(run_dir / "data.npy")
             config_dict = json.loads((run_dir / "config.json").read_text())
