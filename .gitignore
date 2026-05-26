@@ -1,0 +1,12 @@
+app/data/*.parquet
+app/data/runs/
+__pycache__/
+*.egg-info/
+.coverage
+*.pyc
+.env
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FMAS — 3D Manifold Viewer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/viewer.css">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+</head>
+<body class="viewer-body">
+  <div id="viewer-app">
+
+    <!-- Toolbar -->
+    <header class="viewer-toolbar">
+      <a href="/" class="toolbar-back" title="Back to import">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <span class="toolbar-title">FMAS Manifold Viewer</span>
+      <div class="toolbar-meta" id="toolbar-meta"></div>
+
+      <!-- Surface opacity slider -->
+      <div class="toolbar-opacity">
+        <label for="surface-opacity" class="opacity-label">Surface</label>
+        <input type="range" id="surface-opacity" min="0" max="60" value="18"
+               title="Surface opacity">
+      </div>
+
+      <div class="toolbar-controls">
+        <button class="vbtn" id="btn-reset-camera" title="Reset camera">
+          <i class="ti ti-focus-centered"></i>
+        </button>
+        <button class="vbtn" id="btn-toggle-surface" title="Toggle surface">
+          <i class="ti ti-box"></i>
+        </button>
+        <button class="vbtn" id="btn-toggle-clusters" title="Toggle anomaly clusters">
+          <i class="ti ti-alert-triangle"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- 3D canvas -->
+    <div id="canvas-wrap">
+      <canvas id="viewer-canvas"></canvas>
+    </div>
+
+    <!-- Axis labels footer -->
+    <div class="viewer-axis-bar" id="axis-labels"></div>
+
+    <!-- Legend -->
+    <div class="viewer-legend">
+      <span class="legend-item"><span class="dot dot-normal"></span>Normal</span>
+      <span class="legend-item"><span class="dot dot-anomaly"></span>Anomaly</span>
+      <span class="legend-item"><span class="dot dot-cluster"></span>Cluster mesh</span>
+    </div>
+
+    <!-- Detail panel (right side) -->
+    <aside id="detail-panel" class="detail-panel" hidden>
+      <div class="detail-header">
+        <span class="detail-title">Point <span id="detail-index"></span></span>
+        <button id="detail-close" class="detail-close" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <div class="detail-body" id="detail-body"></div>
+    </aside>
+
+    <!-- Loading / error overlays -->
+    <div id="viewer-loading" class="viewer-loading" aria-live="polite">
+      <div class="spinner"></div>
+      <span id="viewer-loading-msg">Loading manifold data…</span>
+    </div>
+    <div id="viewer-error" class="viewer-error" hidden>
+      <i class="ti ti-alert-circle" style="font-size:32px;margin-bottom:8px"></i>
+      <div id="viewer-error-msg"></div>
+    </div>
+
+  </div><!-- /#viewer-app -->
+
+  <script src="js/viewer/api.js"></script>
+  <script src="js/viewer/scene.js"></script>
+  <script src="js/viewer/manifold-mesh.js"></script>
+  <script src="js/viewer/point-cloud.js"></script>
+  <script src="js/viewer/cluster-mesh.js"></script>
+  <script src="js/viewer/controls.js"></script>
+  <script src="js/viewer/detail-panel.js"></script>
+  <script src="js/viewer/main.js"></script>
+</body>
+</html>

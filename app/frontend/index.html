@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FMAS — Import Data</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="page-header">
+      <h1>Import data</h1>
+      <p class="subtitle">Load your dataset and run the Fourier Manifold Anomaly System.</p>
+    </header>
+
+    <!-- Step indicator -->
+    <div class="steps" role="navigation" aria-label="Steps">
+      <div class="step-pill active" data-step="0" tabindex="0" role="button" aria-current="step">
+        <span class="step-num">1</span><span class="step-label">Source</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill" data-step="1" tabindex="0" role="button">
+        <span class="step-num">2</span><span class="step-label">Preview</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill" data-step="2" tabindex="0" role="button">
+        <span class="step-num">3</span><span class="step-label">Configure</span>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Step 1: Source -->
+    <!-- ------------------------------------------------------------------ -->
+    <div id="pane-source" class="pane">
+      <div class="source-tabs" role="tablist">
+        <button class="src-tab active" id="tab-file" role="tab" aria-selected="true" aria-controls="area-file">
+          <i class="ti ti-upload"></i> File upload
+        </button>
+        <button class="src-tab" id="tab-sql" role="tab" aria-selected="false" aria-controls="area-sql">
+          <i class="ti ti-database"></i> SQL connection
+        </button>
+      </div>
+
+      <!-- File upload area -->
+      <div id="area-file" class="source-area" role="tabpanel" aria-labelledby="tab-file">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Drop file here or click to browse">
+          <i class="ti ti-cloud-upload dropzone-icon"></i>
+          <div class="dropzone-text">Drop file here or <span class="link">click to browse</span></div>
+          <div class="dropzone-hint">CSV, TSV, or Excel &mdash; max 500 MB</div>
+          <input type="file" id="file-input" accept=".csv,.tsv,.xlsx,.xls" aria-hidden="true">
+        </div>
+        <div class="file-info" id="file-info" hidden>
+          <i class="ti ti-file-text file-icon"></i>
+          <span id="file-name" class="file-name-text"></span>
+          <span id="file-size" class="file-size-text"></span>
+          <button class="link-btn" id="change-file">Change file</button>
+        </div>
+      </div>
+
+      <!-- SQL connection area -->
+      <div id="area-sql" class="source-area" role="tabpanel" aria-labelledby="tab-sql" hidden>
+        <div class="form-group">
+          <label for="conn-string">Connection string</label>
+          <input type="text" id="conn-string" placeholder="postgresql://user:pass@host:5432/db" spellcheck="false">
+        </div>
+        <div class="form-group">
+          <label for="sql-query">SQL query</label>
+          <textarea id="sql-query" rows="5" placeholder="SELECT * FROM sensor_readings WHERE date > '2024-01-01'"></textarea>
+        </div>
+        <div class="sql-actions">
+          <button id="btn-test-conn" class="btn btn-secondary">
+            <i class="ti ti-plug"></i> Test connection
+          </button>
+          <span id="conn-status" class="conn-status" aria-live="polite"></span>
+          <button id="btn-run-query" class="btn btn-primary" disabled>
+            <i class="ti ti-play"></i> Run query
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-row nav-row--right">
+        <button id="btn-next-1" class="btn btn-primary" disabled>
+          Next <i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Step 2: Preview -->
+    <!-- ------------------------------------------------------------------ -->
+    <div id="pane-preview" class="pane" hidden>
+      <div class="preview-grid">
+        <div class="preview-table-col">
+          <div class="tbl-wrap" id="table-container"></div>
+          <div id="table-hint" class="table-hint"></div>
+        </div>
+        <div class="preview-quality-col" id="quality-container"></div>
+      </div>
+      <div class="nav-row">
+        <button id="btn-back-2" class="btn btn-secondary">
+          <i class="ti ti-arrow-left"></i> Back
+        </button>
+        <button id="btn-next-2" class="btn btn-primary">
+          Next <i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Step 3: Configure -->
+    <!-- ------------------------------------------------------------------ -->
+    <div id="pane-config" class="pane" hidden>
+      <div class="config-grid">
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-n-charts">Number of charts</label>
+          <select id="cfg-n-charts" class="cfg-select">
+            <option value="auto">Auto (recommended)</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="12">12</option>
+            <option value="16">16</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-threshold">Threshold method</label>
+          <select id="cfg-threshold" class="cfg-select">
+            <option value="adaptive">Adaptive (MAD-based)</option>
+            <option value="percentile">Percentile</option>
+            <option value="fixed">Fixed</option>
+          </select>
+        </div>
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-norm">Normalization</label>
+          <select id="cfg-norm" class="cfg-select">
+            <option value="standard">Standard (z-score)</option>
+            <option value="minmax">Min-max</option>
+            <option value="robust">Robust (median)</option>
+          </select>
+        </div>
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-iterations">Max iterations</label>
+          <input type="number" id="cfg-iterations" class="cfg-input" value="10" min="1" max="50">
+        </div>
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-overlap">
+            Overlap factor &mdash; <span id="overlap-display">20%</span>
+          </label>
+          <input type="range" id="cfg-overlap" class="cfg-slider" min="5" max="50" value="20" step="1">
+        </div>
+        <div class="cfg-card">
+          <label class="cfg-label" for="cfg-band">Band detection</label>
+          <select id="cfg-band" class="cfg-select">
+            <option value="spectral_gaps">Spectral gaps</option>
+            <option value="uniform">Uniform</option>
+            <option value="log">Log-spaced</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="launch-bar">
+        <span id="launch-summary" class="launch-summary"></span>
+        <button id="btn-launch" class="btn launch-btn">
+          <i class="ti ti-rocket"></i> Run FMAS
+        </button>
+      </div>
+
+      <div class="nav-row">
+        <button id="btn-back-3" class="btn btn-secondary">
+          <i class="ti ti-arrow-left"></i> Back
+        </button>
+      </div>
+    </div>
+  </div><!-- /#app -->
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay" hidden aria-live="polite">
+    <div class="loading-inner">
+      <div class="spinner" aria-hidden="true"></div>
+      <span id="loading-message">Processing&hellip;</span>
+    </div>
+  </div>
+
+  <!-- Error toast -->
+  <div id="error-toast" class="error-toast" hidden role="alert" aria-live="assertive">
+    <span id="error-message" class="error-message"></span>
+    <button id="error-dismiss" class="error-dismiss" aria-label="Dismiss">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/upload.js"></script>
+  <script src="js/sql.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

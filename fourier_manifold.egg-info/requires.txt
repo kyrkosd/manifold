@@ -6,8 +6,22 @@ faiss-cpu>=1.8
 networkx>=3.2
 pydantic>=2.6
 
+[app]
+fastapi>=0.115
+uvicorn[standard]>=0.34
+python-multipart>=0.0.18
+openpyxl>=3.1
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
+pymysql>=1.1
+aiosqlite>=0.20
+trimesh>=4.5
+orjson>=3.10
+
 [dev]
 pytest>=9.0.3
 pytest-cov>=5.0
 ruff>=0.4
 mypy>=1.9
+httpx>=0.28
+pytest-asyncio>=0.24
