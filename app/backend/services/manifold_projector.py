@@ -115,7 +115,12 @@ class ManifoldProjector:
             is_anomaly=flag,
             anomaly_type=atype if flag else None,
             band_scores=band_s,
-            top_anomalous_band=max(band_s, key=lambda k: abs(band_s[k])) if (flag and band_s) else None,
+            top_anomalous_band = (
+                max(band_s, key=lambda k: abs(band_s[k]))
+                if (flag and band_s)
+                else None
+            ),
+
             chart_id=chart_id,
             chart_alignment_quality=chart_quality,
             cluster_id=None,

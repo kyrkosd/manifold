@@ -59,7 +59,10 @@ class TestAxisSelection:
 
     def test_dc_component_not_selected(self, projection):
         """Verify the DC component (index 0) is never chosen as an axis."""
-        assert 0 not in projection.meta.axes, "DC component (index 0) must not be a projection axis."
+        assert (
+            0 not in projection.meta.axes
+        ), "DC component (index 0) must not be a projection axis."
+
 
     def test_top3_axes_are_high_power_features(self, projector, run_dir):
         """Verify amplified features 1-3 are selected as top axes."""

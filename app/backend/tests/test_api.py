@@ -128,4 +128,3 @@ class TestLaunch:
                        "band_method": "spectral_gaps"},
         })
         assert res.status_code == 422
-
