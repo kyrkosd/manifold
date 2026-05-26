@@ -1,4 +1,5 @@
 /* Main app state and step navigation for the FMAS import interface. */
+/* global Upload, SQL, Preview, Config */
 const App = {
   currentStep: 0,
   dataId: null,

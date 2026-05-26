@@ -19,6 +19,7 @@ _bridge = PipelineBridge()
 
 
 def get_bridge() -> PipelineBridge:
+    """FastAPI dependency: return the shared PipelineBridge instance."""
     return _bridge
 
 
@@ -28,6 +29,7 @@ async def launch_pipeline(
     store: DataStore = Depends(get_store),
     bridge: PipelineBridge = Depends(get_bridge),
 ) -> LaunchResponse:
+    """Validate the dataset, prepare a run directory, and launch the pipeline."""
     # Verify data_id exists before doing anything.
     try:
         meta = store.get_metadata(req.data_id)
@@ -66,6 +68,7 @@ async def get_run_status(
     run_id: str,
     bridge: PipelineBridge = Depends(get_bridge),
 ) -> dict:
+    """Return the current status of a pipeline run."""
     return bridge.get_run_status(run_id, RUNS_DIR)
 
 

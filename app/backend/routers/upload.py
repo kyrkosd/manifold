@@ -19,6 +19,7 @@ router = APIRouter(tags=["upload"])
 
 
 def get_store() -> DataStore:
+    """FastAPI dependency: return the shared DataStore instance."""
     return _store
 
 
@@ -30,6 +31,7 @@ async def upload_file(
     file: UploadFile,
     store: DataStore = Depends(get_store),
 ) -> PreviewResponse:
+    """Upload a file, parse it, profile it, and return a preview response."""
     t0 = time.monotonic()
 
     # Size guard (read Content-Length header if available; else check after read).
@@ -80,6 +82,7 @@ async def get_preview(
     data_id: str,
     store: DataStore = Depends(get_store),
 ) -> PreviewResponse:
+    """Return a cached preview for an already-stored dataset."""
     try:
         df, meta = store.retrieve(data_id)
     except KeyError as exc:

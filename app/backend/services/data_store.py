@@ -53,11 +53,13 @@ class DataStore:
     # ------------------------------------------------------------------
 
     def retrieve(self, data_id: str) -> tuple[pd.DataFrame, dict]:
+        """Return the DataFrame and metadata dict for *data_id*."""
         meta = self._get_meta_safe(data_id)
         df = pd.read_parquet(meta["path"], engine="pyarrow")
         return df, meta
 
     def get_metadata(self, data_id: str) -> dict:
+        """Return the metadata dict for *data_id* without loading the DataFrame."""
         return self._get_meta_safe(data_id)
 
     def get_numeric_array(self, data_id: str) -> np.ndarray:
@@ -74,6 +76,7 @@ class DataStore:
     # ------------------------------------------------------------------
 
     def delete(self, data_id: str) -> None:
+        """Remove dataset *data_id* from the store and delete its parquet file."""
         with self._lock:
             if data_id not in self._meta:
                 return
@@ -82,6 +85,7 @@ class DataStore:
         log.info("Deleted dataset %s.", data_id)
 
     def cleanup_old(self, max_age_hours: int = 24) -> int:
+        """Delete datasets older than *max_age_hours* and return the count removed."""
         now = datetime.now(timezone.utc)
         to_delete = []
         with self._lock:
@@ -99,6 +103,7 @@ class DataStore:
     # ------------------------------------------------------------------
 
     def list_datasets(self) -> list[dict]:
+        """Return metadata for all stored datasets, excluding internal file paths."""
         with self._lock:
             return [
                 {k: v for k, v in m.items() if k != "path"}

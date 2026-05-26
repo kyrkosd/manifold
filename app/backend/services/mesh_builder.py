@@ -72,6 +72,7 @@ class MeshBuilder:
         proj: ProjectionResult,
         alpha: float | None = None,
     ) -> ManifoldViewerData:
+        """Alias for build_viewer_data; retained for backward compatibility."""
         return self.build_viewer_data(proj, alpha=alpha)
 
     # ------------------------------------------------------------------
@@ -83,6 +84,7 @@ class MeshBuilder:
         pts: np.ndarray,
         alpha: float | None = None,
     ) -> tuple[list[list[float]], list[list[int]]]:
+        """Build an alpha-shape or Delaunay surface mesh from *pts*."""
         if len(pts) < 4:
             return [], []
 
@@ -102,6 +104,7 @@ class MeshBuilder:
         self,
         pts: np.ndarray,
     ) -> tuple[list[list[float]], list[list[int]]]:
+        """Build a Delaunay surface mesh for a single anomaly cluster."""
         if len(pts) < 4:
             return pts.tolist(), []
         try:

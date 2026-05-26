@@ -1,4 +1,5 @@
 /* Three.js scene setup for the FMAS 3D manifold viewer. */
+/* global THREE, Controls, ClusterMesh */
 const Scene = {
   renderer: null,
   scene: null,

@@ -54,7 +54,10 @@ def _minimal_projection(normal_pts: np.ndarray) -> ProjectionResult:
 # ---------------------------------------------------------------------------
 
 class TestSurfaceMesh:
+    """Verify surface mesh generation for various point-cloud inputs."""
+
     def test_sphere_produces_nonempty_mesh(self, builder):
+        """Verify a sphere point cloud produces non-empty vertex and face lists."""
         pts = _sphere_points(500)
         verts, faces = builder.build_surface_mesh(pts)
         # Sphere is a closed manifold — Delaunay outer-face extraction should give triangles.
@@ -62,6 +65,7 @@ class TestSurfaceMesh:
         assert len(faces) > 0
 
     def test_plane_handled_gracefully(self, builder):
+        """Verify coplanar input does not raise and returns lists."""
         pts = _plane_points(200)
         verts, faces = builder.build_surface_mesh(pts)
         # Coplanar input may give empty mesh; what matters is it doesn't raise.
@@ -69,17 +73,20 @@ class TestSurfaceMesh:
         assert isinstance(faces, list)
 
     def test_too_few_points_returns_empty(self, builder):
+        """Verify fewer than 4 points yields an empty face list."""
         pts = np.random.default_rng(0).standard_normal((3, 3))
         verts, faces = builder.build_surface_mesh(pts)
         assert faces == []
 
     def test_large_set_subsampled(self, builder):
+        """Verify large inputs are subsampled to at most MAX_SURFACE_POINTS vertices."""
         rng = np.random.default_rng(0)
         pts = rng.standard_normal((10_000, 3))
         verts, faces = builder.build_surface_mesh(pts)
         assert len(verts) <= _MAX_SURFACE_POINTS + 1
 
     def test_face_indices_valid(self, builder):
+        """Verify every face index is within bounds of the vertex list."""
         pts = _sphere_points(300)
         verts, faces = builder.build_surface_mesh(pts)
         if not faces:
@@ -89,12 +96,14 @@ class TestSurfaceMesh:
             assert all(0 <= i < n_verts for i in f), f"Invalid face index in {f}"
 
     def test_no_degenerate_faces(self, builder):
+        """Verify no face contains a repeated vertex index."""
         pts = _sphere_points(300)
         verts, faces = builder.build_surface_mesh(pts)
         for f in faces:
             assert len(set(f)) == 3, f"Degenerate (repeated-vertex) face: {f}"
 
     def test_empty_input_returns_empty(self, builder):
+        """Verify zero-point input returns empty vertex and face lists."""
         verts, faces = builder.build_surface_mesh(np.zeros((0, 3)))
         assert verts == []
         assert faces == []
@@ -105,7 +114,10 @@ class TestSurfaceMesh:
 # ---------------------------------------------------------------------------
 
 class TestClusterMesh:
+    """Verify cluster mesh generation for small and normal point sets."""
+
     def test_normal_cluster_produces_mesh(self, builder):
+        """Verify a 30-point cluster produces non-empty geometry lists."""
         rng = np.random.default_rng(2)
         pts = rng.standard_normal((30, 3))
         verts, faces = builder.build_cluster_mesh(pts)
@@ -113,11 +125,13 @@ class TestClusterMesh:
         assert isinstance(faces, list)
 
     def test_tiny_cluster_no_crash(self, builder):
+        """Verify a 2-point cluster returns an empty face list without raising."""
         pts = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
         verts, faces = builder.build_cluster_mesh(pts)
         assert faces == []
 
     def test_cluster_face_indices_valid(self, builder):
+        """Verify cluster face indices are within bounds of the vertex list."""
         rng = np.random.default_rng(3)
         pts = rng.standard_normal((25, 3))
         verts, faces = builder.build_cluster_mesh(pts)
@@ -133,30 +147,37 @@ class TestClusterMesh:
 # ---------------------------------------------------------------------------
 
 class TestBuildViewerData:
+    """Verify the build_viewer_data orchestrator output."""
+
     def test_returns_manifold_viewer_data(self, builder):
+        """Verify build_viewer_data returns a ManifoldViewerData instance."""
         proj = _minimal_projection(_sphere_points(200))
         result = builder.build_viewer_data(proj)
         assert isinstance(result, ManifoldViewerData)
 
     def test_n_points_correct(self, builder):
+        """Verify n_points matches the input point count."""
         pts = _sphere_points(200)
         proj = _minimal_projection(pts)
         result = builder.build_viewer_data(proj)
         assert result.n_points == 200
 
     def test_point_positions_length(self, builder):
+        """Verify point_positions list length matches input."""
         pts = _sphere_points(200)
         proj = _minimal_projection(pts)
         result = builder.build_viewer_data(proj)
         assert len(result.point_positions) == 200
 
     def test_zero_anomalies_when_all_normal(self, builder):
+        """Verify n_anomalies and n_clusters are 0 for an all-normal projection."""
         proj = _minimal_projection(_sphere_points(100))
         result = builder.build_viewer_data(proj)
         assert result.n_anomalies == 0
         assert result.n_clusters == 0
 
     def test_with_cluster_data(self, builder):
+        """Verify cluster geometry is built for a projection with one cluster."""
         rng = np.random.default_rng(5)
         normal_pts = rng.standard_normal((200, 3))
         cluster_pts = rng.standard_normal((10, 3)) + 5.0
@@ -188,6 +209,7 @@ class TestBuildViewerData:
         assert result.clusters[0].cluster_id == 0
 
     def test_alpha_parameter_accepted(self, builder):
+        """Verify build_viewer_data accepts an explicit alpha parameter."""
         proj = _minimal_projection(_sphere_points(200))
         result = builder.build_viewer_data(proj, alpha=5.0)
         assert isinstance(result, ManifoldViewerData)

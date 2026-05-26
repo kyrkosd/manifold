@@ -1,4 +1,5 @@
 /* File upload and drag-and-drop handling for the FMAS import interface. */
+/* global App, API */
 const Upload = {
   _dropzone: null,
   _fileInput: null,

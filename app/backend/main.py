@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    """Ensure data directories exist and remove stale datasets on startup."""
     # Ensure runtime directories exist.
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
@@ -63,6 +64,7 @@ app.include_router(viewer_router.router, prefix="/api")
 
 @app.exception_handler(FileParseError)
 async def file_parse_error_handler(_req: Request, exc: FileParseError):
+    """Convert FileParseError to a 422 JSON response."""
     return JSONResponse(
         status_code=422,
         content=ErrorResponse(error="File parse error", detail=str(exc)).model_dump(),
@@ -71,6 +73,7 @@ async def file_parse_error_handler(_req: Request, exc: FileParseError):
 
 @app.exception_handler(SQLConnectionError)
 async def sql_error_handler(_req: Request, exc: SQLConnectionError):
+    """Convert SQLConnectionError to a 422 JSON response."""
     return JSONResponse(
         status_code=422,
         content=ErrorResponse(error="SQL error", detail=str(exc)).model_dump(),
@@ -83,16 +86,19 @@ async def sql_error_handler(_req: Request, exc: SQLConnectionError):
 
 @app.get("/api/health")
 async def health():
+    """Return 200 OK for health checks."""
     return {"status": "ok"}
 
 
 @app.get("/viewer", include_in_schema=False)
 async def viewer_page():
+    """Serve the 3D manifold viewer HTML page."""
     return FileResponse(FRONTEND_DIR / "viewer.html")
 
 
 @app.get("/", include_in_schema=False)
 async def index():
+    """Serve the import interface HTML page."""
     return FileResponse(FRONTEND_DIR / "index.html")
 
 

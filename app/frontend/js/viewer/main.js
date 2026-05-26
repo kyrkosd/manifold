@@ -1,4 +1,5 @@
 /* Entry point for the FMAS 3D manifold viewer. */
+/* global Scene, Controls, DetailPanel, ManifoldMesh, ClusterMesh, ViewerAPI, PointCloud */
 (async () => {
   const params = new URLSearchParams(location.search);
   const runId  = params.get('run');

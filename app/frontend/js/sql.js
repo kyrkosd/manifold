@@ -1,4 +1,5 @@
 /* SQL connection form handling for the FMAS import interface. */
+/* global App, API */
 const SQL = {
   _connected: false,
 

@@ -20,6 +20,8 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class ClusterProjection:
+    """3D positions and metadata for a single anomaly cluster."""
+
     cluster_id: int
     indices: list[int]
     positions: np.ndarray          # (n_cluster, 3)
@@ -29,6 +31,8 @@ class ClusterProjection:
 
 @dataclass
 class ProjectionResult:
+    """Complete 3D projection output produced by ManifoldProjector."""
+
     all_positions: np.ndarray       # (n_points, 3)
     is_anomaly: np.ndarray          # (n_points,) bool
     scores: np.ndarray              # (n_points,) float
@@ -197,6 +201,7 @@ class ManifoldProjector:
     # ------------------------------------------------------------------
 
     def select_top3_axes(self, power: np.ndarray) -> list[int]:
+        """Return the 3 highest-power non-DC frequency indices, sorted ascending."""
         # Skip index 0 (DC component — constant offset, uninformative for shape).
         start = 1 if len(power) > 3 else 0
         idx = np.argsort(power[start:])[::-1][:3] + start

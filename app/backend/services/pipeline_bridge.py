@@ -108,6 +108,7 @@ class PipelineBridge:
     # ------------------------------------------------------------------
 
     def get_run_status(self, run_id: str, runs_dir: Path) -> dict:
+        """Return the status dict for *run_id*, or {'status': 'not_found'} if missing."""
         run_dir = runs_dir / run_id
         if not run_dir.exists():
             return {"status": "not_found", "run_id": run_id}

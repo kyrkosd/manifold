@@ -1,4 +1,5 @@
 /* Anomaly cluster wireframe meshes for the FMAS 3D manifold viewer. */
+/* global THREE, Scene */
 const ClusterMesh = {
   _meshes: [],
   _visible: true,

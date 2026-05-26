@@ -24,6 +24,7 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 @pytest.fixture
 def store(tmp_path) -> DataStore:
+    """Provide a DataStore backed by a temporary directory."""
     return DataStore(data_dir=tmp_path / "data")
 
 
@@ -33,6 +34,7 @@ def store(tmp_path) -> DataStore:
 
 @pytest.fixture
 def builder() -> MeshBuilder:
+    """Provide a fresh MeshBuilder instance."""
     return MeshBuilder()
 
 
@@ -95,16 +97,19 @@ def _make_run_dir(tmp_path: Path) -> Path:
 
 @pytest.fixture(scope="module")
 def run_dir(tmp_path_factory) -> Path:
+    """Provide a populated FMAS run directory with synthetic data."""
     return _make_run_dir(tmp_path_factory.mktemp("run"))
 
 
 @pytest.fixture(scope="module")
 def projector() -> ManifoldProjector:
+    """Provide a ManifoldProjector instance."""
     return ManifoldProjector()
 
 
 @pytest.fixture(scope="module")
 def projection(projector, run_dir) -> ProjectionResult:
+    """Provide the full ProjectionResult for the synthetic run."""
     return projector.project(run_dir)
 
 
@@ -132,16 +137,19 @@ def sample_df() -> pd.DataFrame:
 
 @pytest.fixture
 def csv_path() -> Path:
+    """Return the path to the test CSV fixture file."""
     return FIXTURES_DIR / "test_data.csv"
 
 
 @pytest.fixture
 def tsv_path() -> Path:
+    """Return the path to the test TSV fixture file."""
     return FIXTURES_DIR / "test_data.tsv"
 
 
 @pytest.fixture
 def xlsx_path() -> Path:
+    """Return the path to the test XLSX fixture file."""
     return FIXTURES_DIR / "test_data.xlsx"
 
 
@@ -193,6 +201,7 @@ def app_client(tmp_path, monkeypatch):
 
 @pytest_asyncio.fixture
 async def async_client(tmp_path, monkeypatch):
+    """Async HTTPX client wired to the FastAPI app with temp directories."""
     monkeypatch.setattr("backend.config.DATA_DIR", tmp_path / "data")
     monkeypatch.setattr("backend.config.RUNS_DIR", tmp_path / "runs")
     (tmp_path / "data").mkdir()

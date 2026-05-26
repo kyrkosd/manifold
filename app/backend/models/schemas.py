@@ -13,12 +13,16 @@ from backend.models.enums import DataStatus, SuitabilityLevel
 # ---------------------------------------------------------------------------
 
 class SQLConnectionRequest(BaseModel):
+    """Payload for SQL connection-test and query-execution requests."""
+
     connection_string: str
     query: str = "SELECT 1"
     max_rows: int = 500_000
 
 
 class PipelineConfigRequest(BaseModel):
+    """User-configurable parameters for a FMAS pipeline run."""
+
     n_charts: int | str = "auto"
     threshold_method: str = "adaptive"
     normalization: str = "standard"
@@ -42,6 +46,8 @@ class PipelineConfigRequest(BaseModel):
 
 
 class LaunchRequest(BaseModel):
+    """Payload to launch a new FMAS pipeline run."""
+
     data_id: str
     config: PipelineConfigRequest
 
@@ -51,6 +57,8 @@ class LaunchRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 class ColumnInfo(BaseModel):
+    """Per-column metadata returned in a preview response."""
+
     model_config = ConfigDict(from_attributes=True)
 
     name: str
@@ -62,6 +70,8 @@ class ColumnInfo(BaseModel):
 
 
 class QualityReport(BaseModel):
+    """Dataset quality and suitability assessment produced by the profiler."""
+
     model_config = ConfigDict(from_attributes=True)
 
     n_rows: int
@@ -82,6 +92,8 @@ class QualityReport(BaseModel):
 # ---------------------------------------------------------------------------
 
 class PreviewResponse(BaseModel):
+    """Full preview payload returned after file upload or SQL query."""
+
     data_id: str
     file_name: str | None = None
     source_type: str           # "file" or "sql"
@@ -92,6 +104,8 @@ class PreviewResponse(BaseModel):
 
 
 class LaunchResponse(BaseModel):
+    """Response returned when a pipeline run is initiated."""
+
     run_id: str
     data_id: str
     config: PipelineConfigRequest
@@ -101,6 +115,8 @@ class LaunchResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
+    """Standard error payload for 4xx/5xx responses."""
+
     error: str
     detail: str | None = None
 
@@ -110,6 +126,8 @@ class ErrorResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class ClusterMeshData(BaseModel):
+    """3D geometry and metadata for a single anomaly cluster mesh."""
+
     cluster_id: int
     vertices: list[list[float]]
     faces: list[list[int]]
@@ -120,6 +138,8 @@ class ClusterMeshData(BaseModel):
 
 
 class ManifoldViewerData(BaseModel):
+    """Full viewer payload: surface mesh, point cloud, and cluster meshes."""
+
     surface_vertices: list[list[float]]
     surface_faces: list[list[int]]
     point_positions: list[list[float]]
@@ -135,6 +155,8 @@ class ManifoldViewerData(BaseModel):
 
 
 class PointDetailResponse(BaseModel):
+    """Per-point anomaly detail returned by the viewer side-panel endpoint."""
+
     index: int
     overall_score: float
     is_anomaly: bool

@@ -46,10 +46,12 @@ def profile(df: pd.DataFrame) -> QualityReport:
 
 
 def build_column_info(df: pd.DataFrame) -> list[ColumnInfo]:
+    """Return per-column metadata for all columns in *df*."""
     return _analyze_columns(df)
 
 
 def build_preview_rows(df: pd.DataFrame, n: int = 100) -> list[dict[str, Any]]:
+    """Return up to *n* rows of *df* as JSON-serialisable dicts."""
     return _build_preview_rows(df, n)
 
 
