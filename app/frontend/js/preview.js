@@ -1,4 +1,5 @@
 /* Data preview table and quality cards rendering for the FMAS import interface. */
+/* exported Preview */
 const Preview = {
   init() {
     this._tableContainer   = document.getElementById('table-container');

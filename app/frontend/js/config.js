@@ -1,5 +1,6 @@
 /* Pipeline config form handling and launch for the FMAS import interface. */
 /* global App, Preview, API */
+/* exported Config */
 const Config = {
   init() {
     const overlap = document.getElementById('cfg-overlap');

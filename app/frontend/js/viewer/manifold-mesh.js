@@ -1,5 +1,6 @@
 /* Translucent surface mesh rendering for the FMAS 3D manifold viewer. */
 /* global THREE, Scene */
+/* exported ManifoldMesh */
 const ManifoldMesh = {
   _mesh: null,
   _visible: true,

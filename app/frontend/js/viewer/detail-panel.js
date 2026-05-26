@@ -1,5 +1,6 @@
 /* Side panel for point inspection in the FMAS 3D manifold viewer. */
 /* global ViewerAPI, PointCloud */
+/* exported DetailPanel */
 const DetailPanel = {
   _runId: null,
   _panel: null,

@@ -1,4 +1,5 @@
 /* API client for the FMAS 3D manifold viewer. */
+/* exported ViewerAPI */
 const ViewerAPI = {
   async _fetch(url, options = {}) {
     const res = await fetch(url, options);
