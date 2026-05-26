@@ -38,7 +38,7 @@ class TestProjectionShapes:
 
     def test_normal_count(self, projection):
         """Verify the count of non-anomalous points."""
-        assert len(projection.normal_indices) == 940
+        assert len(projection.meta.normal_indices) == 940
 
     def test_three_clusters(self, projection):
         """Verify three clusters are detected."""
@@ -46,8 +46,8 @@ class TestProjectionShapes:
 
     def test_axis_labels_length(self, projection):
         """Verify axis_labels and axes each have 3 entries."""
-        assert len(projection.axis_labels) == 3
-        assert len(projection.axes) == 3
+        assert len(projection.meta.axis_labels) == 3
+        assert len(projection.meta.axes) == 3
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ class TestAxisSelection:
 
     def test_dc_component_not_selected(self, projection):
         """Verify the DC component (index 0) is never chosen as an axis."""
-        assert 0 not in projection.axes, "DC component (index 0) must not be a projection axis."
+        assert 0 not in projection.meta.axes, "DC component (index 0) must not be a projection axis."
 
     def test_top3_axes_are_high_power_features(self, projector, run_dir):
         """Verify amplified features 1-3 are selected as top axes."""
@@ -70,7 +70,7 @@ class TestAxisSelection:
 
     def test_axes_sorted(self, projection):
         """Verify projection axes are returned in ascending order."""
-        assert projection.axes == sorted(projection.axes)
+        assert projection.meta.axes == sorted(projection.meta.axes)
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ class TestClusterReprojection:
     def test_divergent_axes_differ_from_projection_axes(self, projection):
         """Verify divergent axes are different from the global projection axes."""
         c1 = self._get(projection, 1)
-        assert set(c1.divergent_axes) != set(projection.axes)
+        assert set(c1.divergent_axes) != set(projection.meta.axes)
 
     def test_reprojected_positions_shape(self, projection):
         """Verify reprojected cluster positions have shape (n_cluster, 3)."""
@@ -175,4 +175,4 @@ class TestMissingFiles:
         }))
         result = projector.project(tmp_path)
         assert result.clusters == []
-        assert len(result.isolated_indices) == 10
+        assert len(result.meta.isolated_indices) == 10

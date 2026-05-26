@@ -31,6 +31,16 @@ class ClusterProjection:
 
 
 @dataclass
+class ProjectionMeta:
+    """Projection axes, labels, and point partitioning grouped for a ManifoldProjector result."""
+
+    axes: list[int]
+    axis_labels: list[str]
+    normal_indices: list[int]
+    isolated_indices: list[int]
+
+
+@dataclass
 class ProjectionResult:
     """Complete 3D projection output produced by ManifoldProjector."""
 
@@ -38,11 +48,8 @@ class ProjectionResult:
     is_anomaly: np.ndarray          # (n_points,) bool
     scores: np.ndarray              # (n_points,) float
     point_ids: np.ndarray           # (n_points,) int
-    normal_indices: list[int]
-    isolated_indices: list[int]
+    meta: ProjectionMeta
     clusters: list[ClusterProjection] = field(default_factory=list)
-    axes: list[int] = field(default_factory=list)
-    axis_labels: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -55,12 +62,8 @@ class ManifoldProjector:
     def project(self, run_dir: Path) -> ProjectionResult:
         """Full projection pipeline. Expects run_dir to contain FMAS outputs."""
         coeff = self._load_coefficients(run_dir)
-        power_raw = self._load_power_spectrum(run_dir)
-        power = power_raw if power_raw is not None else np.mean(np.abs(coeff) ** 2, axis=0)
-        anomaly_raw = self._load_anomaly(run_dir)
-        anomaly = anomaly_raw if anomaly_raw is not None else {
-            "flags": [False] * len(coeff), "scores": [0.0] * len(coeff), "types": ["normal"] * len(coeff),
-        }
+        power = self._load_or_compute_power(run_dir, coeff)
+        anomaly = self._load_or_default_anomaly(run_dir, len(coeff))
         cluster_labels = self._load_cluster_labels(run_dir)
 
         axes = self.select_top3_axes(power)
@@ -79,11 +82,13 @@ class ManifoldProjector:
             is_anomaly=flags,
             scores=scores,
             point_ids=np.arange(len(coeff), dtype=np.intp),
-            normal_indices=normal_idx,
-            isolated_indices=isolated_idx,
+            meta=ProjectionMeta(
+                axes=axes,
+                axis_labels=axis_labels,
+                normal_indices=normal_idx,
+                isolated_indices=isolated_idx,
+            ),
             clusters=clusters,
-            axes=axes,
-            axis_labels=axis_labels,
         )
 
     def point_detail(self, run_dir: Path, index: int) -> PointDetailResponse:
@@ -92,15 +97,8 @@ class ManifoldProjector:
         if index < 0 or index >= len(coeff):
             raise HTTPException(status_code=404, detail=f"Point index {index} out of range.")
 
-        anomaly_raw = self._load_anomaly(run_dir)
-        anomaly = anomaly_raw if anomaly_raw is not None else {
-            "flags": [False] * len(coeff), "scores": [0.0] * len(coeff), "types": ["normal"] * len(coeff),
-        }
-        manifold_raw = self._load_manifold(run_dir)
-        manifold = manifold_raw if manifold_raw is not None else {
-            "n_charts": 1, "chart_assignments": [0] * len(coeff),
-            "intrinsic_dim": 2, "alignment_qualities": [1.0],
-        }
+        anomaly = self._load_or_default_anomaly(run_dir, len(coeff))
+        manifold = self._load_or_default_manifold(run_dir, len(coeff))
         col_names = self._load_column_names(run_dir)
 
         score  = float(anomaly.get("scores", [0.0] * len(coeff))[index])
@@ -178,6 +176,26 @@ class ManifoldProjector:
         if path.exists():
             return json.loads(path.read_text())
         return None
+
+    def _load_or_compute_power(self, run_dir: Path, coeff: np.ndarray) -> np.ndarray:
+        """Return power spectrum from file, or compute it from coefficients if absent."""
+        power = self._load_power_spectrum(run_dir)
+        return power if power is not None else np.mean(np.abs(coeff) ** 2, axis=0)
+
+    def _load_or_default_anomaly(self, run_dir: Path, n: int) -> dict:
+        """Return anomaly results from file, or an all-normal default dict if absent."""
+        result = self._load_anomaly(run_dir)
+        return result if result is not None else {
+            "flags": [False] * n, "scores": [0.0] * n, "types": ["normal"] * n,
+        }
+
+    def _load_or_default_manifold(self, run_dir: Path, n: int) -> dict:
+        """Return manifold info from file, or a single-chart default dict if absent."""
+        result = self._load_manifold(run_dir)
+        return result if result is not None else {
+            "n_charts": 1, "chart_assignments": [0] * n,
+            "intrinsic_dim": 2, "alignment_qualities": [1.0],
+        }
 
     # ------------------------------------------------------------------
     # Projection helpers

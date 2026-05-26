@@ -27,8 +27,8 @@ class MeshBuilder:
     ) -> ManifoldViewerData:
         """Orchestrate projection → geometry → ManifoldViewerData."""
         normal_pos = (
-            proj.all_positions[proj.normal_indices]
-            if proj.normal_indices
+            proj.all_positions[proj.meta.normal_indices]
+            if proj.meta.normal_indices
             else np.zeros((0, 3))
         )
 
@@ -65,8 +65,8 @@ class MeshBuilder:
             n_points=len(proj.all_positions),
             n_anomalies=int(proj.is_anomaly.sum()),
             n_clusters=len(clusters_data),
-            projection_axes=proj.axes,
-            axis_labels=proj.axis_labels,
+            projection_axes=proj.meta.axes,
+            axis_labels=proj.meta.axis_labels,
         )
 
     # Keep backward-compatible alias used by the viewer router.

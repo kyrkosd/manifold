@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from backend.models.schemas import ManifoldViewerData
-from backend.services.manifold_projector import ClusterProjection, ProjectionResult
+from backend.services.manifold_projector import ClusterProjection, ProjectionMeta, ProjectionResult
 
 _MAX_SURFACE_POINTS = 2_000
 
@@ -40,11 +40,13 @@ def _minimal_projection(normal_pts: np.ndarray) -> ProjectionResult:
         is_anomaly=np.zeros(n, dtype=bool),
         scores=np.zeros(n),
         point_ids=np.arange(n, dtype=np.intp),
-        normal_indices=list(range(n)),
-        isolated_indices=[],
+        meta=ProjectionMeta(
+            axes=[0, 1, 2],
+            axis_labels=["GFT 0", "GFT 1", "GFT 2"],
+            normal_indices=list(range(n)),
+            isolated_indices=[],
+        ),
         clusters=[],
-        axes=[0, 1, 2],
-        axis_labels=["GFT 0", "GFT 1", "GFT 2"],
     )
 
 
@@ -196,11 +198,13 @@ class TestBuildViewerData:
             is_anomaly=is_anomaly,
             scores=np.where(is_anomaly, 0.9, 0.0),
             point_ids=np.arange(210, dtype=np.intp),
-            normal_indices=list(range(200)),
-            isolated_indices=[],
+            meta=ProjectionMeta(
+                axes=[0, 1, 2],
+                axis_labels=["GFT 0", "GFT 1", "GFT 2"],
+                normal_indices=list(range(200)),
+                isolated_indices=[],
+            ),
             clusters=[cp],
-            axes=[0, 1, 2],
-            axis_labels=["GFT 0", "GFT 1", "GFT 2"],
         )
         result = builder.build_viewer_data(proj)
         assert result.n_clusters == 1
