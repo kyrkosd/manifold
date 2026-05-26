@@ -29,6 +29,7 @@ async def sql_query(
     req: SQLConnectionRequest,
     store: DataStore = Depends(get_store),
 ) -> PreviewResponse:
+    """Execute a SQL query and return a data preview with quality report."""
     t0 = time.monotonic()
     try:
         df = execute_query(req.connection_string, req.query, req.max_rows)

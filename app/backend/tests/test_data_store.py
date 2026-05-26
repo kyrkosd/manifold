@@ -83,8 +83,8 @@ class TestDeleteAndCleanup:
         assert removed == 1
 
 
-class TestMaxLimit:
-    """Verify the MAX_DATASETS eviction policy."""
+class TestEvictionAndConcurrency:
+    """Verify the MAX_DATASETS eviction policy and thread-safe concurrent operations."""
 
     def test_evicts_oldest_when_full(self, tmp_path):
         """When MAX_DATASETS is exceeded the oldest entry is evicted."""
@@ -98,10 +98,6 @@ class TestMaxLimit:
             assert len(store.list_datasets()) == 3
         finally:
             ds_mod.MAX_DATASETS = original
-
-
-class TestConcurrentAccess:
-    """Verify thread-safe concurrent store operations."""
 
     def test_concurrent_store(self, store):
         """Verify 10 concurrent stores each produce a unique data_id."""

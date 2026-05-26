@@ -62,10 +62,8 @@ def _make_run_dir(tmp_path: Path) -> Path:
 
     power = np.mean(np.abs(coeff) ** 2, axis=0)
 
-    all_anomaly = sep_idx + overlap_idx + sep2_idx
-    flags  = [i in set(all_anomaly) for i in range(n_pts)]
+    flags  = [i in set(sep_idx + overlap_idx + sep2_idx) for i in range(n_pts)]
     scores = [0.9 if f else 0.0 for f in flags]
-    types  = ["regional" if f else "normal" for f in flags]
 
     cluster_labels = np.full(n_pts, -1, dtype=int)
     for i in sep_idx:     cluster_labels[i] = 0
@@ -75,7 +73,7 @@ def _make_run_dir(tmp_path: Path) -> Path:
     anomaly = {
         "flags":  flags,
         "scores": scores,
-        "types":  types,
+        "types":  ["regional" if f else "normal" for f in flags],
         "per_point_band_scores": {
             "band_0": scores,
             "band_1": [s * 0.5 for s in scores],

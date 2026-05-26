@@ -43,10 +43,6 @@ class ProjectionResult:
     clusters: list[ClusterProjection] = field(default_factory=list)
     axes: list[int] = field(default_factory=list)
     axis_labels: list[str] = field(default_factory=list)
-    # Raw data for point-detail lookup
-    anomaly_data: dict = field(default_factory=dict)
-    manifold_data: dict = field(default_factory=dict)
-    coefficients: Optional[np.ndarray] = None
 
 
 # ---------------------------------------------------------------------------
@@ -59,17 +55,11 @@ class ManifoldProjector:
     def project(self, run_dir: Path) -> ProjectionResult:
         """Full projection pipeline. Expects run_dir to contain FMAS outputs."""
         coeff = self._load_coefficients(run_dir)
-        n = len(coeff)
         power_raw = self._load_power_spectrum(run_dir)
         power = power_raw if power_raw is not None else np.mean(np.abs(coeff) ** 2, axis=0)
         anomaly_raw = self._load_anomaly(run_dir)
         anomaly = anomaly_raw if anomaly_raw is not None else {
-            "flags": [False] * n, "scores": [0.0] * n, "types": ["normal"] * n,
-        }
-        manifold_raw = self._load_manifold(run_dir)
-        manifold = manifold_raw if manifold_raw is not None else {
-            "n_charts": 1, "chart_assignments": [0] * n,
-            "intrinsic_dim": 2, "alignment_qualities": [1.0],
+            "flags": [False] * len(coeff), "scores": [0.0] * len(coeff), "types": ["normal"] * len(coeff),
         }
         cluster_labels = self._load_cluster_labels(run_dir)
 
@@ -78,42 +68,9 @@ class ManifoldProjector:
 
         flags = np.array(anomaly.get("flags", [False] * len(coeff)), dtype=bool)
         scores = np.array(anomaly.get("scores", [0.0] * len(coeff)), dtype=float)
-        types = anomaly.get("types", ["normal"] * len(coeff))
 
-        classification = self._classify_points(flags, cluster_labels)
-        normal_idx = classification["normal"]
-        isolated_idx = classification["isolated"]
-        regional = classification["regional"]
-
-        normal_pos = positions_all[normal_idx] if normal_idx else np.zeros((0, 3))
-
-        clusters: list[ClusterProjection] = []
-        for cid, cidx in regional.items():
-            cluster_pos = positions_all[cidx]
-            reprojected = False
-            div_axes = None
-
-            if (
-                len(normal_idx) >= 5
-                and self._check_cluster_overlap(cluster_pos, normal_pos)
-            ):
-                div_axes = self._find_divergent_axes(cidx, normal_idx, coeff)
-                cluster_pos = self._reproject_cluster(
-                    cidx,
-                    coeff,
-                    div_axes,
-                    positions_all.mean(axis=0),
-                )
-                reprojected = True
-
-
-            clusters.append(ClusterProjection(
-                cluster_id=cid,
-                indices=cidx,
-                positions=cluster_pos,
-                reprojected=reprojected,
-                divergent_axes=div_axes,
-            ))
+        normal_idx, isolated_idx, regional = self._classify_points(flags, cluster_labels)
+        clusters = self._build_clusters(regional, positions_all, normal_idx, coeff)
 
         axis_labels = [f"GFT coeff {a} (λ={power[a]:.3f})" for a in axes]
 
@@ -127,9 +84,6 @@ class ManifoldProjector:
             clusters=clusters,
             axes=axes,
             axis_labels=axis_labels,
-            anomaly_data=anomaly,
-            manifold_data=manifold,
-            coefficients=coeff,
         )
 
     def point_detail(self, run_dir: Path, index: int) -> PointDetailResponse:
@@ -138,14 +92,13 @@ class ManifoldProjector:
         if index < 0 or index >= len(coeff):
             raise HTTPException(status_code=404, detail=f"Point index {index} out of range.")
 
-        n = len(coeff)
         anomaly_raw = self._load_anomaly(run_dir)
         anomaly = anomaly_raw if anomaly_raw is not None else {
-            "flags": [False] * n, "scores": [0.0] * n, "types": ["normal"] * n,
+            "flags": [False] * len(coeff), "scores": [0.0] * len(coeff), "types": ["normal"] * len(coeff),
         }
         manifold_raw = self._load_manifold(run_dir)
         manifold = manifold_raw if manifold_raw is not None else {
-            "n_charts": 1, "chart_assignments": [0] * n,
+            "n_charts": 1, "chart_assignments": [0] * len(coeff),
             "intrinsic_dim": 2, "alignment_qualities": [1.0],
         }
         col_names = self._load_column_names(run_dir)
@@ -156,10 +109,7 @@ class ManifoldProjector:
         band_s = {k: float(v[index]) for k, v in anomaly.get("per_point_band_scores", {}).items()}
         top_band = max(band_s, key=lambda k: abs(band_s[k])) if band_s else None
 
-        assignments = manifold.get("chart_assignments", [])
-        chart_id = int(assignments[index]) if index < len(assignments) else 0
-        qualities = manifold.get("alignment_qualities", [])
-        chart_quality = float(qualities[chart_id]) if chart_id < len(qualities) else 0.0
+        chart_id, chart_quality = self._get_chart_info(manifold, index)
 
         row = coeff[index, :20]
         if col_names:
@@ -252,12 +202,13 @@ class ManifoldProjector:
         self,
         flags: np.ndarray,
         cluster_labels: np.ndarray | None,
-    ) -> dict:
+    ) -> tuple[list[int], list[int], dict[int, list[int]]]:
+        """Partition point indices into normal, isolated anomaly, and regional cluster groups."""
         normal   = [int(i) for i in np.where(~flags)[0]]
         anomalous = np.where(flags)[0]
 
         if cluster_labels is None:
-            return {"normal": normal, "isolated": [int(i) for i in anomalous], "regional": {}}
+            return normal, [int(i) for i in anomalous], {}
 
         regional: dict[int, list[int]] = {}
         isolated: list[int] = []
@@ -267,7 +218,52 @@ class ManifoldProjector:
                 regional.setdefault(lbl, []).append(int(i))
             else:
                 isolated.append(int(i))
-        return {"normal": normal, "isolated": isolated, "regional": regional}
+        return normal, isolated, regional
+
+    def _build_clusters(
+        self,
+        regional: dict[int, list[int]],
+        positions_all: np.ndarray,
+        normal_idx: list[int],
+        coeff: np.ndarray,
+    ) -> list[ClusterProjection]:
+        """Build ClusterProjection list, reprojecting clusters that overlap the normal surface."""
+        normal_pos = positions_all[normal_idx] if normal_idx else np.zeros((0, 3))
+        clusters: list[ClusterProjection] = []
+        for cid, cidx in regional.items():
+            cluster_pos = positions_all[cidx]
+            reprojected = False
+            div_axes = None
+
+            if (
+                len(normal_idx) >= 5
+                and self._check_cluster_overlap(cluster_pos, normal_pos)
+            ):
+                div_axes = self._find_divergent_axes(cidx, normal_idx, coeff)
+                cluster_pos = self._reproject_cluster(
+                    cidx,
+                    coeff,
+                    div_axes,
+                    positions_all.mean(axis=0),
+                )
+                reprojected = True
+
+            clusters.append(ClusterProjection(
+                cluster_id=cid,
+                indices=cidx,
+                positions=cluster_pos,
+                reprojected=reprojected,
+                divergent_axes=div_axes,
+            ))
+        return clusters
+
+    def _get_chart_info(self, manifold: dict, index: int) -> tuple[int, float]:
+        """Return (chart_id, chart_alignment_quality) for the given point index."""
+        assignments = manifold.get("chart_assignments", [])
+        chart_id = int(assignments[index]) if index < len(assignments) else 0
+        qualities = manifold.get("alignment_qualities", [])
+        chart_quality = float(qualities[chart_id]) if chart_id < len(qualities) else 0.0
+        return chart_id, chart_quality
 
     def _check_cluster_overlap(
         self,

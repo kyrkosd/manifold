@@ -182,14 +182,14 @@ class MeshBuilder:
     def _circumradius(self, tet: np.ndarray) -> float:
         """Circumradius of a tetrahedron (4 × 3 array of 3-D vertices)."""
         p0, p1, p2, p3 = tet
-        A = 2.0 * np.array([p1 - p0, p2 - p0, p3 - p0])
+        lhs = 2.0 * np.array([p1 - p0, p2 - p0, p3 - p0])
         rhs = np.array([
             np.dot(p1, p1) - np.dot(p0, p0),
             np.dot(p2, p2) - np.dot(p0, p0),
             np.dot(p3, p3) - np.dot(p0, p0),
         ])
         try:
-            center = np.linalg.solve(A, rhs)
+            center = np.linalg.solve(lhs, rhs)
             return float(np.linalg.norm(center - p0))
         except np.linalg.LinAlgError:
             return np.inf

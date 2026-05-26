@@ -47,6 +47,12 @@ class TestUpload:
         res = app_client.get("/api/data/nonexistent/preview")
         assert res.status_code == 404
 
+    def test_health_ok(self, app_client):
+        """Verify health endpoint returns status='ok'."""
+        res = app_client.get("/api/health")
+        assert res.status_code == 200
+        assert res.json()["status"] == "ok"
+
 class TestSQL:
     """Integration tests for the /api/sql/test and /api/sql/query endpoints."""
 
@@ -124,11 +130,3 @@ class TestLaunch:
         assert res.status_code == 422
 
 
-class TestHealth:
-    """Integration tests for the /api/health endpoint."""
-
-    def test_health_ok(self, app_client):
-        """Verify health endpoint returns status='ok'."""
-        res = app_client.get("/api/health")
-        assert res.status_code == 200
-        assert res.json()["status"] == "ok"

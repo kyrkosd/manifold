@@ -8,11 +8,24 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from backend.models.enums import DataStatus, SuitabilityLevel
 
 
+class FMASModel(BaseModel):
+    """Base class for all FMAS Pydantic models, providing dict conversion helpers."""
+
+    def to_dict(self) -> dict:
+        """Serialize this model to a plain Python dictionary."""
+        return self.model_dump()
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "FMASModel":
+        """Deserialize a plain dictionary into this model."""
+        return cls.model_validate(data)
+
+
 # ---------------------------------------------------------------------------
 # Request models
 # ---------------------------------------------------------------------------
 
-class SQLConnectionRequest(BaseModel):
+class SQLConnectionRequest(FMASModel):
     """Payload for SQL connection-test and query-execution requests."""
 
     connection_string: str
@@ -20,7 +33,7 @@ class SQLConnectionRequest(BaseModel):
     max_rows: int = 500_000
 
 
-class PipelineConfigRequest(BaseModel):
+class PipelineConfigRequest(FMASModel):
     """User-configurable parameters for a FMAS pipeline run."""
 
     n_charts: int | str = "auto"
@@ -45,7 +58,7 @@ class PipelineConfigRequest(BaseModel):
         return v
 
 
-class LaunchRequest(BaseModel):
+class LaunchRequest(FMASModel):
     """Payload to launch a new FMAS pipeline run."""
 
     data_id: str
@@ -56,7 +69,7 @@ class LaunchRequest(BaseModel):
 # Response sub-models
 # ---------------------------------------------------------------------------
 
-class ColumnInfo(BaseModel):
+class ColumnInfo(FMASModel):
     """Per-column metadata returned in a preview response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -69,7 +82,7 @@ class ColumnInfo(BaseModel):
     sample_values: list[str]
 
 
-class QualityReport(BaseModel):
+class QualityReport(FMASModel):
     """Dataset quality and suitability assessment produced by the profiler."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -91,7 +104,7 @@ class QualityReport(BaseModel):
 # Top-level response models
 # ---------------------------------------------------------------------------
 
-class PreviewResponse(BaseModel):
+class PreviewResponse(FMASModel):
     """Full preview payload returned after file upload or SQL query."""
 
     data_id: str
@@ -103,7 +116,7 @@ class PreviewResponse(BaseModel):
     status: DataStatus
 
 
-class LaunchResponse(BaseModel):
+class LaunchResponse(FMASModel):
     """Response returned when a pipeline run is initiated."""
 
     run_id: str
@@ -114,7 +127,7 @@ class LaunchResponse(BaseModel):
     viewer_url: str | None = None
 
 
-class ErrorResponse(BaseModel):
+class ErrorResponse(FMASModel):
     """Standard error payload for 4xx/5xx responses."""
 
     error: str
@@ -125,7 +138,7 @@ class ErrorResponse(BaseModel):
 # 3D viewer response models (Prompt 13)
 # ---------------------------------------------------------------------------
 
-class ClusterMeshData(BaseModel):
+class ClusterMeshData(FMASModel):
     """3D geometry and metadata for a single anomaly cluster mesh."""
 
     cluster_id: int
@@ -137,7 +150,7 @@ class ClusterMeshData(BaseModel):
     divergent_axes: list[int] | None = None
 
 
-class ManifoldViewerData(BaseModel):
+class ManifoldViewerData(FMASModel):
     """Full viewer payload: surface mesh, point cloud, and cluster meshes."""
 
     surface_vertices: list[list[float]]
@@ -154,7 +167,7 @@ class ManifoldViewerData(BaseModel):
     axis_labels: list[str]
 
 
-class PointDetailResponse(BaseModel):
+class PointDetailResponse(FMASModel):
     """Per-point anomaly detail returned by the viewer side-panel endpoint."""
 
     index: int
