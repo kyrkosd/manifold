@@ -72,13 +72,23 @@ const Config = {
         ? 'Pipeline running.'
         : res.message || 'Data prepared.';
       const bar = document.querySelector('.launch-bar');
-      bar.innerHTML = `
-        <div style="padding:4px 0;color:var(--success);font-size:13px">
-          <i class="ti ti-check"></i> ${statusMsg} Run ID: ${res.run_id}.
-        </div>
-        <a href="${viewerUrl}" class="btn btn-primary btn-sm" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;font-size:13px">
-          <i class="ti ti-3d-cube-sphere"></i> View 3D manifold
-        </a>`;
+      bar.innerHTML = '';
+      const msgDiv = document.createElement('div');
+      msgDiv.style.cssText = 'padding:4px 0;color:var(--success);font-size:13px';
+      const checkIcon = document.createElement('i');
+      checkIcon.className = 'ti ti-check';
+      msgDiv.appendChild(checkIcon);
+      msgDiv.appendChild(document.createTextNode(` ${statusMsg} Run ID: ${res.run_id}.`));
+      bar.appendChild(msgDiv);
+      const link = document.createElement('a');
+      link.href = viewerUrl;
+      link.className = 'btn btn-primary btn-sm';
+      link.style.cssText = 'margin-top:8px;display:inline-flex;align-items:center;gap:6px;font-size:13px';
+      const cubeIcon = document.createElement('i');
+      cubeIcon.className = 'ti ti-3d-cube-sphere';
+      link.appendChild(cubeIcon);
+      link.appendChild(document.createTextNode(' View 3D manifold'));
+      bar.appendChild(link);
     } catch (err) {
       App.hideLoading();
       App.showError(err.error || 'Failed to launch pipeline. Please try again.');

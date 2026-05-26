@@ -15,27 +15,30 @@ const Preview = {
   renderTable(columns, rows, totalRows) {
     const numCols = columns.filter(c => c.is_numeric).map(c => c.name);
 
-    let html = '<table><thead><tr>';
+    const table = document.createElement('table');
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
     columns.forEach(c => {
-      const cls = c.is_numeric ? 'col-num' : 'col-skip';
-      html += `<th class="${cls}">${this._esc(c.name)}</th>`;
+      const th = document.createElement('th');
+      th.className = c.is_numeric ? 'col-num' : 'col-skip';
+      th.textContent = c.name;
+      headerRow.appendChild(th);
     });
-    html += '</tr></thead><tbody>';
 
+    const tbody = table.createTBody();
     rows.forEach(row => {
-      html += '<tr>';
+      const tr = tbody.insertRow();
       columns.forEach(c => {
         const val = row[c.name];
         const isMissing = val === '—' || val === null || val === undefined || val === '';
-        const cls = c.is_numeric ? 'col-num' : 'col-skip';
-        const valClass = isMissing ? ' missing' : '';
-        html += `<td class="${cls}${valClass}">${this._esc(isMissing ? '—' : val)}</td>`;
+        const td = tr.insertCell();
+        td.className = (c.is_numeric ? 'col-num' : 'col-skip') + (isMissing ? ' missing' : '');
+        td.textContent = isMissing ? '—' : val;
       });
-      html += '</tr>';
     });
 
-    html += '</tbody></table>';
-    this._tableContainer.innerHTML = html;
+    this._tableContainer.innerHTML = '';
+    this._tableContainer.appendChild(table);
 
     const numCount = numCols.length;
     const showing  = rows.length;
@@ -52,48 +55,93 @@ const Preview = {
       : q.suitability_level === 'needs_attention'
       ? 'Needs attention'
       : 'Not suitable';
-
-    const dupColor = q.duplicate_rows === 0 ? 'ok' : 'warn';
+    const dupColor   = q.duplicate_rows === 0 ? 'ok' : 'warn';
     const constColor = q.constant_columns.length === 0 ? 'ok' : 'warn';
 
-    let html = `
-      <div class="qcard">
-        <div class="qcard-label">Rows</div>
-        <div class="qcard-value">${this.formatNumber(q.n_rows)}</div>
-      </div>
-      <div class="qcard">
-        <div class="qcard-label">Numeric columns</div>
-        <div class="qcard-value">${q.n_numeric_columns} <span style="font-size:13px;font-weight:400;color:var(--text-secondary)">of ${q.n_columns}</span></div>
-      </div>
-      <div class="qcard">
-        <div class="qcard-label">Missing values</div>
-        <div class="qcard-value" style="color:var(--${missingColor === 'ok' ? 'success' : missingColor === 'warn' ? 'warning' : 'danger'})">${this.formatPercent(q.missing_pct)}</div>
-        <div class="bar-mini"><div class="bar-mini-fill bar-fill-${missingColor}" style="width:${Math.min(q.missing_pct, 100).toFixed(1)}%"></div></div>
-      </div>
-      <div class="qcard">
-        <div class="qcard-label">Duplicate rows</div>
-        <div class="qcard-value" style="color:var(--${dupColor === 'ok' ? 'success' : 'warning'})">${this.formatNumber(q.duplicate_rows)}</div>
-      </div>
-      <div class="qcard">
-        <div class="qcard-label">Constant columns</div>
-        <div class="qcard-value" style="color:var(--${constColor === 'ok' ? 'success' : 'warning'})">${q.constant_columns.length}</div>
-        ${q.constant_columns.length > 0 ? `<div class="qcard-sub">${q.constant_columns.slice(0,3).map(c => this._esc(c)).join(', ')}${q.constant_columns.length > 3 ? ', …' : ''}</div>` : ''}
-      </div>
-      <div class="qcard">
-        <div class="qcard-label">Suitability</div>
-        <div class="qcard-value">${(q.suitability_score * 100).toFixed(0)}%</div>
-        <div class="bar-mini"><div class="bar-mini-fill bar-fill-${suitColor}" style="width:${(q.suitability_score * 100).toFixed(1)}%"></div></div>
-        <div style="margin-top:6px"><span class="suit-badge badge-${suitColor === 'ok' ? 'ok' : suitColor === 'warn' ? 'warn' : 'bad'}">${suitLabel}</span></div>
-        <div class="qcard-sub">Est. runtime: ${this._formatRuntime(q.estimated_runtime_seconds)}</div>
-      </div>`;
+    const frag = document.createDocumentFragment();
 
+    // Rows card
+    const rowsCard = this._qcard('Rows');
+    rowsCard.appendChild(this._qval(this.formatNumber(q.n_rows)));
+    frag.appendChild(rowsCard);
+
+    // Numeric columns card
+    const numCard = this._qcard('Numeric columns');
+    const numValEl = document.createElement('div');
+    numValEl.className = 'qcard-value';
+    numValEl.appendChild(document.createTextNode(String(q.n_numeric_columns) + ' '));
+    const numSub = document.createElement('span');
+    numSub.style.cssText = 'font-size:13px;font-weight:400;color:var(--text-secondary)';
+    numSub.textContent = `of ${q.n_columns}`;
+    numValEl.appendChild(numSub);
+    numCard.appendChild(numValEl);
+    frag.appendChild(numCard);
+
+    // Missing values card
+    const missingValColor = missingColor === 'ok' ? 'var(--success)' : missingColor === 'warn' ? 'var(--warning)' : 'var(--danger)';
+    const missingCard = this._qcard('Missing values');
+    const missingValEl = this._qval(this.formatPercent(q.missing_pct));
+    missingValEl.style.color = missingValColor;
+    missingCard.appendChild(missingValEl);
+    missingCard.appendChild(this._minibar(missingColor, Math.min(q.missing_pct, 100)));
+    frag.appendChild(missingCard);
+
+    // Duplicate rows card
+    const dupCard = this._qcard('Duplicate rows');
+    const dupValEl = this._qval(this.formatNumber(q.duplicate_rows));
+    dupValEl.style.color = dupColor === 'ok' ? 'var(--success)' : 'var(--warning)';
+    dupCard.appendChild(dupValEl);
+    frag.appendChild(dupCard);
+
+    // Constant columns card
+    const constCard = this._qcard('Constant columns');
+    const constValEl = this._qval(String(q.constant_columns.length));
+    constValEl.style.color = constColor === 'ok' ? 'var(--success)' : 'var(--warning)';
+    constCard.appendChild(constValEl);
+    if (q.constant_columns.length > 0) {
+      const constSub = document.createElement('div');
+      constSub.className = 'qcard-sub';
+      constSub.textContent = q.constant_columns.slice(0, 3).join(', ') + (q.constant_columns.length > 3 ? ', …' : '');
+      constCard.appendChild(constSub);
+    }
+    frag.appendChild(constCard);
+
+    // Suitability card
+    const suitCard = this._qcard('Suitability');
+    suitCard.appendChild(this._qval(`${(q.suitability_score * 100).toFixed(0)}%`));
+    suitCard.appendChild(this._minibar(suitColor, q.suitability_score * 100));
+    const badgeWrap = document.createElement('div');
+    badgeWrap.style.marginTop = '6px';
+    const badge = document.createElement('span');
+    badge.className = `suit-badge badge-${suitColor === 'ok' ? 'ok' : suitColor === 'warn' ? 'warn' : 'bad'}`;
+    badge.textContent = suitLabel;
+    badgeWrap.appendChild(badge);
+    suitCard.appendChild(badgeWrap);
+    const runtimeSub = document.createElement('div');
+    runtimeSub.className = 'qcard-sub';
+    runtimeSub.textContent = `Est. runtime: ${this._formatRuntime(q.estimated_runtime_seconds)}`;
+    suitCard.appendChild(runtimeSub);
+    frag.appendChild(suitCard);
+
+    // Warnings
     if (q.warnings.length > 0) {
-      html += `<div class="warnings-list"><p>Warnings</p><ul>`;
-      q.warnings.forEach(w => { html += `<li>${this._esc(w)}</li>`; });
-      html += `</ul></div>`;
+      const warnDiv = document.createElement('div');
+      warnDiv.className = 'warnings-list';
+      const warnHead = document.createElement('p');
+      warnHead.textContent = 'Warnings';
+      warnDiv.appendChild(warnHead);
+      const ul = document.createElement('ul');
+      q.warnings.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = w;
+        ul.appendChild(li);
+      });
+      warnDiv.appendChild(ul);
+      frag.appendChild(warnDiv);
     }
 
-    this._qualityContainer.innerHTML = html;
+    this._qualityContainer.innerHTML = '';
+    this._qualityContainer.appendChild(frag);
   },
 
   formatNumber(n) { return Number(n).toLocaleString(); },
@@ -105,11 +153,30 @@ const Preview = {
     return `~${(seconds / 3600).toFixed(1)} hr`;
   },
 
-  _esc(str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  _qcard(label) {
+    const card = document.createElement('div');
+    card.className = 'qcard';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'qcard-label';
+    labelEl.textContent = label;
+    card.appendChild(labelEl);
+    return card;
+  },
+
+  _qval(text) {
+    const el = document.createElement('div');
+    el.className = 'qcard-value';
+    el.textContent = text;
+    return el;
+  },
+
+  _minibar(colorClass, pct) {
+    const bar = document.createElement('div');
+    bar.className = 'bar-mini';
+    const fill = document.createElement('div');
+    fill.className = `bar-mini-fill bar-fill-${colorClass}`;
+    fill.style.width = `${Number(pct).toFixed(1)}%`;
+    bar.appendChild(fill);
+    return bar;
   },
 };
