@@ -29,7 +29,7 @@ class MeshBuilder:
             else np.zeros((0, 3))
         )
 
-        surface_verts, surface_faces = self._build_surface_mesh(normal_pos, alpha=alpha)
+        surface_verts, surface_faces = self.build_surface_mesh(normal_pos, alpha=alpha)
 
         point_positions = proj.all_positions.tolist()
         point_is_anomaly = proj.is_anomaly.tolist()
@@ -38,7 +38,7 @@ class MeshBuilder:
 
         clusters_data: list[ClusterMeshData] = []
         for cp in proj.clusters:
-            verts, faces = self._build_cluster_mesh(cp.positions)
+            verts, faces = self.build_cluster_mesh(cp.positions)
             clusters_data.append(ClusterMeshData(
                 cluster_id=cp.cluster_id,
                 vertices=verts,
@@ -78,7 +78,7 @@ class MeshBuilder:
     # Mesh generation
     # ------------------------------------------------------------------
 
-    def _build_surface_mesh(
+    def build_surface_mesh(
         self,
         pts: np.ndarray,
         alpha: float | None = None,
@@ -98,7 +98,7 @@ class MeshBuilder:
             log.warning("Surface mesh failed: %s — returning empty mesh.", exc)
             return [], []
 
-    def _build_cluster_mesh(
+    def build_cluster_mesh(
         self,
         pts: np.ndarray,
     ) -> tuple[list[list[float]], list[list[int]]]:
@@ -121,7 +121,9 @@ class MeshBuilder:
         """Outer faces of a 3-D Delaunay triangulation (= convex-hull surface)."""
         from scipy.spatial import Delaunay
         tri = Delaunay(pts)
-        outer_faces = self._extract_boundary_faces(tri.simplices, np.ones(len(tri.simplices), dtype=bool))
+        mask = np.ones(len(tri.simplices), dtype=bool)
+        outer_faces = self._extract_boundary_faces(tri.simplices, mask)
+
         return pts.tolist(), outer_faces.tolist() if len(outer_faces) else []
 
     def _alpha_shape_mesh(

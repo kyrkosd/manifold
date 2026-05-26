@@ -59,7 +59,7 @@ class ManifoldProjector:
         manifold = self._load_manifold(run_dir, n_points=len(coeff))
         cluster_labels = self._load_cluster_labels(run_dir, n_points=len(coeff))
 
-        axes = self._select_top3_axes(power)
+        axes = self.select_top3_axes(power)
         positions_all = self._project_to_3d(coeff, axes)
 
         flags = np.array(anomaly.get("flags", [False] * len(coeff)), dtype=bool)
@@ -196,7 +196,7 @@ class ManifoldProjector:
     # Projection helpers
     # ------------------------------------------------------------------
 
-    def _select_top3_axes(self, power: np.ndarray) -> list[int]:
+    def select_top3_axes(self, power: np.ndarray) -> list[int]:
         # Skip index 0 (DC component — constant offset, uninformative for shape).
         start = 1 if len(power) > 3 else 0
         idx = np.argsort(power[start:])[::-1][:3] + start

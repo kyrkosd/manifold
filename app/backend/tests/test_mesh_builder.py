@@ -1,8 +1,8 @@
 """Tests for backend/services/mesh_builder.py."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
+##import json
+##from pathlib import Path
 
 import numpy as np
 import pytest
@@ -61,32 +61,32 @@ def builder():
 class TestSurfaceMesh:
     def test_sphere_produces_nonempty_mesh(self, builder):
         pts = _sphere_points(500)
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         # Sphere is a closed manifold — Delaunay outer-face extraction should give triangles.
         assert len(verts) > 0
         assert len(faces) > 0
 
     def test_plane_handled_gracefully(self, builder):
         pts = _plane_points(200)
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         # Coplanar input may give empty mesh; what matters is it doesn't raise.
         assert isinstance(verts, list)
         assert isinstance(faces, list)
 
     def test_too_few_points_returns_empty(self, builder):
         pts = np.random.default_rng(0).standard_normal((3, 3))
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         assert faces == []
 
     def test_large_set_subsampled(self, builder):
         rng = np.random.default_rng(0)
         pts = rng.standard_normal((10_000, 3))
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         assert len(verts) <= _MAX_SURFACE_POINTS + 1
 
     def test_face_indices_valid(self, builder):
         pts = _sphere_points(300)
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         if not faces:
             pytest.skip("Mesh is empty — skip index check.")
         n_verts = len(verts)
@@ -95,12 +95,12 @@ class TestSurfaceMesh:
 
     def test_no_degenerate_faces(self, builder):
         pts = _sphere_points(300)
-        verts, faces = builder._build_surface_mesh(pts)
+        verts, faces = builder.build_surface_mesh(pts)
         for f in faces:
             assert len(set(f)) == 3, f"Degenerate (repeated-vertex) face: {f}"
 
     def test_empty_input_returns_empty(self, builder):
-        verts, faces = builder._build_surface_mesh(np.zeros((0, 3)))
+        verts, faces = builder.build_surface_mesh(np.zeros((0, 3)))
         assert verts == []
         assert faces == []
 
@@ -113,19 +113,19 @@ class TestClusterMesh:
     def test_normal_cluster_produces_mesh(self, builder):
         rng = np.random.default_rng(2)
         pts = rng.standard_normal((30, 3))
-        verts, faces = builder._build_cluster_mesh(pts)
+        verts, faces = builder.build_cluster_mesh(pts)
         assert isinstance(verts, list)
         assert isinstance(faces, list)
 
     def test_tiny_cluster_no_crash(self, builder):
         pts = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
-        verts, faces = builder._build_cluster_mesh(pts)
+        verts, faces = builder.build_cluster_mesh(pts)
         assert faces == []
 
     def test_cluster_face_indices_valid(self, builder):
         rng = np.random.default_rng(3)
         pts = rng.standard_normal((25, 3))
-        verts, faces = builder._build_cluster_mesh(pts)
+        verts, faces = builder.build_cluster_mesh(pts)
         if not faces:
             return
         n_v = len(verts)

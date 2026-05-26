@@ -36,7 +36,11 @@ def _check_complete(run_dir: Path) -> None:
     payload = json.loads(status_path.read_text())
     status = payload.get("status", "")
     if status == "running":
-        raise HTTPException(status_code=202, detail="Pipeline still running. Try again when complete.")
+        raise HTTPException(
+    status_code=202,
+    detail="Pipeline still running. Try again when complete.",
+)
+
     if status not in ("completed", ""):
         raise HTTPException(status_code=425, detail=f"Run is not complete yet (status={status!r}).")
 

@@ -6,7 +6,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.config import DATA_DIR
+##from backend.config import DATA_DIR
 from backend.models.enums import DataStatus
 from backend.models.schemas import PreviewResponse, SQLConnectionRequest
 from backend.services import data_profiler as profiler

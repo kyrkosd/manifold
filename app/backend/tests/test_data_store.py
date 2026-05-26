@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import threading
-import time
+##import time
 
 import numpy as np
 import pandas as pd
@@ -61,11 +61,15 @@ class TestDeleteAndCleanup:
         store.delete("does_not_exist")  # should not raise
 
     def test_cleanup_old_removes_stale(self, store, sample_df):
-        did = store.store(sample_df, {})
-        # Manually back-date the timestamp.
-        with store._lock:
-            store._meta[did]["timestamp"] = "2000-01-01T00:00:00+00:00"
-        removed = store.cleanup_old(max_age_hours=24)
+        from datetime import datetime, timedelta, timezone
+        from unittest.mock import patch
+
+        store.store(sample_df, {})
+        future = datetime.now(timezone.utc) + timedelta(hours=25)
+        with patch("backend.services.data_store.datetime") as mock_dt:
+            mock_dt.now.return_value = future
+            mock_dt.fromisoformat = datetime.fromisoformat
+            removed = store.cleanup_old(max_age_hours=24)
         assert removed == 1
 
 
@@ -79,7 +83,7 @@ class TestMaxLimit:
             store = DataStore(data_dir=tmp_path / "data")
             df = pd.DataFrame({"x": [1.0, 2.0]})
             ids = [store.store(df, {}) for _ in range(4)]
-            assert len(store._meta) == 3
+            assert len(store.list_datasets()) == 3
         finally:
             ds_mod.MAX_DATASETS = original
 

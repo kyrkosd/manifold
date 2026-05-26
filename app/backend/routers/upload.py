@@ -5,11 +5,11 @@ import logging
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+##from fastapi.responses import JSONResponse
 
 from backend.config import DATA_DIR, MAX_UPLOAD_BYTES
 from backend.models.enums import DataStatus
-from backend.models.schemas import ErrorResponse, PreviewResponse
+from backend.models.schemas import PreviewResponse
 from backend.services import data_profiler as profiler
 from backend.services.data_store import DataStore
 from backend.services.file_parser import FileParseError, parse_file, save_upload
@@ -57,7 +57,12 @@ async def upload_file(
         "status": DataStatus.READY,
     })
 
-    log.info("Upload %r processed in %.2fs → data_id=%s", file.filename, time.monotonic() - t0, data_id)
+    log.info(
+    "Upload %r processed in %.2fs → data_id=%s",
+    file.filename,
+    time.monotonic() - t0,
+    data_id,
+)
 
     return PreviewResponse(
         data_id=data_id,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
+##import pytest
 
 from backend.models.enums import SuitabilityLevel
 from backend.services.data_profiler import profile

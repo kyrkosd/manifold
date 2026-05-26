@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-import pytest_asyncio
+##import pytest
+##import pytest_asyncio
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -28,7 +28,10 @@ class TestUpload:
 
     def test_preview_endpoint(self, app_client):
         with open(FIXTURES / "test_data.csv", "rb") as f:
-            upload_res = app_client.post("/api/upload", files={"file": ("test_data.csv", f, "text/csv")})
+            upload_res = app_client.post(
+    "/api/upload",
+    files={"file": ("test_data.csv", f, "text/csv")},
+)
         data_id = upload_res.json()["data_id"]
         res = app_client.get(f"/api/data/{data_id}/preview")
         assert res.status_code == 200
@@ -36,12 +39,13 @@ class TestUpload:
 
     def test_preview_not_found(self, app_client):
         res = app_client.get("/api/data/nonexistent/preview")
-        assert res.status_code == 404
-
+        assert res.status_code == 404      
 
 class TestSQL:
     def test_sql_test_connection(self, app_client, sqlite_db):
-        res = app_client.post("/api/sql/test", json={"connection_string": sqlite_db, "query": "SELECT 1"})
+        payload = {"connection_string": sqlite_db, "query": "SELECT 1"}
+        res = app_client.post("/api/sql/test", json=payload)
+
         assert res.status_code == 200
         assert res.json()["success"] is True
 

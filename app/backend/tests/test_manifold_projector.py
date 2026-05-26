@@ -133,7 +133,7 @@ class TestAxisSelection:
 
     def test_top3_axes_are_high_power_features(self, projector, run_dir):
         power = np.load(run_dir / "power_spectrum.npy")
-        axes = projector._select_top3_axes(power)
+        axes = projector.select_top3_axes(power)
         # Features 1, 2, 3 were amplified — they should be the top-3.
         assert set(axes) == {1, 2, 3}
 

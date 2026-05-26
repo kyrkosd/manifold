@@ -41,7 +41,11 @@ def parse_file(file_path: Path, file_type: FileType | None = None) -> pd.DataFra
         df = _parse_excel(file_path)
 
     df = _clean_column_names(df)
-    log.info("Parsed %d rows, %d columns in %.2fs.", len(df), len(df.columns), time.monotonic() - t0)
+    rows, cols = df.shape
+    duration = time.monotonic() - t0
+
+    log.info("Parsed %d rows, %d columns in %.2fs.", rows, cols, duration)
+
     return df
 
 
@@ -52,7 +56,7 @@ async def save_upload(upload_file: UploadFile, data_dir: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     content = await upload_file.read()
     dest.write_bytes(content)
-    log.info("Saved upload %s → %s (%d bytes).", upload_file.filename, dest.name, len(content))
+
     return dest
 
 
