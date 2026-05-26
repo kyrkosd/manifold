@@ -1,6 +1,5 @@
 /* File upload and drag-and-drop handling for the FMAS import interface. */
 /* global App, API */
-/* exported Upload */
 const Upload = {
   _dropzone: null,
   _fileInput: null,
@@ -77,3 +76,4 @@ const Upload = {
     return bytes + ' B';
   },
 };
+window.Upload = Upload;

@@ -1,6 +1,5 @@
 /* SQL connection form handling for the FMAS import interface. */
 /* global App, API */
-/* exported SQL */
 const SQL = {
   _connected: false,
 
@@ -66,3 +65,4 @@ const SQL = {
     }
   },
 };
+window.SQL = SQL;

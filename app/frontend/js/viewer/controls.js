@@ -1,6 +1,5 @@
 /* Orbit controls, panning, zoom, raycasting for the FMAS 3D manifold viewer. */
 /* global THREE, Scene, PointCloud */
-/* exported Controls */
 const Controls = {
   _isDragging: false,
   _isPanning:  false,
@@ -159,3 +158,4 @@ const Controls = {
     this._target.set(0, 0, 0);
   },
 };
+window.Controls = Controls;

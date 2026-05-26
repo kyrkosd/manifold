@@ -1,6 +1,5 @@
 /* Point cloud rendering for the FMAS 3D manifold viewer. */
 /* global THREE, Scene, Float32Array */
-/* exported PointCloud */
 const PointCloud = {
   _points: null,
   _positions: [],
@@ -105,3 +104,4 @@ const PointCloud = {
   getPointId(i)   { return this._pointIds[i] ?? i; },
   count()         { return this._positions.length; },
 };
+window.PointCloud = PointCloud;

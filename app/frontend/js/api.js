@@ -1,5 +1,4 @@
 /* API client for the FMAS import interface backend. */
-/* exported API */
 const API = {
   baseUrl: '',
 
@@ -55,3 +54,4 @@ const API = {
     return this._fetch(`/api/runs/${runId}/status`);
   },
 };
+window.API = API;

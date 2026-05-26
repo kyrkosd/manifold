@@ -1,6 +1,5 @@
 /* Translucent surface mesh rendering for the FMAS 3D manifold viewer. */
 /* global THREE, Scene */
-/* exported ManifoldMesh */
 const ManifoldMesh = {
   _mesh: null,
   _visible: true,
@@ -50,3 +49,4 @@ const ManifoldMesh = {
 
   toggle() { this.setVisible(!this._visible); },
 };
+window.ManifoldMesh = ManifoldMesh;
