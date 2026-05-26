@@ -57,7 +57,7 @@ def _detect_database_type(connection_string: str) -> DatabaseType:
     if cs.startswith("sqlite"):
         return DatabaseType.SQLITE
     raise SQLConnectionError(
-        f"Unsupported database scheme. Use postgresql://, mysql://, or sqlite:///."
+        "Unsupported database scheme. Use postgresql://, mysql://, or sqlite:///."
     )
 
 

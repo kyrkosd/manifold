@@ -129,4 +129,3 @@ class TestLaunch:
         })
         assert res.status_code == 422
 
-

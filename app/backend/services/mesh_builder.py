@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from scipy.spatial import Delaunay
-from scipy.spatial import Delaunay
 from sklearn.neighbors import NearestNeighbors
 
 import numpy as np

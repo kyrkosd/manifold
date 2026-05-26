@@ -165,8 +165,8 @@ def _save_anomaly_json(run_dir: Path, flags_obj, scores_obj, anomaly_results) ->
         "scores": [float(s) for s in overall_scores],
         "flags": [bool(f) for f in overall_flags],
         "types": getattr(anomaly_results, "anomaly_types", ["normal"] * len(overall_flags)),
-        "band_scores": {str(k): [float(v) for v in arr] for k, v in per_band.items()},
-        "per_point_band_scores": {str(k): [float(v) for v in arr] for k, v in per_band.items()},
+        "band_scores": {str(k): [float(v) for v in arr] for k, arr in per_band.items()},
+        "per_point_band_scores": {str(k): [float(v) for v in arr] for k, arr in per_band.items()},
     }
     (run_dir / "anomaly_results.json").write_text(json.dumps(payload), encoding="utf-8")
 

@@ -46,7 +46,7 @@ class PipelineConfigRequest(FMASModel):
     @field_validator("overlap_factor")
     @classmethod
     def _check_overlap(cls, v: float) -> float:
-        if not (0.0 < v < 1.0):
+        if not 0.0 < v < 1.0:
             raise ValueError("overlap_factor must be in the open interval (0, 1)")
         return v
 

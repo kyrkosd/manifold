@@ -66,9 +66,12 @@ def _make_run_dir(tmp_path: Path) -> Path:
     scores = [0.9 if f else 0.0 for f in flags]
 
     cluster_labels = np.full(n_pts, -1, dtype=int)
-    for i in sep_idx:     cluster_labels[i] = 0
-    for i in overlap_idx: cluster_labels[i] = 1
-    for i in sep2_idx:    cluster_labels[i] = 2
+    for i in sep_idx:
+        cluster_labels[i] = 0
+    for i in overlap_idx:
+        cluster_labels[i] = 1
+    for i in sep2_idx:
+        cluster_labels[i] = 2
 
     anomaly = {
         "flags":  flags,

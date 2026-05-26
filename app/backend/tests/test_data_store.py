@@ -108,7 +108,9 @@ class TestEvictionAndConcurrency:
             results.append(store.store(df, {}))
 
         threads = [threading.Thread(target=_store) for _ in range(10)]
-        for t in threads: t.start()
-        for t in threads: t.join()
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
         assert len(results) == 10
         assert len(set(results)) == 10  # all unique IDs

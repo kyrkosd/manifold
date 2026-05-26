@@ -1,11 +1,11 @@
 """3D manifold viewer API router."""
 from __future__ import annotations
 
-import numpy as np
 import json
 import logging
 from pathlib import Path
 
+import numpy as np
 from fastapi import APIRouter, Body, HTTPException
 
 from backend.config import RUNS_DIR
@@ -76,7 +76,7 @@ async def get_point_detail(run_id: str, point_index: int) -> PointDetailResponse
 @router.get("/viewer/{run_id}/cluster/{cluster_id}")
 async def get_cluster_detail(run_id: str, cluster_id: int) -> dict:
     """Return summary info about a specific anomaly cluster."""
-    
+
     run_dir = _run_dir(run_id)
 
     labels_path = run_dir / "cluster_labels.npy"
@@ -118,8 +118,8 @@ async def reproject(
             alpha = float(alpha)
             if alpha <= 0:
                 raise ValueError
-        except (TypeError, ValueError):
-            raise HTTPException(status_code=422, detail="alpha must be a positive float.")
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail="alpha must be a positive float.") from exc
 
     _viewer_cache.pop(run_id, None)
 

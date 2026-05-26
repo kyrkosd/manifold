@@ -105,15 +105,9 @@ class ManifoldProjector:
         flag   = bool(anomaly.get("flags",   [False] * len(coeff))[index])
         atype  = anomaly.get("types", ["normal"] * len(coeff))[index]
         band_s = {k: float(v[index]) for k, v in anomaly.get("per_point_band_scores", {}).items()}
-        top_band = max(band_s, key=lambda k: abs(band_s[k])) if band_s else None
 
         chart_id, chart_quality = self._get_chart_info(manifold, index)
-
-        row = coeff[index, :20]
-        if col_names:
-            orig = {col_names[i]: float(row[i]) for i in range(min(len(col_names), len(row)))}
-        else:
-            orig = {f"feature_{i}": float(v) for i, v in enumerate(row)}
+        orig = self._get_original_values(coeff, index, col_names)
 
         return PointDetailResponse(
             index=index,
@@ -121,7 +115,7 @@ class ManifoldProjector:
             is_anomaly=flag,
             anomaly_type=atype if flag else None,
             band_scores=band_s,
-            top_anomalous_band=top_band if flag else None,
+            top_anomalous_band=max(band_s, key=lambda k: abs(band_s[k])) if (flag and band_s) else None,
             chart_id=chart_id,
             chart_alignment_quality=chart_quality,
             cluster_id=None,
@@ -282,6 +276,18 @@ class ManifoldProjector:
         qualities = manifold.get("alignment_qualities", [])
         chart_quality = float(qualities[chart_id]) if chart_id < len(qualities) else 0.0
         return chart_id, chart_quality
+
+    def _get_original_values(
+        self,
+        coeff: np.ndarray,
+        index: int,
+        col_names: list[str] | None,
+    ) -> dict[str, float]:
+        """Return the first 20 coefficient values mapped to column names or feature_N fallbacks."""
+        row = coeff[index, :20]
+        if col_names:
+            return {col_names[i]: float(row[i]) for i in range(min(len(col_names), len(row)))}
+        return {f"feature_{i}": float(v) for i, v in enumerate(row)}
 
     def _check_cluster_overlap(
         self,

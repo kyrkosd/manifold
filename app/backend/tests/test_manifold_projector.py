@@ -1,9 +1,9 @@
 """Tests for backend/services/manifold_projector.py."""
 from __future__ import annotations
-from fastapi import HTTPException
 
 import json
 
+from fastapi import HTTPException
 import numpy as np
 import pytest
 
