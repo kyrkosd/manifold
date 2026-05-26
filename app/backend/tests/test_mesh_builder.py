@@ -49,11 +49,6 @@ def _minimal_projection(normal_pts: np.ndarray) -> ProjectionResult:
     )
 
 
-@pytest.fixture
-def builder():
-    return MeshBuilder()
-
-
 # ---------------------------------------------------------------------------
 # Surface mesh
 # ---------------------------------------------------------------------------

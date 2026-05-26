@@ -2,94 +2,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
 
-from backend.services.manifold_projector import ManifoldProjector, ProjectionResult
-
-
-# ---------------------------------------------------------------------------
-# Fixture helpers
-# ---------------------------------------------------------------------------
-
-def _make_run_dir(tmp_path: Path) -> Path:
-    """Synthetic FMAS run: 1000 pts × 50 features, 3 planted clusters.
-
-    Cluster layout:
-      0 (indices 940-959): separated — pushed far in positive top-3 direction
-      1 (indices 960-979): overlapping in top-3 space; diverges in feature 20
-      2 (indices 980-999): separated — pushed far in negative top-3 direction
-    """
-    rng = np.random.default_rng(42)
-    n_pts, n_feat = 1000, 50
-
-    coeff = rng.standard_normal((n_pts, n_feat)) * 0.5
-    # Amplify features 1-3 so they dominate the power spectrum → become top-3 axes.
-    coeff[:, 1:4] += rng.standard_normal((n_pts, 3)) * 2.0
-
-    sep_idx     = list(range(940, 960))   # cluster 0
-    overlap_idx = list(range(960, 980))   # cluster 1
-    sep2_idx    = list(range(980, 1000))  # cluster 2
-
-    # ±50 offsets give features 1-3 power ≈ 104, beating feature 20's power ≈ 50.
-    coeff[sep_idx,    1:4] += 50.0   # far positive
-    coeff[overlap_idx, 20] += 50.0   # diverges only in feature 20, stays normal in 1-3
-    coeff[sep2_idx,   1:4] -= 50.0   # far negative
-
-    power = np.mean(np.abs(coeff) ** 2, axis=0)
-
-    all_anomaly = sep_idx + overlap_idx + sep2_idx
-    flags  = [i in set(all_anomaly) for i in range(n_pts)]
-    scores = [0.9 if f else 0.0 for f in flags]
-    types  = ["regional" if f else "normal" for f in flags]
-
-    cluster_labels = np.full(n_pts, -1, dtype=int)
-    for i in sep_idx:     cluster_labels[i] = 0
-    for i in overlap_idx: cluster_labels[i] = 1
-    for i in sep2_idx:    cluster_labels[i] = 2
-
-    anomaly = {
-        "flags":  flags,
-        "scores": scores,
-        "types":  types,
-        "per_point_band_scores": {
-            "band_0": scores,
-            "band_1": [s * 0.5 for s in scores],
-        },
-    }
-    manifold = {
-        "n_charts": 2,
-        "chart_assignments": [i % 2 for i in range(n_pts)],
-        "alignment_qualities": [0.95, 0.90],
-        "intrinsic_dim": 2,
-    }
-
-    np.save(tmp_path / "coefficients.npy",   coeff)
-    np.save(tmp_path / "power_spectrum.npy",  power)
-    np.save(tmp_path / "cluster_labels.npy",  cluster_labels)
-    (tmp_path / "anomaly_results.json").write_text(json.dumps(anomaly))
-    (tmp_path / "manifold_info.json").write_text(json.dumps(manifold))
-    (tmp_path / "column_names.json").write_text(
-        json.dumps([f"feat_{i}" for i in range(n_feat)])
-    )
-    return tmp_path
-
-
-@pytest.fixture(scope="module")
-def run_dir(tmp_path_factory):
-    return _make_run_dir(tmp_path_factory.mktemp("run"))
-
-
-@pytest.fixture(scope="module")
-def projector():
-    return ManifoldProjector()
-
-
-@pytest.fixture(scope="module")
-def projection(projector, run_dir):
-    return projector.project(run_dir)
+from backend.services.manifold_projector import ProjectionResult
 
 
 # ---------------------------------------------------------------------------

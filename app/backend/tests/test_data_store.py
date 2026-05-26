@@ -11,11 +11,6 @@ import pytest
 from backend.services.data_store import DataStore
 
 
-@pytest.fixture
-def store(tmp_path) -> DataStore:
-    return DataStore(data_dir=tmp_path / "data")
-
-
 class TestStoreAndRetrieve:
     def test_roundtrip(self, store, sample_df):
         did = store.store(sample_df, {"source_type": "file"})
