@@ -45,7 +45,7 @@ class TestUpload:
     def test_preview_not_found(self, app_client):
         """Verify a missing data_id returns 404."""
         res = app_client.get("/api/data/nonexistent/preview")
-        assert res.status_code == 404      
+        assert res.status_code == 404    
 
 class TestSQL:
     """Integration tests for the /api/sql/test and /api/sql/query endpoints."""

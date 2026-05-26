@@ -72,7 +72,10 @@ def _detect_file_type(file_path: Path) -> FileType:
         return FileType.TSV
     if ext in (".xlsx", ".xls"):
         return FileType.XLSX
-    raise FileParseError(f"Unsupported file extension: {ext!r}. Expected .csv, .tsv, .xlsx, or .xls.")
+    raise FileParseError(
+        f"Unsupported file extension: {ext!r}."
+        "Expected .csv, .tsv, .xlsx, or .xls."
+    )
 
 
 # ---------------------------------------------------------------------------

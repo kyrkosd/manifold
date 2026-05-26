@@ -84,10 +84,19 @@ class ManifoldProjector:
             reprojected = False
             div_axes = None
 
-            if len(normal_idx) >= 5 and self._check_cluster_overlap(cluster_pos, normal_pos):
+            if (
+                len(normal_idx) >= 5 
+                and self._check_cluster_overlap(cluster_pos, normal_pos)
+            ):
                 div_axes = self._find_divergent_axes(cidx, normal_idx, coeff)
-                cluster_pos = self._reproject_cluster(cidx, coeff, div_axes, positions_all.mean(axis=0))
+                cluster_pos = self._reproject_cluster(
+                    cidx, 
+                    coeff, 
+                    div_axes, 
+                    positions_all.mean(axis=0),
+                )
                 reprojected = True
+
 
             clusters.append(ClusterProjection(
                 cluster_id=cid,
@@ -162,7 +171,10 @@ class ManifoldProjector:
         path = run_dir / "coefficients.npy"
         if not path.exists():
             # Fallback: generate random projection for demo purposes.
-            log.warning("coefficients.npy missing; using random 3-D positions for %s.", run_dir.name)
+            log.warning(
+                "coefficients.npy missing; using random 3-D positions for %s.",
+                run_dir.name,
+            )
             return np.random.default_rng(0).standard_normal((50, 10))
         return np.load(path)
 
@@ -176,13 +188,23 @@ class ManifoldProjector:
         path = run_dir / "anomaly_results.json"
         if path.exists():
             return json.loads(path.read_text())
-        return {"flags": [False] * n_points, "scores": [0.0] * n_points, "types": ["normal"] * n_points}
+        return {
+            "flags": [False] * n_points,
+            "scores": [0.0] * n_points,
+            "types": ["normal"] * n_points,
+        }
 
     def _load_manifold(self, run_dir: Path, n_points: int) -> dict:
         path = run_dir / "manifold_info.json"
         if path.exists():
             return json.loads(path.read_text())
-        return {"n_charts": 1, "chart_assignments": [0] * n_points, "intrinsic_dim": 2, "alignment_qualities": [1.0]}
+        return {
+            "n_charts": 1,
+            "chart_assignments": [0] * n_points,
+            "intrinsic_dim": 2,
+            "alignment_qualities": [1.0],
+        }
+
 
     def _load_cluster_labels(self, run_dir: Path) -> np.ndarray | None:
         path = run_dir / "cluster_labels.npy"
@@ -255,7 +277,7 @@ class ManifoldProjector:
         self,
         cluster_idx: list[int],
         normal_idx: list[int],
-        coeff: np.ndarray,       
+        coeff: np.ndarray,   
     ) -> list[int]:
         cluster_power = np.mean(np.abs(coeff[cluster_idx]) ** 2, axis=0)
         normal_power  = np.mean(np.abs(coeff[normal_idx])  ** 2, axis=0)

@@ -137,12 +137,14 @@ def _compute_suitability(
     if n_numeric == 0:
         score -= 1.0  # No numeric data at all — FMAS cannot run.
         warnings.append(
-            f"Only {n_numeric} numeric column(s) — FMAS needs at least 3 to build a meaningful manifold."
+            f"Only {n_numeric} numeric column(s) — "
+            "FMAS needs at least 3 to build a meaningful manifold."
         )
     elif n_numeric < 3:
         score -= 0.5
         warnings.append(
-            f"Only {n_numeric} numeric column(s) — FMAS needs at least 3 to build a meaningful manifold."
+            f"Only {n_numeric} numeric column(s) — "
+            "FMAS needs at least 3 to build a meaningful manifold."
         )
 
     if missing_pct > 10:

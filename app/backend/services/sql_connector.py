@@ -115,7 +115,11 @@ def _classify_error(exc: Exception) -> SQLConnectionError:
     if "does not exist" in msg or "no such table" in msg:
         return SQLConnectionError("Table not found. Check your query.")
     if "timeout" in msg or "timed out" in msg:
-        return SQLConnectionError(f"Query timed out after {_TIMEOUT_SECONDS} seconds. Try adding filters.")
+        return SQLConnectionError(
+            f"Query timed out after {_TIMEOUT_SECONDS} seconds. "
+            "Try adding filters."
+        )
+
     return SQLConnectionError(str(exc))
 
 
