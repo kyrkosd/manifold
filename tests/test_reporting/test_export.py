@@ -71,23 +71,12 @@ class TestToJson:
         parsed = json.loads(to_json(r))
         assert isinstance(parsed, dict)
 
-    def test_has_summary_key(self):
-        """Has summary key."""
+    def test_has_required_top_level_keys(self):
+        """Has all required top-level keys in JSON output."""
         r = _make_report()
         parsed = json.loads(to_json(r))
-        assert "summary" in parsed
-
-    def test_has_type_distribution_key(self):
-        """Has type distribution key."""
-        r = _make_report()
-        parsed = json.loads(to_json(r))
-        assert "type_distribution" in parsed
-
-    def test_has_top_anomalies_key(self):
-        """Has top anomalies key."""
-        r = _make_report()
-        parsed = json.loads(to_json(r))
-        assert "top_anomalies" in parsed
+        for key in ("summary", "type_distribution", "top_anomalies"):
+            assert key in parsed
 
     def test_summary_values_are_native_types(self):
         """Summary values are native types."""

@@ -118,16 +118,12 @@ class TestCleanData:
         result = pipeline.run(clean_data)
         assert result.config is pipeline.config
 
-    def test_table_has_required_columns(self, pipeline, clean_data):
-        """Table has required columns."""
+    def test_required_columns_and_summary_keys(self, pipeline, clean_data):
+        """Required table columns and summary keys are all present."""
         result = pipeline.run(clean_data)
         cols = result.anomaly_report.table.columns.tolist()
         for col in ("point_index", "overall_score", "is_anomaly", "top_anomalous_band"):
             assert col in cols
-
-    def test_summary_has_required_keys(self, pipeline, clean_data):
-        """Summary has required keys."""
-        result = pipeline.run(clean_data)
         sm = result.anomaly_report.summary
         for key in ("total_points", "total_anomalies", "anomaly_rate", "mean_score"):
             assert key in sm

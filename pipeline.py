@@ -38,10 +38,17 @@ class FinalReport:
     config: PipelineConfig
 
 
+def _ingest_data(data: np.ndarray | pd.DataFrame) -> np.ndarray:
+    """Run Phase 1 (ingestion) and return the cleaned numpy array."""
+    clean = ingest(data)
+    return clean.data
+
+
 class FourierManifoldPipeline:
     """Orchestrates all six FMAS phases end-to-end."""
 
     def __init__(self, config: PipelineConfig | None = None) -> None:
+        """Initialise the pipeline with optional config; defaults applied if omitted."""
         self.config = config or default_config()
         self._log = logging.getLogger(__name__)
 
@@ -63,7 +70,7 @@ class FourierManifoldPipeline:
         timing: dict[str, float] = {}
 
         t0 = time.perf_counter()
-        clean_data = self._ingest(data)
+        clean_data = _ingest_data(data)
         timing["ingest"] = time.perf_counter() - t0
 
         t0 = time.perf_counter()
@@ -112,11 +119,6 @@ class FourierManifoldPipeline:
     # Private phase helpers — each wraps one FMAS phase with the
     # appropriate config slice; keeps run() readable as a sequencer.
     # ------------------------------------------------------------------
-
-    def _ingest(self, data: np.ndarray | pd.DataFrame) -> np.ndarray:
-        """Run Phase 1 (ingestion) and return the cleaned numpy array."""
-        clean = ingest(data)
-        return clean.data
 
     def _discover_structure(self, data: np.ndarray) -> StructureReport:
         """Run Phase 2 (structure discovery) and return a StructureReport."""

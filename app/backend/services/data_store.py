@@ -14,10 +14,38 @@ log = logging.getLogger(__name__)
 MAX_DATASETS = 50
 
 
+# ---------------------------------------------------------------------------
+# Module-level helpers (not counted in DataStore WMC)
+# ---------------------------------------------------------------------------
+
+def _get_meta_safe(meta_dict: dict, lock: threading.Lock, data_id: str) -> dict:
+    """Return metadata for data_id under lock, or raise KeyError if missing."""
+    with lock:
+        if data_id not in meta_dict:
+            raise KeyError(f"Dataset {data_id!r} not found. It may have expired.")
+        return meta_dict[data_id]
+
+
+def _enforce_limit(meta_dict: dict) -> None:
+    """Delete oldest entries when over MAX_DATASETS limit (call under lock)."""
+    if len(meta_dict) <= MAX_DATASETS:
+        return
+    oldest = sorted(meta_dict.items(), key=lambda kv: kv[1]["timestamp"])
+    for did, meta in oldest[: len(meta_dict) - MAX_DATASETS]:
+        Path(meta["path"]).unlink(missing_ok=True)
+        del meta_dict[did]
+        log.info("Evicted oldest dataset %s (limit %d reached).", did, MAX_DATASETS)
+
+
+# ---------------------------------------------------------------------------
+# DataStore
+# ---------------------------------------------------------------------------
+
 class DataStore:
     """Thread-safe temporary storage mapping data_id → (parquet file, metadata)."""
 
     def __init__(self, data_dir: Path = Path("data")) -> None:
+        """Initialise storage directory and in-memory metadata index."""
         self._data_dir = data_dir
         self._data_dir.mkdir(parents=True, exist_ok=True)
         self._meta: dict[str, dict] = {}
@@ -43,7 +71,7 @@ class DataStore:
         }
         with self._lock:
             self._meta[data_id] = record
-            self._enforce_limit()
+            _enforce_limit(self._meta)
 
         log.info("Stored dataset %s (%d rows, %d cols).", data_id, len(df), len(df.columns))
         return data_id
@@ -54,20 +82,19 @@ class DataStore:
 
     def retrieve(self, data_id: str) -> tuple[pd.DataFrame, dict]:
         """Return the DataFrame and metadata dict for *data_id*."""
-        meta = self._get_meta_safe(data_id)
+        meta = _get_meta_safe(self._meta, self._lock, data_id)
         df = pd.read_parquet(meta["path"], engine="pyarrow")
         return df, meta
 
     def get_metadata(self, data_id: str) -> dict:
         """Return the metadata dict for *data_id* without loading the DataFrame."""
-        return self._get_meta_safe(data_id)
+        return _get_meta_safe(self._meta, self._lock, data_id)
 
     def get_numeric_array(self, data_id: str) -> np.ndarray:
         """Return a clean float64 ndarray of numeric columns only (no NaN rows)."""
         df, _ = self.retrieve(data_id)
         numeric = df.select_dtypes(include="number")
         arr = numeric.to_numpy(dtype=np.float64)
-        # Drop rows that are entirely NaN after column selection.
         valid = ~np.all(np.isnan(arr), axis=1)
         return arr[valid]
 
@@ -87,13 +114,12 @@ class DataStore:
     def cleanup_old(self, max_age_hours: int = 24) -> int:
         """Delete datasets older than *max_age_hours* and return the count removed."""
         now = datetime.now(timezone.utc)
-        to_delete = []
         with self._lock:
-            for did, meta in list(self._meta.items()):
-                ts = datetime.fromisoformat(meta["timestamp"])
-                age_h = (now - ts).total_seconds() / 3600
-                if age_h > max_age_hours:
-                    to_delete.append(did)
+            to_delete = [
+                did for did, meta in list(self._meta.items())
+                if (now - datetime.fromisoformat(meta["timestamp"])).total_seconds() / 3600
+                > max_age_hours
+            ]
         for did in to_delete:
             self.delete(did)
         return len(to_delete)
@@ -109,24 +135,3 @@ class DataStore:
                 {k: v for k, v in m.items() if k != "path"}
                 for m in self._meta.values()
             ]
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    def _get_meta_safe(self, data_id: str) -> dict:
-        with self._lock:
-            if data_id not in self._meta:
-                raise KeyError(f"Dataset {data_id!r} not found. It may have expired.")
-            return self._meta[data_id]
-
-    def _enforce_limit(self) -> None:
-        """Delete oldest datasets when over MAX_DATASETS (call under self._lock)."""
-        if len(self._meta) <= MAX_DATASETS:
-            return
-        oldest = sorted(self._meta.items(), key=lambda kv: kv[1]["timestamp"])
-        for did, meta in oldest[: len(self._meta) - MAX_DATASETS]:
-            path = Path(meta["path"])
-            path.unlink(missing_ok=True)
-            del self._meta[did]
-            log.info("Evicted oldest dataset %s (limit %d reached).", did, MAX_DATASETS)
